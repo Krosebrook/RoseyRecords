@@ -4,11 +4,20 @@
 
 HarmoniQ is an AI-powered music and lyrics generation platform that allows users to create studio-quality lyrics and songs without musical experience. The application features a dark "Music Studio" aesthetic with a synthwave theme, providing tools for generating lyrics from text prompts, exploring public songs, and managing a personal music library.
 
-The platform supports multiple creation modes (description-based, lyrics-based, and image-to-song), integrates with OpenAI for AI generation, and uses Replit Auth for user authentication.
+The platform supports multiple AI engines (OpenAI for fast lyrics, Gemini for full song concepts), integrates with Replicate for audio generation, and uses Replit Auth for user authentication.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes
+
+### January 2026
+- Added Gemini AI integration for advanced song concept generation (BPM, key, energy analysis)
+- Added Replicate integration for AI music/audio generation
+- Created Music Studio page with audio generation and music theory tools
+- Added AI engine selector (OpenAI vs Gemini) to Generate page
+- Implemented chord progression generator and scale finder tools
 
 ## System Architecture
 
@@ -41,16 +50,53 @@ Preferred communication style: Simple, everyday language.
 4. **Protected Routes**: Frontend uses a `ProtectedRoute` component pattern for authentication-gated pages
 
 ### Core Features
-- **Song Generation**: AI-powered lyrics generation from text prompts with configurable genre and mood
+- **Dual AI Lyrics Generation**: Choose between OpenAI (fast) or Gemini (comprehensive song concepts)
+- **Audio Generation**: AI-powered instrumental music creation via Replicate
+- **Music Theory Tools**: Chord progression generator, scale finder, production tips
 - **User Library**: Personal song management with CRUD operations
 - **Public Explore**: Browse and like publicly shared songs
 - **Playlist Management**: Create and manage song playlists
 
+### Application Pages
+- `/` - Landing page (redirects to dashboard if authenticated)
+- `/dashboard` - User's song library
+- `/generate` - AI lyrics generation with OpenAI/Gemini toggle
+- `/studio` - Music studio with audio generation and music theory tools
+- `/explore` - Browse public songs
+- `/songs/:id` - Song details view
+
 ## External Dependencies
 
 ### AI Services
-- **OpenAI API**: Used for lyrics generation, accessed via Replit AI Integrations
+- **OpenAI API**: Used for fast lyrics generation, accessed via Replit AI Integrations
   - Environment variables: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`
+  
+- **Gemini API**: Used for comprehensive song concepts, accessed via Replit AI Integrations
+  - Environment variables: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
+
+- **Replicate API**: Used for audio/music generation (MusicGen model)
+  - Environment variable: `REPLICATE_API_KEY`
+
+### API Routes
+
+#### Generation Routes
+- `POST /api/generate/lyrics` - OpenAI lyrics generation
+- `POST /api/generate/song-concept` - Gemini full song concept
+- `POST /api/generate/lyrics-gemini` - Gemini lyrics only
+- `POST /api/generate/production-tips` - AI production advice
+- `POST /api/generate/analyze-lyrics` - Analyze existing lyrics
+- `POST /api/generate/cover-art-prompt` - Generate album art prompts
+
+#### Music Theory Routes
+- `POST /api/music-theory/chord-progression` - Generate chord progressions
+- `POST /api/music-theory/reharmonize` - Reharmonize existing progressions
+- `POST /api/music-theory/lookup-scales` - Identify scales from notes
+
+#### Audio Routes
+- `POST /api/audio/generate` - Synchronous audio generation
+- `POST /api/audio/generate/start` - Async audio generation (returns prediction ID)
+- `GET /api/audio/status/:predictionId` - Check generation status
+- `POST /api/audio/sound-effect` - Generate sound effects
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations
@@ -70,3 +116,5 @@ Preferred communication style: Simple, everyday language.
 - Passport.js with openid-client for authentication
 - express-session with connect-pg-simple for session storage
 - Drizzle ORM for database operations
+- Replicate SDK for audio generation
+- @google/genai for Gemini integration

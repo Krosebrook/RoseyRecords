@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import Generate from "@/pages/Generate";
 import SongDetails from "@/pages/SongDetails";
 import Explore from "@/pages/Explore";
+import Studio from "@/pages/Studio";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +56,10 @@ function Router() {
 
       <Route path="/explore">
         <ProtectedRoute component={Explore} />
+      </Route>
+
+      <Route path="/studio">
+        <ProtectedRoute component={Studio} />
       </Route>
 
       <Route component={NotFound} />
