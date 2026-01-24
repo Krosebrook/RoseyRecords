@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -38,18 +39,41 @@ const PIANO_KEYS = [
 
 const MUSICAL_KEYS = ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"];
 
+const DURATION_OPTIONS = [
+  { value: 30, label: "30s" },
+  { value: 60, label: "1 min" },
+  { value: 120, label: "2 min" },
+  { value: 180, label: "3 min" },
+];
+
+type GenerationMode = "sample" | "full";
+type GenerationEngine = "replicate" | "stable";
+
 export default function Studio() {
   const { toast } = useToast();
   
   const [audioPrompt, setAudioPrompt] = useState("");
-  const [audioDuration, setAudioDuration] = useState([10]);
+  const [targetDuration, setTargetDuration] = useState("60");
   const [selectedGenre, setSelectedGenre] = useState("Electronic");
   const [selectedMood, setSelectedMood] = useState("Energetic");
+  const [bpm, setBpm] = useState("");
+  const [musicalKey, setMusicalKey] = useState("");
+  
+  const [generationMode, setGenerationMode] = useState<GenerationMode>("sample");
+  const [generationEngine, setGenerationEngine] = useState<GenerationEngine>("stable");
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  
+  const [sampleUrl, setSampleUrl] = useState<string | null>(null);
+  const [fullTrackUrl, setFullTrackUrl] = useState<string | null>(null);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [currentDuration, setCurrentDuration] = useState(0);
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [playbackProgress, setPlaybackProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressIntervalRef = useRef<number | null>(null);
   
   const [chordKey, setChordKey] = useState("C");
   const [chordMood, setChordMood] = useState("Happy");
@@ -66,67 +90,166 @@ export default function Studio() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
     }
     setIsPlaying(false);
+    setPlaybackProgress(0);
     
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.onended = () => setIsPlaying(false);
+    if (currentAudioUrl) {
+      const audio = new Audio(currentAudioUrl);
+      audio.onended = () => {
+        setIsPlaying(false);
+        setPlaybackProgress(0);
+      };
+      audio.onloadedmetadata = () => {
+        setCurrentDuration(audio.duration);
+      };
       audio.muted = isMuted;
       audioRef.current = audio;
     }
-  }, [audioUrl]);
+  }, [currentAudioUrl]);
 
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current = null;
+      }
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
       }
     };
   }, []);
 
-  const handleGenerateAudio = async () => {
+  const startProgressTracking = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    progressIntervalRef.current = window.setInterval(() => {
+      if (audioRef.current) {
+        const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+        setPlaybackProgress(progress);
+      }
+    }, 100);
+  };
+
+  const handleGenerateSample = async () => {
     if (!audioPrompt) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter an audio prompt" });
+      toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
       return;
     }
     
+    setGenerationMode("sample");
     setIsGeneratingAudio(true);
-    setAudioUrl(null);
+    setGenerationProgress(0);
+    setSampleUrl(null);
+    setFullTrackUrl(null);
+    setCurrentAudioUrl(null);
+    
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => Math.min(prev + 5, 90));
+    }, 500);
     
     try {
-      const response = await apiRequest("POST", "/api/audio/generate", {
+      const endpoint = generationEngine === "stable" 
+        ? "/api/stable-audio/sample"
+        : "/api/audio/generate";
+      
+      const response = await apiRequest("POST", endpoint, {
         prompt: audioPrompt,
-        duration: audioDuration[0],
+        duration: 15,
         genre: selectedGenre,
         mood: selectedMood,
+        bpm: bpm ? parseInt(bpm) : undefined,
+        key: musicalKey || undefined,
         instrumental: true
       });
       
       const data = await response.json();
       
       if (data.audioUrl) {
-        setAudioUrl(data.audioUrl);
-        toast({ title: "Audio Generated", description: "Your music is ready to play!" });
+        setGenerationProgress(100);
+        setSampleUrl(data.audioUrl);
+        setCurrentAudioUrl(data.audioUrl);
+        setGenerationMode("sample");
+        toast({ title: "Sample Ready!", description: "Listen to your 15-second preview" });
       }
     } catch (err) {
-      console.error("Audio generation error:", err);
-      toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate audio" });
+      console.error("Sample generation error:", err);
+      toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate sample. Make sure FAL_KEY is configured." });
     } finally {
+      clearInterval(progressInterval);
       setIsGeneratingAudio(false);
+      setGenerationProgress(0);
+    }
+  };
+
+  const handleGenerateFullTrack = async () => {
+    if (!audioPrompt) {
+      toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
+      return;
+    }
+    
+    setGenerationMode("full");
+    setIsGeneratingAudio(true);
+    setGenerationProgress(0);
+    setFullTrackUrl(null);
+    
+    const duration = parseInt(targetDuration);
+    const estimatedTime = duration > 47 ? 30000 : 15000;
+    const progressIncrement = 100 / (estimatedTime / 500);
+    
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => Math.min(prev + progressIncrement, 95));
+    }, 500);
+    
+    try {
+      const response = await apiRequest("POST", "/api/stable-audio/full", {
+        prompt: audioPrompt,
+        duration,
+        genre: selectedGenre,
+        mood: selectedMood,
+        bpm: bpm ? parseInt(bpm) : undefined,
+        key: musicalKey || undefined,
+        instrumental: true,
+        useV25: duration > 47
+      });
+      
+      const data = await response.json();
+      
+      if (data.audioUrl) {
+        setGenerationProgress(100);
+        setFullTrackUrl(data.audioUrl);
+        setCurrentAudioUrl(data.audioUrl);
+        setGenerationMode("full");
+        toast({ 
+          title: "Full Track Ready!", 
+          description: `Your ${formatDuration(duration)} track is ready to play` 
+        });
+      }
+    } catch (err) {
+      console.error("Full track generation error:", err);
+      toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate full track" });
+    } finally {
+      clearInterval(progressInterval);
+      setIsGeneratingAudio(false);
+      setGenerationProgress(0);
     }
   };
 
   const handlePlayPause = () => {
-    if (!audioRef.current || !audioUrl) return;
+    if (!audioRef.current || !currentAudioUrl) return;
     
     if (isPlaying) {
       audioRef.current.pause();
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
       setIsPlaying(false);
     } else {
       audioRef.current.play();
+      startProgressTracking();
       setIsPlaying(true);
     }
   };
@@ -136,6 +259,41 @@ export default function Studio() {
       audioRef.current.muted = !isMuted;
     }
     setIsMuted(!isMuted);
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (audioRef.current && audioRef.current.duration) {
+      audioRef.current.currentTime = (value[0] / 100) * audioRef.current.duration;
+      setPlaybackProgress(value[0]);
+    }
+  };
+
+  const switchToSample = () => {
+    if (sampleUrl) {
+      setCurrentAudioUrl(sampleUrl);
+      setGenerationMode("sample");
+    }
+  };
+
+  const switchToFullTrack = () => {
+    if (fullTrackUrl) {
+      setCurrentAudioUrl(fullTrackUrl);
+      setGenerationMode("full");
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
+  };
+
+  const formatCurrentTime = () => {
+    if (!audioRef.current) return "0:00";
+    const current = audioRef.current.currentTime;
+    const mins = Math.floor(current / 60);
+    const secs = Math.floor(current % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleGenerateChords = async () => {
@@ -229,7 +387,7 @@ export default function Studio() {
           </div>
           <div>
             <h1 className="text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation tools</p>
+            <p className="text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
           </div>
         </div>
 
@@ -250,10 +408,12 @@ export default function Studio() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Headphones className="w-5 h-5 text-primary" />
-                    Generate Music
+                    <Wand2 className="w-5 h-5 text-primary" />
+                    Create Music
                   </CardTitle>
-                  <CardDescription data-testid="text-audio-description">Create AI-generated instrumental tracks</CardDescription>
+                  <CardDescription data-testid="text-audio-description">
+                    Generate a quick 15s sample first, then create the full track
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -262,7 +422,7 @@ export default function Studio() {
                       id="audio-prompt"
                       value={audioPrompt}
                       onChange={(e) => setAudioPrompt(e.target.value)}
-                      placeholder="e.g. Upbeat electronic track with synth arpeggios"
+                      placeholder="e.g. Upbeat electronic track with synth arpeggios and driving bass"
                       data-testid="input-audio-prompt"
                     />
                   </div>
@@ -296,37 +456,89 @@ export default function Studio() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label data-testid="text-duration-label">Duration: {audioDuration[0]}s</Label>
-                    <Slider
-                      value={audioDuration}
-                      onValueChange={setAudioDuration}
-                      min={5}
-                      max={30}
-                      step={5}
-                      className="w-full"
-                      data-testid="slider-duration"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bpm">BPM (optional)</Label>
+                      <Input
+                        id="bpm"
+                        type="number"
+                        value={bpm}
+                        onChange={(e) => setBpm(e.target.value)}
+                        placeholder="e.g. 120"
+                        min={60}
+                        max={200}
+                        data-testid="input-bpm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Key (optional)</Label>
+                      <Select value={musicalKey || "any"} onValueChange={(v) => setMusicalKey(v === "any" ? "" : v)}>
+                        <SelectTrigger data-testid="select-key">
+                          <SelectValue placeholder="Any key" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any key</SelectItem>
+                          {MUSICAL_KEYS.map(k => (
+                            <SelectItem key={k} value={k}>{k}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <Button
-                    onClick={handleGenerateAudio}
-                    disabled={isGeneratingAudio || !audioPrompt}
-                    className="w-full"
-                    data-testid="button-generate-audio"
-                  >
-                    {isGeneratingAudio ? (
-                      <>
+                  <div className="space-y-2">
+                    <Label>Full Track Duration</Label>
+                    <Select value={targetDuration} onValueChange={setTargetDuration}>
+                      <SelectTrigger data-testid="select-duration">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DURATION_OPTIONS.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value.toString()}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {isGeneratingAudio && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Generating...</span>
+                        <span className="text-muted-foreground">{Math.round(generationProgress)}%</span>
+                      </div>
+                      <Progress value={generationProgress} className="h-2" />
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleGenerateSample}
+                      disabled={isGeneratingAudio || !audioPrompt}
+                      variant="outline"
+                      className="flex-1"
+                      data-testid="button-generate-sample"
+                    >
+                      {isGeneratingAudio && generationMode === "sample" ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
+                      ) : (
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Music
-                      </>
-                    )}
-                  </Button>
+                      )}
+                      15s Sample
+                    </Button>
+                    <Button
+                      onClick={handleGenerateFullTrack}
+                      disabled={isGeneratingAudio || !audioPrompt}
+                      className="flex-1"
+                      data-testid="button-generate-full"
+                    >
+                      {isGeneratingAudio && generationMode === "full" ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Clock className="w-4 h-4 mr-2" />
+                      )}
+                      Full Track
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -336,19 +548,46 @@ export default function Studio() {
                     <Volume2 className="w-5 h-5 text-primary" />
                     Audio Player
                   </CardTitle>
-                  <CardDescription data-testid="text-player-description">Listen to your generated music</CardDescription>
+                  <CardDescription data-testid="text-player-description">
+                    {currentAudioUrl 
+                      ? `Playing: ${generationMode === "sample" ? "15s Sample" : "Full Track"}`
+                      : "Generate music to start listening"
+                    }
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <AnimatePresence mode="wait">
-                    {audioUrl ? (
+                    {currentAudioUrl ? (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         className="space-y-4"
                       >
-                        <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center relative overflow-hidden">
+                        <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex flex-col items-center justify-center relative overflow-hidden p-4">
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent animate-pulse" />
+                          
+                          {sampleUrl && fullTrackUrl && (
+                            <div className="flex gap-2 mb-4 z-10">
+                              <Button
+                                size="sm"
+                                variant={generationMode === "sample" ? "default" : "outline"}
+                                onClick={switchToSample}
+                                data-testid="button-switch-sample"
+                              >
+                                Sample
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={generationMode === "full" ? "default" : "outline"}
+                                onClick={switchToFullTrack}
+                                data-testid="button-switch-full"
+                              >
+                                Full Track
+                              </Button>
+                            </div>
+                          )}
+
                           <div className="flex gap-3 z-10">
                             <Button
                               size="icon"
@@ -376,11 +615,43 @@ export default function Studio() {
                                 <Volume2 className="w-4 h-4" />
                               )}
                             </Button>
+                            {currentAudioUrl && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="rounded-full bg-primary/10"
+                                asChild
+                                data-testid="button-download"
+                              >
+                                <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <p className="text-xs text-muted-foreground text-center" data-testid="text-audio-info">
-                          {selectedGenre} • {selectedMood} • {audioDuration[0]}s
-                        </p>
+                        
+                        <div className="space-y-2">
+                          <Slider
+                            value={[playbackProgress]}
+                            onValueChange={handleSeek}
+                            max={100}
+                            step={0.1}
+                            className="cursor-pointer"
+                            data-testid="slider-progress"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span data-testid="text-current-time">{formatCurrentTime()}</span>
+                            <span data-testid="text-duration">{formatDuration(currentDuration)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary" data-testid="badge-genre">{selectedGenre}</Badge>
+                          <Badge variant="secondary" data-testid="badge-mood">{selectedMood}</Badge>
+                          {bpm && <Badge variant="outline" data-testid="badge-bpm">{bpm} BPM</Badge>}
+                          {musicalKey && <Badge variant="outline" data-testid="badge-key">{musicalKey}</Badge>}
+                        </div>
                       </motion.div>
                     ) : (
                       <motion.div
@@ -391,6 +662,7 @@ export default function Studio() {
                         <div className="text-center text-muted-foreground">
                           <Headphones className="w-12 h-12 mx-auto mb-2 opacity-30" />
                           <p className="text-sm" data-testid="text-no-audio">No audio generated yet</p>
+                          <p className="text-xs mt-1">Start with a 15s sample to preview</p>
                         </div>
                       </motion.div>
                     )}

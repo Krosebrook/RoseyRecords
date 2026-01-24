@@ -10,6 +10,7 @@ import { registerImageRoutes } from "./replit_integrations/image";
 import OpenAI from "openai";
 import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
+import * as stableAudioService from "./services/stableAudio";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -583,6 +584,151 @@ Also suggest a fitting title for the song.`;
         return res.status(503).json({ message: "Audio generation is not configured" });
       }
       res.status(500).json({ message: "Failed to generate sound effect" });
+    }
+  });
+
+  // ==========================================
+  // STABLE AUDIO ROUTES (Extended Duration)
+  // ==========================================
+
+  // POST /api/stable-audio/sample - Generate a 15s sample preview
+  app.post('/api/stable-audio/sample', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, genre, mood, bpm, key, instrumental } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const result = await stableAudioService.generateSample({
+        prompt,
+        genre,
+        mood,
+        bpm,
+        key,
+        instrumental: instrumental ?? true
+      });
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating sample:", err);
+      if (err instanceof Error && err.message.includes("FAL_KEY")) {
+        return res.status(503).json({ message: "Stable Audio is not configured. Please add FAL_KEY." });
+      }
+      res.status(500).json({ message: "Failed to generate sample" });
+    }
+  });
+
+  // POST /api/stable-audio/full - Generate full track (up to 3 minutes)
+  app.post('/api/stable-audio/full', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration, genre, mood, bpm, key, instrumental, useV25 } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      let result;
+      if (useV25 && duration > 47) {
+        result = await stableAudioService.generateWithStableAudio25({
+          prompt,
+          duration: duration || 60,
+          genre,
+          mood,
+          bpm,
+          key,
+          instrumental: instrumental ?? true
+        });
+      } else {
+        result = await stableAudioService.generateFullTrack({
+          prompt,
+          duration: Math.min(duration || 47, 47),
+          genre,
+          mood,
+          bpm,
+          key,
+          instrumental: instrumental ?? true
+        });
+      }
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating full track:", err);
+      if (err instanceof Error && err.message.includes("FAL_KEY")) {
+        return res.status(503).json({ message: "Stable Audio is not configured. Please add FAL_KEY." });
+      }
+      res.status(500).json({ message: "Failed to generate full track" });
+    }
+  });
+
+  // POST /api/stable-audio/start - Start async generation for longer tracks
+  app.post('/api/stable-audio/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration, genre, mood, bpm, key, instrumental } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const requestId = await stableAudioService.startAsyncGeneration({
+        prompt,
+        duration: duration || 120,
+        genre,
+        mood,
+        bpm,
+        key,
+        instrumental: instrumental ?? true
+      });
+      
+      res.json({ requestId });
+    } catch (err) {
+      console.error("Error starting async generation:", err);
+      if (err instanceof Error && err.message.includes("FAL_KEY")) {
+        return res.status(503).json({ message: "Stable Audio is not configured. Please add FAL_KEY." });
+      }
+      res.status(500).json({ message: "Failed to start generation" });
+    }
+  });
+
+  // GET /api/stable-audio/status/:requestId - Check async generation status
+  app.get('/api/stable-audio/status/:requestId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { requestId } = req.params;
+      
+      if (!requestId) {
+        return res.status(400).json({ message: "Request ID is required" });
+      }
+      
+      const status = await stableAudioService.checkAsyncStatus(requestId);
+      res.json(status);
+    } catch (err) {
+      console.error("Error checking async status:", err);
+      res.status(500).json({ message: "Failed to check status" });
+    }
+  });
+
+  // POST /api/stable-audio/transform - Transform existing audio
+  app.post('/api/stable-audio/transform', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, audioUrl, duration } = req.body;
+      
+      if (!prompt || !audioUrl) {
+        return res.status(400).json({ message: "Prompt and audioUrl are required" });
+      }
+      
+      const result = await stableAudioService.transformAudio({
+        prompt,
+        audioUrl,
+        duration
+      });
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error transforming audio:", err);
+      if (err instanceof Error && err.message.includes("FAL_KEY")) {
+        return res.status(503).json({ message: "Stable Audio is not configured. Please add FAL_KEY." });
+      }
+      res.status(500).json({ message: "Failed to transform audio" });
     }
   });
 

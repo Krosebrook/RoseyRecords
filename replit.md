@@ -14,10 +14,12 @@ Preferred communication style: Simple, everyday language.
 
 ### January 2026
 - Added Gemini AI integration for advanced song concept generation (BPM, key, energy analysis)
-- Added Replicate integration for AI music/audio generation
-- Created Music Studio page with audio generation and music theory tools
+- Added Replicate integration for AI music/audio generation (short clips, 5-30s)
+- Added Stable Audio integration via fal.ai for extended duration tracks (up to 3 minutes)
+- Created Music Studio page with sample-first workflow (15s preview → full track)
 - Added AI engine selector (OpenAI vs Gemini) to Generate page
 - Implemented chord progression generator and scale finder tools
+- Audio player with progress bar and seek functionality for longer tracks
 
 ## System Architecture
 
@@ -74,8 +76,11 @@ Preferred communication style: Simple, everyday language.
 - **Gemini API**: Used for comprehensive song concepts, accessed via Replit AI Integrations
   - Environment variables: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
 
-- **Replicate API**: Used for audio/music generation (MusicGen model)
+- **Replicate API**: Used for short audio/music generation (MusicGen model, 5-30s)
   - Environment variable: `REPLICATE_API_KEY`
+
+- **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
+  - Environment variable: `FAL_KEY`
 
 ### API Routes
 
@@ -92,11 +97,18 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/music-theory/reharmonize` - Reharmonize existing progressions
 - `POST /api/music-theory/lookup-scales` - Identify scales from notes
 
-#### Audio Routes
-- `POST /api/audio/generate` - Synchronous audio generation
+#### Audio Routes (Replicate - Short Clips)
+- `POST /api/audio/generate` - Synchronous audio generation (5-30s)
 - `POST /api/audio/generate/start` - Async audio generation (returns prediction ID)
 - `GET /api/audio/status/:predictionId` - Check generation status
 - `POST /api/audio/sound-effect` - Generate sound effects
+
+#### Stable Audio Routes (fal.ai - Extended Duration)
+- `POST /api/stable-audio/sample` - Generate 15s sample preview
+- `POST /api/stable-audio/full` - Generate full track (up to 3 minutes)
+- `POST /api/stable-audio/start` - Start async generation for longer tracks
+- `GET /api/stable-audio/status/:requestId` - Check async generation status
+- `POST /api/stable-audio/transform` - Transform existing audio
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations
