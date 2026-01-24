@@ -9,6 +9,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import OpenAI from "openai";
 import * as geminiService from "./services/gemini";
+import * as replicateService from "./services/replicate";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -487,6 +488,101 @@ Also suggest a fitting title for the song.`;
     } catch (err) {
       console.error("Error generating cover art prompt:", err);
       res.status(500).json({ message: "Failed to generate prompt" });
+    }
+  });
+
+  // ==========================================
+  // REPLICATE AUDIO GENERATION ROUTES
+  // ==========================================
+
+  // POST /api/audio/generate - Generate music with Replicate
+  app.post('/api/audio/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration, genre, mood, instrumental } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const result = await replicateService.generateMusic({
+        prompt,
+        duration: duration || 10,
+        genre,
+        mood,
+        instrumental: instrumental || false
+      });
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating music:", err);
+      if (err instanceof Error && err.message.includes("REPLICATE_API_KEY")) {
+        return res.status(503).json({ message: "Audio generation is not configured" });
+      }
+      res.status(500).json({ message: "Failed to generate music" });
+    }
+  });
+
+  // POST /api/audio/generate/start - Start async music generation
+  app.post('/api/audio/generate/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration, genre, mood, instrumental } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const predictionId = await replicateService.startMusicGeneration({
+        prompt,
+        duration: duration || 10,
+        genre,
+        mood,
+        instrumental: instrumental || false
+      });
+      
+      res.json({ predictionId });
+    } catch (err) {
+      console.error("Error starting music generation:", err);
+      if (err instanceof Error && err.message.includes("REPLICATE_API_KEY")) {
+        return res.status(503).json({ message: "Audio generation is not configured" });
+      }
+      res.status(500).json({ message: "Failed to start music generation" });
+    }
+  });
+
+  // GET /api/audio/status/:predictionId - Check prediction status
+  app.get('/api/audio/status/:predictionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { predictionId } = req.params;
+      
+      if (!predictionId) {
+        return res.status(400).json({ message: "Prediction ID is required" });
+      }
+      
+      const status = await replicateService.checkPredictionStatus(predictionId);
+      res.json(status);
+    } catch (err) {
+      console.error("Error checking prediction status:", err);
+      res.status(500).json({ message: "Failed to check status" });
+    }
+  });
+
+  // POST /api/audio/sound-effect - Generate a sound effect
+  app.post('/api/audio/sound-effect', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const result = await replicateService.generateSoundEffect(prompt, duration || 5);
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating sound effect:", err);
+      if (err instanceof Error && err.message.includes("REPLICATE_API_KEY")) {
+        return res.status(503).json({ message: "Audio generation is not configured" });
+      }
+      res.status(500).json({ message: "Failed to generate sound effect" });
     }
   });
 
