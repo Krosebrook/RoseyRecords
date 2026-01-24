@@ -8,6 +8,7 @@ import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integra
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import OpenAI from "openai";
+import * as geminiService from "./services/gemini";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -347,6 +348,146 @@ Also suggest a fitting title for the song.`;
   app.get(api.generate.randomLyrics.path, async (req, res) => {
     const randomIndex = Math.floor(Math.random() * RANDOM_LYRICS_SAMPLES.length);
     res.json({ lyrics: RANDOM_LYRICS_SAMPLES[randomIndex] });
+  });
+
+  // ==========================================
+  // GEMINI-POWERED MUSIC THEORY ROUTES
+  // ==========================================
+
+  // POST /api/generate/song-concept - Generate full song concept with Gemini
+  app.post('/api/generate/song-concept', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, genre, mood } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const concept = await geminiService.generateSongConcept(prompt, genre, mood);
+      res.json(concept);
+    } catch (err) {
+      console.error("Error generating song concept:", err);
+      res.status(500).json({ message: "Failed to generate song concept" });
+    }
+  });
+
+  // POST /api/generate/lyrics-gemini - Generate lyrics with Gemini
+  app.post('/api/generate/lyrics-gemini', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, genre, mood } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const result = await geminiService.generateLyricsOnly(prompt, genre, mood);
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating lyrics with Gemini:", err);
+      res.status(500).json({ message: "Failed to generate lyrics" });
+    }
+  });
+
+  // POST /api/music-theory/chord-progression - Suggest chord progression
+  app.post('/api/music-theory/chord-progression', isAuthenticated, async (req: any, res) => {
+    try {
+      const { mood, key } = req.body;
+      
+      if (!mood || !key) {
+        return res.status(400).json({ message: "Mood and key are required" });
+      }
+      
+      const progression = await geminiService.suggestChordProgression(mood, key);
+      res.json({ progression });
+    } catch (err) {
+      console.error("Error generating chord progression:", err);
+      res.status(500).json({ message: "Failed to generate chord progression" });
+    }
+  });
+
+  // POST /api/music-theory/reharmonize - Reharmonize existing progression
+  app.post('/api/music-theory/reharmonize', isAuthenticated, async (req: any, res) => {
+    try {
+      const { progression, key } = req.body;
+      
+      if (!progression || !key) {
+        return res.status(400).json({ message: "Progression and key are required" });
+      }
+      
+      const reharmonized = await geminiService.reharmonizeProgression(progression, key);
+      res.json({ progression: reharmonized });
+    } catch (err) {
+      console.error("Error reharmonizing:", err);
+      res.status(500).json({ message: "Failed to reharmonize" });
+    }
+  });
+
+  // POST /api/music-theory/lookup-scales - Identify scales from notes
+  app.post('/api/music-theory/lookup-scales', isAuthenticated, async (req: any, res) => {
+    try {
+      const { notes } = req.body;
+      
+      if (!notes || !Array.isArray(notes) || notes.length < 2) {
+        return res.status(400).json({ message: "At least 2 notes are required" });
+      }
+      
+      const results = await geminiService.lookupScales(notes);
+      res.json({ results });
+    } catch (err) {
+      console.error("Error looking up scales:", err);
+      res.status(500).json({ message: "Failed to identify scales" });
+    }
+  });
+
+  // POST /api/generate/production-tips - Get AI production tips
+  app.post('/api/generate/production-tips', isAuthenticated, async (req: any, res) => {
+    try {
+      const { genre, mood, energy } = req.body;
+      
+      if (!genre || !mood) {
+        return res.status(400).json({ message: "Genre and mood are required" });
+      }
+      
+      const tip = await geminiService.getProductionTips(genre, mood, energy || "medium");
+      res.json({ tip });
+    } catch (err) {
+      console.error("Error getting production tips:", err);
+      res.status(500).json({ message: "Failed to get production tips" });
+    }
+  });
+
+  // POST /api/generate/analyze-lyrics - Analyze lyrics for themes and suggestions
+  app.post('/api/generate/analyze-lyrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const { lyrics } = req.body;
+      
+      if (!lyrics) {
+        return res.status(400).json({ message: "Lyrics are required" });
+      }
+      
+      const analysis = await geminiService.analyzeLyrics(lyrics);
+      res.json(analysis);
+    } catch (err) {
+      console.error("Error analyzing lyrics:", err);
+      res.status(500).json({ message: "Failed to analyze lyrics" });
+    }
+  });
+
+  // POST /api/generate/cover-art-prompt - Generate album art prompt
+  app.post('/api/generate/cover-art-prompt', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, genre, mood } = req.body;
+      
+      if (!title || !genre || !mood) {
+        return res.status(400).json({ message: "Title, genre, and mood are required" });
+      }
+      
+      const prompt = await geminiService.generateCoverArtPrompt(title, genre, mood);
+      res.json({ prompt });
+    } catch (err) {
+      console.error("Error generating cover art prompt:", err);
+      res.status(500).json({ message: "Failed to generate prompt" });
+    }
   });
 
   return httpServer;

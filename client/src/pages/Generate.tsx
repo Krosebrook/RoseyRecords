@@ -2,11 +2,15 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useChatGeneration } from "@/hooks/use-chat-generation";
 import { useCreateSong } from "@/hooks/use-songs";
-import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, ChevronDown, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, ChevronDown, Check, Sparkles, Zap, Music, Lightbulb } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+
+type AIEngine = "openai" | "gemini";
 
 export default function Generate() {
   const { generateLyrics, getRandomPrompt, isGenerating, currentLyrics, setCurrentLyrics } = useChatGeneration();
@@ -21,13 +25,65 @@ export default function Generate() {
   const [isPublic, setIsPublic] = useState(false);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const [showMoodDropdown, setShowMoodDropdown] = useState(false);
+  
+  const [aiEngine, setAiEngine] = useState<AIEngine>("openai");
+  const [isGeneratingLocal, setIsGeneratingLocal] = useState(false);
+  const [productionTip, setProductionTip] = useState<string | null>(null);
+  const [songMetadata, setSongMetadata] = useState<{
+    bpm?: number;
+    key?: string;
+    energy?: string;
+  } | null>(null);
 
   const handleGenerate = async () => {
     if (!topic) return;
-    const result = await generateLyrics(topic, genre, mood);
-    if (result) {
-      setGeneratedContent(result.lyrics);
-      setGeneratedTitle(result.title);
+    setIsGeneratingLocal(true);
+    setProductionTip(null);
+    setSongMetadata(null);
+    
+    try {
+      if (aiEngine === "openai") {
+        const result = await generateLyrics(topic, genre, mood);
+        if (result) {
+          setGeneratedContent(result.lyrics);
+          setGeneratedTitle(result.title);
+        }
+      } else {
+        const response = await apiRequest("POST", "/api/generate/song-concept", {
+          prompt: topic,
+          genre,
+          mood
+        });
+        const data = await response.json();
+        setGeneratedContent(data.lyrics);
+        setGeneratedTitle(data.title);
+        setSongMetadata({
+          bpm: data.bpm,
+          key: data.key,
+          energy: data.energy
+        });
+        
+        try {
+          const tipResponse = await apiRequest("POST", "/api/generate/production-tips", {
+            genre: data.genre || genre,
+            mood: data.mood || mood,
+            energy: data.energy || "medium"
+          });
+          const tipData = await tipResponse.json();
+          setProductionTip(tipData.tip);
+        } catch (e) {
+          console.error("Failed to get production tip:", e);
+        }
+      }
+    } catch (error) {
+      console.error("Generation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: "Please try again."
+      });
+    } finally {
+      setIsGeneratingLocal(false);
     }
   };
 
@@ -57,6 +113,8 @@ export default function Generate() {
     });
   };
 
+  const loading = isGenerating || isGeneratingLocal;
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)]">
@@ -72,6 +130,47 @@ export default function Generate() {
             </div>
 
             <div className="space-y-4">
+              {/* AI Engine Toggle */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  AI Engine
+                </label>
+                <div className="flex gap-2 p-1 bg-muted/50 rounded-xl">
+                  <button
+                    onClick={() => setAiEngine("openai")}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      aiEngine === "openai"
+                        ? "bg-primary text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    data-testid="button-engine-openai"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    OpenAI
+                  </button>
+                  <button
+                    onClick={() => setAiEngine("gemini")}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      aiEngine === "gemini"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    data-testid="button-engine-gemini"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Gemini
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {aiEngine === "gemini" 
+                    ? "Full song concept with BPM, key, and production tips" 
+                    : "Fast lyrics generation with GPT-4o"}
+                </p>
+              </div>
+
               {/* Topic Input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -108,32 +207,35 @@ export default function Generate() {
                   <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", showGenreDropdown && "rotate-180")} />
                 </button>
                 
-                {showGenreDropdown && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="grid grid-cols-2 gap-1">
-                      {GENRES.map(g => (
-                        <button
-                          key={g}
-                          onClick={() => { setGenre(g); setShowGenreDropdown(false); }}
-                          className={cn(
-                            "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
-                            genre === g 
-                              ? "bg-primary text-white" 
-                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                          )}
-                          data-testid={`option-genre-${g.toLowerCase().replace(/\s+/g, '-')}`}
-                        >
-                          {genre === g && <Check className="w-3 h-3" />}
-                          {g}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {showGenreDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
+                    >
+                      <div className="grid grid-cols-2 gap-1">
+                        {GENRES.map(g => (
+                          <button
+                            key={g}
+                            onClick={() => { setGenre(g); setShowGenreDropdown(false); }}
+                            className={cn(
+                              "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
+                              genre === g 
+                                ? "bg-primary text-white" 
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                            )}
+                            data-testid={`option-genre-${g.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            {genre === g && <Check className="w-3 h-3" />}
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Mood Selection */}
@@ -150,32 +252,35 @@ export default function Generate() {
                   <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", showMoodDropdown && "rotate-180")} />
                 </button>
                 
-                {showMoodDropdown && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="grid grid-cols-2 gap-1">
-                      {MOODS.map(m => (
-                        <button
-                          key={m}
-                          onClick={() => { setMood(m); setShowMoodDropdown(false); }}
-                          className={cn(
-                            "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
-                            mood === m 
-                              ? "bg-primary text-white" 
-                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                          )}
-                          data-testid={`option-mood-${m.toLowerCase().replace(/\s+/g, '-')}`}
-                        >
-                          {mood === m && <Check className="w-3 h-3" />}
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {showMoodDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
+                    >
+                      <div className="grid grid-cols-2 gap-1">
+                        {MOODS.map(m => (
+                          <button
+                            key={m}
+                            onClick={() => { setMood(m); setShowMoodDropdown(false); }}
+                            className={cn(
+                              "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
+                              mood === m 
+                                ? "bg-primary text-white" 
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                            )}
+                            data-testid={`option-mood-${m.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            {mood === m && <Check className="w-3 h-3" />}
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Visibility Toggle */}
@@ -200,29 +305,29 @@ export default function Generate() {
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleGenerate}
-              disabled={isGenerating || !topic}
+              disabled={loading || !topic}
               className={cn(
-                "mt-auto w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all",
-                isGenerating || !topic
-                  ? "bg-muted text-muted-foreground cursor-not-allowed"
-                  : "bg-gradient-to-r from-primary to-secondary text-white hover:scale-[1.02] neon-shadow"
+                "mt-auto w-full py-6 rounded-xl font-bold text-lg",
+                aiEngine === "gemini" 
+                  ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" 
+                  : "bg-gradient-to-r from-primary to-secondary"
               )}
               data-testid="button-generate"
             >
-              {isGenerating ? (
+              {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Generating...
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  {aiEngine === "gemini" ? "Creating Song Concept..." : "Generating..."}
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-5 h-5" />
-                  Generate Lyrics
+                  {aiEngine === "gemini" ? <Sparkles className="w-5 h-5 mr-2" /> : <Wand2 className="w-5 h-5 mr-2" />}
+                  Generate {aiEngine === "gemini" ? "Song Concept" : "Lyrics"}
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -232,28 +337,63 @@ export default function Generate() {
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
-                  <Disc className={cn("w-5 h-5", isGenerating ? "animate-spin text-primary" : "text-muted-foreground")} />
+                  <Disc className={cn("w-5 h-5", loading ? "animate-spin text-primary" : "text-muted-foreground")} />
                 </div>
                 <div>
                   <h3 className="font-bold" data-testid="text-song-title">
                     {generatedTitle || topic || "New Song"}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{genre} • {mood}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{genre}</span>
+                    <span>•</span>
+                    <span>{mood}</span>
+                    {songMetadata?.bpm && (
+                      <>
+                        <span>•</span>
+                        <span>{songMetadata.bpm} BPM</span>
+                      </>
+                    )}
+                    {songMetadata?.key && (
+                      <>
+                        <span>•</span>
+                        <span>{songMetadata.key}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {generatedContent && (
-                <button
+                <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all flex items-center gap-2 text-sm font-medium"
                   data-testid="button-save"
                 >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Save to Library
-                </button>
+                </Button>
               )}
             </div>
+
+            {/* Production Tip */}
+            <AnimatePresence>
+              {productionTip && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-4 p-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20"
+                >
+                  <div className="flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Production Tip</p>
+                      <p className="text-sm text-foreground/80">{productionTip}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar relative" data-testid="container-lyrics">
               {(currentLyrics || generatedContent) ? (
