@@ -20,6 +20,8 @@ Preferred communication style: Simple, everyday language.
 - Added AI engine selector (OpenAI vs Gemini) to Generate page
 - Implemented chord progression generator and scale finder tools
 - Audio player with progress bar and seek functionality for longer tracks
+- Added ElevenLabs integration for AI vocal synthesis (text-to-speech/singing)
+- Added Vocals tab to Studio page with voice selection, stability, and similarity controls
 
 ## System Architecture
 
@@ -80,7 +82,10 @@ Preferred communication style: Simple, everyday language.
   - Environment variable: `REPLICATE_API_KEY`
 
 - **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
-  - Environment variable: `FAL_KEY`
+  - Environment variable: `FAL_API_KEY` or `FAL_KEY`
+
+- **ElevenLabs**: Used for AI vocal synthesis (text-to-speech, singing vocals)
+  - Environment variable: `ELEVENLABS_API_KEY`
 
 ### API Routes
 
@@ -109,6 +114,12 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/stable-audio/start` - Start async generation for longer tracks
 - `GET /api/stable-audio/status/:requestId` - Check async generation status
 - `POST /api/stable-audio/transform` - Transform existing audio
+
+#### ElevenLabs Routes (Vocals)
+- `GET /api/elevenlabs/voices` - List available voices
+- `POST /api/elevenlabs/text-to-speech` - Generate vocals from text
+- `POST /api/elevenlabs/sound-effect` - Generate sound effects
+- `GET /api/elevenlabs/status` - Check if ElevenLabs is configured
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations

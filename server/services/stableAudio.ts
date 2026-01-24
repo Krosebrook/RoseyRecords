@@ -1,6 +1,7 @@
 import { fal } from "@fal-ai/client";
 
-const FAL_KEY = process.env.FAL_KEY;
+// Support both FAL_API_KEY and FAL_KEY for compatibility
+const FAL_KEY = process.env.FAL_API_KEY || process.env.FAL_KEY;
 
 if (FAL_KEY) {
   fal.config({ credentials: FAL_KEY });

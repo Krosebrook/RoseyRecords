@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward } from "lucide-react";
+import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward, Mic } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -86,6 +87,24 @@ export default function Studio() {
   
   const [productionTip, setProductionTip] = useState<string | null>(null);
   const [isGettingTip, setIsGettingTip] = useState(false);
+
+  // Vocals state
+  interface VoiceInfo {
+    voice_id: string;
+    name: string;
+    category: string;
+    labels: Record<string, string>;
+  }
+  const [vocalsText, setVocalsText] = useState("");
+  const [voices, setVoices] = useState<VoiceInfo[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState("");
+  const [stability, setStability] = useState(0.5);
+  const [similarityBoost, setSimilarityBoost] = useState(0.75);
+  const [isGeneratingVocals, setIsGeneratingVocals] = useState(false);
+  const [vocalsUrl, setVocalsUrl] = useState<string | null>(null);
+  const [elevenlabsConfigured, setElevenlabsConfigured] = useState(false);
+  const vocalsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlayingVocals, setIsPlayingVocals] = useState(false);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -378,6 +397,99 @@ export default function Studio() {
     }
   };
 
+  // ElevenLabs functions
+  useEffect(() => {
+    const checkElevenlabs = async () => {
+      try {
+        const res = await fetch("/api/elevenlabs/status", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setElevenlabsConfigured(data.configured);
+          if (data.configured) {
+            fetchVoices();
+          }
+        }
+      } catch {
+        setElevenlabsConfigured(false);
+      }
+    };
+    checkElevenlabs();
+  }, []);
+
+  const fetchVoices = async () => {
+    try {
+      const res = await fetch("/api/elevenlabs/voices", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setVoices(data.voices || []);
+        if (data.voices?.length > 0) {
+          setSelectedVoice(data.voices[0].voice_id);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch voices:", err);
+    }
+  };
+
+  const handleGenerateVocals = async () => {
+    if (!vocalsText.trim()) {
+      toast({ title: "Please enter lyrics", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingVocals(true);
+    try {
+      const response = await apiRequest("POST", "/api/elevenlabs/text-to-speech", {
+        text: vocalsText.trim(),
+        voiceId: selectedVoice,
+        stability,
+        similarityBoost
+      });
+      const data = await response.json();
+      setVocalsUrl(data.audioUrl);
+      toast({ title: "Vocals generated successfully!" });
+    } catch (err) {
+      console.error("Vocals generation error:", err);
+      toast({ title: "Failed to generate vocals", variant: "destructive" });
+    } finally {
+      setIsGeneratingVocals(false);
+    }
+  };
+
+  // Update vocals audio when URL changes
+  useEffect(() => {
+    if (vocalsAudioRef.current) {
+      vocalsAudioRef.current.pause();
+      vocalsAudioRef.current = null;
+    }
+    setIsPlayingVocals(false);
+    
+    if (vocalsUrl) {
+      const audio = new Audio(vocalsUrl);
+      audio.onended = () => setIsPlayingVocals(false);
+      vocalsAudioRef.current = audio;
+    }
+    
+    return () => {
+      if (vocalsAudioRef.current) {
+        vocalsAudioRef.current.pause();
+        vocalsAudioRef.current = null;
+      }
+    };
+  }, [vocalsUrl]);
+
+  const toggleVocalsPlayback = () => {
+    if (!vocalsUrl || !vocalsAudioRef.current) return;
+    
+    if (isPlayingVocals) {
+      vocalsAudioRef.current.pause();
+      setIsPlayingVocals(false);
+    } else {
+      vocalsAudioRef.current.play();
+      setIsPlayingVocals(true);
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -392,14 +504,18 @@ export default function Studio() {
         </div>
 
         <Tabs defaultValue="audio" className="space-y-4">
-          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+          <TabsList className="grid w-full max-w-[500px] grid-cols-3">
             <TabsTrigger value="audio" className="flex items-center gap-2" data-testid="tab-audio">
               <Headphones className="w-4 h-4" />
-              Audio Generation
+              Audio
+            </TabsTrigger>
+            <TabsTrigger value="vocals" className="flex items-center gap-2" data-testid="tab-vocals">
+              <Mic className="w-4 h-4" />
+              Vocals
             </TabsTrigger>
             <TabsTrigger value="theory" className="flex items-center gap-2" data-testid="tab-theory">
               <Piano className="w-4 h-4" />
-              Music Theory
+              Theory
             </TabsTrigger>
           </TabsList>
 
@@ -701,6 +817,160 @@ export default function Studio() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Vocals Tab */}
+          <TabsContent value="vocals" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mic className="w-5 h-5 text-primary" />
+                    AI Vocals
+                  </CardTitle>
+                  <CardDescription data-testid="text-vocals-description">
+                    Generate realistic singing vocals from lyrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!elevenlabsConfigured ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>ElevenLabs is not configured</p>
+                      <p className="text-sm mt-2">Add your ELEVENLABS_API_KEY to enable vocal generation</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="vocals-text">Lyrics to sing</Label>
+                        <Textarea
+                          id="vocals-text"
+                          value={vocalsText}
+                          onChange={(e) => setVocalsText(e.target.value)}
+                          placeholder="Enter the lyrics you want to turn into vocals..."
+                          className="min-h-[120px] resize-none"
+                          data-testid="input-vocals-text"
+                        />
+                        <p className="text-xs text-muted-foreground">{vocalsText.length}/5000 characters</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Voice</Label>
+                        <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                          <SelectTrigger data-testid="select-voice">
+                            <SelectValue placeholder="Select a voice" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {voices.map(v => (
+                              <SelectItem key={v.voice_id} value={v.voice_id}>
+                                {v.name} ({v.category})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Stability: {stability.toFixed(2)}</Label>
+                          <Slider
+                            value={[stability]}
+                            onValueChange={([v]) => setStability(v)}
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            data-testid="slider-stability"
+                          />
+                          <p className="text-xs text-muted-foreground">Higher = more consistent, lower = more expressive</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Similarity: {similarityBoost.toFixed(2)}</Label>
+                          <Slider
+                            value={[similarityBoost]}
+                            onValueChange={([v]) => setSimilarityBoost(v)}
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            data-testid="slider-similarity"
+                          />
+                          <p className="text-xs text-muted-foreground">Higher = closer to original voice</p>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleGenerateVocals}
+                        disabled={isGeneratingVocals || !vocalsText.trim()}
+                        className="w-full"
+                        data-testid="button-generate-vocals"
+                      >
+                        {isGeneratingVocals ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating Vocals...
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-4 h-4 mr-2" />
+                            Generate Vocals
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Vocals Preview Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Headphones className="w-5 h-5 text-primary" />
+                    Preview
+                  </CardTitle>
+                  <CardDescription>Listen to your generated vocals</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {vocalsUrl ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4 p-4 bg-secondary/20 rounded-lg">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={toggleVocalsPlayback}
+                          data-testid="button-play-vocals"
+                        >
+                          {isPlayingVocals ? (
+                            <Pause className="w-5 h-5" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                        </Button>
+                        <div className="flex-1">
+                          <p className="font-medium">Generated Vocals</p>
+                          <p className="text-sm text-muted-foreground">AI-generated singing</p>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          asChild
+                          data-testid="button-download-vocals"
+                        >
+                          <a href={vocalsUrl} download="vocals.mp3">
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground" data-testid="text-no-vocals">
+                      <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No vocals generated yet</p>
+                      <p className="text-sm mt-2">Enter lyrics and generate to hear AI singing</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="theory" className="space-y-4">
