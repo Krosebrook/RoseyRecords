@@ -308,12 +308,8 @@ export default function Generate() {
             <Button
               onClick={handleGenerate}
               disabled={loading || !topic}
-              className={cn(
-                "mt-auto w-full py-6 rounded-xl font-bold text-lg",
-                aiEngine === "gemini" 
-                  ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" 
-                  : "bg-gradient-to-r from-primary to-secondary"
-              )}
+              size="lg"
+              className="mt-auto w-full font-bold"
               data-testid="button-generate"
             >
               {loading ? (
