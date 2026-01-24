@@ -1,27 +1,57 @@
 import { db } from "./db";
 import {
   songs,
+  playlists,
+  playlistSongs,
+  songLikes,
   type Song,
   type InsertSong,
-  type UpdateSongRequest
+  type UpdateSongRequest,
+  type Playlist,
+  type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
   getSongs(userId: string): Promise<Song[]>;
+  getPublicSongs(): Promise<Song[]>;
   getSong(id: number): Promise<Song | undefined>;
   createSong(song: InsertSong): Promise<Song>;
   updateSong(id: number, updates: UpdateSongRequest): Promise<Song>;
   deleteSong(id: number): Promise<void>;
+  incrementPlayCount(id: number): Promise<number>;
+  
+  // Likes
+  toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }>;
+  isLiked(userId: string, songId: number): Promise<boolean>;
+  getLikedSongs(userId: string): Promise<Song[]>;
+  
+  // Playlist CRUD
+  getPlaylists(userId: string): Promise<Playlist[]>;
+  getPlaylist(id: number): Promise<Playlist | undefined>;
+  getPlaylistWithSongs(id: number): Promise<(Playlist & { songs: Song[] }) | undefined>;
+  createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
+  deletePlaylist(id: number): Promise<void>;
+  addSongToPlaylist(playlistId: number, songId: number): Promise<void>;
+  removeSongFromPlaylist(playlistId: number, songId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // === Songs ===
   async getSongs(userId: string): Promise<Song[]> {
     return await db.select()
       .from(songs)
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
+  }
+
+  async getPublicSongs(): Promise<Song[]> {
+    return await db.select()
+      .from(songs)
+      .where(eq(songs.isPublic, true))
+      .orderBy(desc(songs.playCount))
+      .limit(50);
   }
 
   async getSong(id: number): Promise<Song | undefined> {
@@ -44,6 +74,120 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSong(id: number): Promise<void> {
     await db.delete(songs).where(eq(songs.id, id));
+  }
+
+  async incrementPlayCount(id: number): Promise<number> {
+    const song = await this.getSong(id);
+    if (!song) return 0;
+    
+    const newCount = (song.playCount || 0) + 1;
+    await db.update(songs)
+      .set({ playCount: newCount })
+      .where(eq(songs.id, id));
+    return newCount;
+  }
+
+  // === Likes ===
+  async toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }> {
+    const [existingLike] = await db.select()
+      .from(songLikes)
+      .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
+
+    const song = await this.getSong(songId);
+    if (!song) return { liked: false, likeCount: 0 };
+
+    if (existingLike) {
+      // Unlike
+      await db.delete(songLikes)
+        .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
+      const newCount = Math.max(0, (song.likeCount || 0) - 1);
+      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
+      return { liked: false, likeCount: newCount };
+    } else {
+      // Like
+      await db.insert(songLikes).values({ userId, songId });
+      const newCount = (song.likeCount || 0) + 1;
+      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
+      return { liked: true, likeCount: newCount };
+    }
+  }
+
+  async isLiked(userId: string, songId: number): Promise<boolean> {
+    const [like] = await db.select()
+      .from(songLikes)
+      .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
+    return !!like;
+  }
+
+  async getLikedSongs(userId: string): Promise<Song[]> {
+    const likes = await db.select({ songId: songLikes.songId })
+      .from(songLikes)
+      .where(eq(songLikes.userId, userId));
+    
+    if (likes.length === 0) return [];
+    
+    const songIds = likes.map(l => l.songId);
+    const likedSongs: Song[] = [];
+    for (const id of songIds) {
+      const song = await this.getSong(id);
+      if (song) likedSongs.push(song);
+    }
+    return likedSongs;
+  }
+
+  // === Playlists ===
+  async getPlaylists(userId: string): Promise<Playlist[]> {
+    return await db.select()
+      .from(playlists)
+      .where(eq(playlists.userId, userId))
+      .orderBy(desc(playlists.createdAt));
+  }
+
+  async getPlaylist(id: number): Promise<Playlist | undefined> {
+    const [playlist] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return playlist;
+  }
+
+  async getPlaylistWithSongs(id: number): Promise<(Playlist & { songs: Song[] }) | undefined> {
+    const playlist = await this.getPlaylist(id);
+    if (!playlist) return undefined;
+
+    const playlistSongRows = await db.select({ songId: playlistSongs.songId })
+      .from(playlistSongs)
+      .where(eq(playlistSongs.playlistId, id));
+
+    const songsList: Song[] = [];
+    for (const row of playlistSongRows) {
+      const song = await this.getSong(row.songId);
+      if (song) songsList.push(song);
+    }
+
+    return { ...playlist, songs: songsList };
+  }
+
+  async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
+    const [playlist] = await db.insert(playlists).values(insertPlaylist).returning();
+    return playlist;
+  }
+
+  async deletePlaylist(id: number): Promise<void> {
+    await db.delete(playlists).where(eq(playlists.id, id));
+  }
+
+  async addSongToPlaylist(playlistId: number, songId: number): Promise<void> {
+    // Check if already exists
+    const [existing] = await db.select()
+      .from(playlistSongs)
+      .where(and(eq(playlistSongs.playlistId, playlistId), eq(playlistSongs.songId, songId)));
+    
+    if (!existing) {
+      await db.insert(playlistSongs).values({ playlistId, songId });
+    }
+  }
+
+  async removeSongFromPlaylist(playlistId: number, songId: number): Promise<void> {
+    await db.delete(playlistSongs)
+      .where(and(eq(playlistSongs.playlistId, playlistId), eq(playlistSongs.songId, songId)));
   }
 }
 

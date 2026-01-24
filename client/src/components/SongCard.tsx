@@ -1,9 +1,9 @@
 import { Link } from "wouter";
-import { Music, Calendar, Trash2 } from "lucide-react";
+import { Music, Calendar, Trash2, Globe, Lock } from "lucide-react";
 import { type Song } from "@shared/schema";
 import { format } from "date-fns";
-import { useState } from "react";
 import { useDeleteSong } from "@/hooks/use-songs";
+import { Button } from "@/components/ui/button";
 
 interface SongCardProps {
   song: Song;
@@ -11,7 +11,6 @@ interface SongCardProps {
 
 export function SongCard({ song }: SongCardProps) {
   const { mutate: deleteSong, isPending } = useDeleteSong();
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -22,9 +21,8 @@ export function SongCard({ song }: SongCardProps) {
   };
 
   return (
-    <Link href={`/songs/${song.id}`} className="block group">
+    <Link href={`/songs/${song.id}`} className="block group" data-testid={`card-song-${song.id}`}>
       <div className="glass-panel rounded-2xl p-6 h-full transition-all duration-300 hover:scale-[1.02] hover:border-primary/30 relative overflow-hidden">
-        {/* Decorative gradient blob */}
         <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
         
         <div className="relative z-10 flex flex-col h-full">
@@ -33,20 +31,34 @@ export function SongCard({ song }: SongCardProps) {
               <Music className="w-6 h-6" />
             </div>
             
-            <button
-              onClick={handleDelete}
-              disabled={isPending}
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {song.isPublic ? (
+                <span className="p-2 text-primary" title="Public">
+                  <Globe className="w-4 h-4" />
+                </span>
+              ) : (
+                <span className="p-2 text-muted-foreground" title="Private">
+                  <Lock className="w-4 h-4" />
+                </span>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                data-testid={`button-delete-${song.id}`}
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            </div>
           </div>
           
-          <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+          <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors" data-testid={`text-title-${song.id}`}>
             {song.title}
           </h3>
           
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             {song.genre && (
               <span className="px-2 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-medium uppercase tracking-wider">
                 {song.genre}
@@ -59,7 +71,7 @@ export function SongCard({ song }: SongCardProps) {
             )}
           </div>
           
-          <p className="text-muted-foreground text-sm line-clamp-3 mb-auto font-mono opacity-80">
+          <p className="text-muted-foreground text-sm line-clamp-3 mb-auto font-mono opacity-80" data-testid={`text-lyrics-preview-${song.id}`}>
             {song.lyrics}
           </p>
           

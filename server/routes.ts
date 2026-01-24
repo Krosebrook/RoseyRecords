@@ -2,10 +2,57 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
+
+// Random prompt ideas for inspiration
+const PROMPT_IDEAS = [
+  "A love song about meeting someone at a coffee shop on a rainy day",
+  "An upbeat anthem about chasing your dreams despite the odds",
+  "A melancholic ballad about leaving your hometown",
+  "A party song about a wild night in the city",
+  "A peaceful acoustic track about watching the sunset",
+  "A motivational hip-hop song about rising from nothing",
+  "A rock anthem about standing up for what you believe in",
+  "A dreamy pop song about summer memories",
+  "A country song about life on the open road",
+  "An electronic track about dancing till dawn",
+];
+
+const RANDOM_LYRICS_SAMPLES = [
+  `Verse 1:
+Walking down these empty streets at night
+City lights reflecting in my eyes
+Every step I take brings me closer
+To the dreams I've been chasing all my life
+
+Chorus:
+We're unstoppable, we're infinite
+Nothing can hold us down tonight
+We're unstoppable, we're infinite
+Burning brighter than the stars so bright`,
+
+  `Verse 1:
+Raindrops on my window, thoughts of you
+Every song reminds me what we had
+Now I'm standing here without a clue
+Missing every moment, good and bad
+
+Chorus:
+Come back to me, I need you here
+These empty nights are filled with tears
+Come back to me, don't disappear
+I'm lost without you, crystal clear`,
+];
 
 export async function registerRoutes(
   httpServer: Server,
@@ -19,26 +66,34 @@ export async function registerRoutes(
   registerChatRoutes(app);
   registerImageRoutes(app);
 
-  // 3. Songs Routes
+  // ==========================================
+  // SONG ROUTES
+  // ==========================================
   
-  // GET /api/songs
+  // GET /api/songs - User's songs
   app.get(api.songs.list.path, isAuthenticated, async (req: any, res) => {
     const userId = req.user.claims.sub;
-    const songs = await storage.getSongs(userId);
-    res.json(songs);
+    const userSongs = await storage.getSongs(userId);
+    res.json(userSongs);
+  });
+
+  // GET /api/songs/public - Public songs for explore
+  app.get(api.songs.listPublic.path, async (req, res) => {
+    const publicSongs = await storage.getPublicSongs();
+    res.json(publicSongs);
   });
 
   // GET /api/songs/:id
   app.get(api.songs.get.path, isAuthenticated, async (req: any, res) => {
-    const userId = req.user.claims.sub;
     const song = await storage.getSong(Number(req.params.id));
     
     if (!song) {
       return res.status(404).json({ message: 'Song not found' });
     }
     
-    // Ensure user owns the song
-    if (song.userId !== userId) {
+    // Allow access if public or user owns it
+    const userId = req.user.claims.sub;
+    if (!song.isPublic && song.userId !== userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
     
@@ -48,12 +103,12 @@ export async function registerRoutes(
   // POST /api/songs
   app.post(api.songs.create.path, isAuthenticated, async (req: any, res) => {
     try {
-      const input = api.songs.create.input.parse({
-        ...req.body,
-        userId: req.user.claims.sub // Force userId from session
-      });
+      const input = api.songs.create.input.parse(req.body);
       
-      const song = await storage.createSong(input);
+      const song = await storage.createSong({
+        ...input,
+        userId: req.user.claims.sub
+      });
       res.status(201).json(song);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -81,6 +136,217 @@ export async function registerRoutes(
 
     await storage.deleteSong(Number(req.params.id));
     res.status(204).send();
+  });
+
+  // POST /api/songs/:id/like
+  app.post(api.songs.like.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const songId = Number(req.params.id);
+    const song = await storage.getSong(songId);
+    
+    if (!song) {
+      return res.status(404).json({ message: 'Song not found' });
+    }
+    
+    const result = await storage.toggleLike(userId, songId);
+    res.json(result);
+  });
+
+  // POST /api/songs/:id/play
+  app.post(api.songs.incrementPlay.path, async (req, res) => {
+    const songId = Number(req.params.id);
+    const song = await storage.getSong(songId);
+    
+    if (!song) {
+      return res.status(404).json({ message: 'Song not found' });
+    }
+    
+    const playCount = await storage.incrementPlayCount(songId);
+    res.json({ playCount });
+  });
+
+  // GET /api/songs/liked-ids - Get user's liked song IDs
+  app.get('/api/songs/liked-ids', isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const likedSongs = await storage.getLikedSongs(userId);
+    const ids = likedSongs.map(s => s.id);
+    res.json({ likedIds: ids });
+  });
+
+  // ==========================================
+  // PLAYLIST ROUTES
+  // ==========================================
+
+  // GET /api/playlists
+  app.get(api.playlists.list.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const userPlaylists = await storage.getPlaylists(userId);
+    res.json(userPlaylists);
+  });
+
+  // GET /api/playlists/:id
+  app.get(api.playlists.get.path, isAuthenticated, async (req: any, res) => {
+    const playlist = await storage.getPlaylistWithSongs(Number(req.params.id));
+    
+    if (!playlist) {
+      return res.status(404).json({ message: 'Playlist not found' });
+    }
+    
+    const userId = req.user.claims.sub;
+    if (!playlist.isPublic && playlist.userId !== userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    res.json(playlist);
+  });
+
+  // POST /api/playlists
+  app.post(api.playlists.create.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const input = api.playlists.create.input.parse(req.body);
+      
+      const playlist = await storage.createPlaylist({
+        ...input,
+        userId: req.user.claims.sub
+      });
+      res.status(201).json(playlist);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  // DELETE /api/playlists/:id
+  app.delete(api.playlists.delete.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const playlist = await storage.getPlaylist(Number(req.params.id));
+    
+    if (!playlist) {
+      return res.status(404).json({ message: 'Playlist not found' });
+    }
+    
+    if (playlist.userId !== userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    await storage.deletePlaylist(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  // POST /api/playlists/:id/songs
+  app.post(api.playlists.addSong.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const { songId } = api.playlists.addSong.input.parse(req.body);
+      const playlistId = Number(req.params.id);
+      
+      const userId = req.user.claims.sub;
+      const playlist = await storage.getPlaylist(playlistId);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: 'Playlist not found' });
+      }
+      
+      if (playlist.userId !== userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      await storage.addSongToPlaylist(playlistId, songId);
+      res.status(201).json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  // DELETE /api/playlists/:id/songs/:songId
+  app.delete(api.playlists.removeSong.path, isAuthenticated, async (req: any, res) => {
+    const playlistId = Number(req.params.id);
+    const songId = Number(req.params.songId);
+    
+    const userId = req.user.claims.sub;
+    const playlist = await storage.getPlaylist(playlistId);
+    
+    if (!playlist) {
+      return res.status(404).json({ message: 'Playlist not found' });
+    }
+    
+    if (playlist.userId !== userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    await storage.removeSongFromPlaylist(playlistId, songId);
+    res.status(204).send();
+  });
+
+  // ==========================================
+  // GENERATION ROUTES
+  // ==========================================
+
+  // POST /api/generate/lyrics - Generate lyrics with AI
+  app.post(api.generate.lyrics.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const input = generateLyricsSchema.parse(req.body);
+      
+      const systemPrompt = `You are a professional songwriter and lyricist. Generate creative, original song lyrics based on the user's request. 
+Format the output as a complete song with clear sections (Verse 1, Chorus, Verse 2, etc.).
+Make the lyrics emotional, relatable, and catchy.
+Also suggest a fitting title for the song.`;
+
+      let userPrompt = `Write song lyrics about: ${input.prompt}`;
+      if (input.genre) userPrompt += `\nGenre: ${input.genre}`;
+      if (input.mood) userPrompt += `\nMood: ${input.mood}`;
+      if (input.style) userPrompt += `\nStyle: ${input.style}`;
+      userPrompt += `\n\nRespond in JSON format: { "title": "Song Title", "lyrics": "Full lyrics here" }`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 2048,
+      });
+
+      const content = response.choices[0]?.message?.content || '{}';
+      const result = JSON.parse(content);
+      
+      res.json({
+        title: result.title || "Untitled Song",
+        lyrics: result.lyrics || "Could not generate lyrics"
+      });
+    } catch (err) {
+      console.error("Error generating lyrics:", err);
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      res.status(500).json({ message: "Failed to generate lyrics" });
+    }
+  });
+
+  // GET /api/generate/random-prompt
+  app.get(api.generate.randomPrompt.path, async (req, res) => {
+    const randomIndex = Math.floor(Math.random() * PROMPT_IDEAS.length);
+    res.json({ prompt: PROMPT_IDEAS[randomIndex] });
+  });
+
+  // GET /api/generate/random-lyrics
+  app.get(api.generate.randomLyrics.path, async (req, res) => {
+    const randomIndex = Math.floor(Math.random() * RANDOM_LYRICS_SAMPLES.length);
+    res.json({ lyrics: RANDOM_LYRICS_SAMPLES[randomIndex] });
   });
 
   return httpServer;

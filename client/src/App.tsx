@@ -11,6 +11,7 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Generate from "@/pages/Generate";
 import SongDetails from "@/pages/SongDetails";
+import Explore from "@/pages/Explore";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,6 +51,10 @@ function Router() {
       
       <Route path="/songs/:id">
         <ProtectedRoute component={SongDetails} />
+      </Route>
+
+      <Route path="/explore">
+        <ProtectedRoute component={Explore} />
       </Route>
 
       <Route component={NotFound} />

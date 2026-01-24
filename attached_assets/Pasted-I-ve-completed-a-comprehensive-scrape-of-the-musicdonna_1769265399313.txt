@@ -1,0 +1,888 @@
+I've completed a comprehensive scrape of the musicdonna.com website. Here's everything I found to help you clone this AI music generation platform:
+Website Structure & Pages
+Main Navigation
+
+Explore (Home/Browse page)
+Create (Song creation interface)
+Library (User's personal collection)
+Pricing/Credits (Get More)
+
+Additional Pages
+
+Privacy Policy
+Terms of Use
+
+
+Core Features & Functions
+1. Song Creation Methods (3 modes)
+A. Song Description Mode
+
+Text input field for song description (placeholder: "Lost in a forgotten forest...")
+"Get Inspired" button for random prompts
+Select Mood (Optional): Happy, Confident, Motivational, Melancholic, Productivity, Uplifting, Dreamy, Chill, Romantic, Hype, Joyful, Dark, Passionate, Spiritual, Whimsical, Depressive, Eclectic, Emotion, Hard, Lyrical, Magical, Minimal, Party, Weird, Soft, Ethnic
+Select Genre (Optional): Random, Blues, Funk, Rap, Pop, Classical, Jazz, Metal, Rock, EDM, K-pop, Indie, Hip-Hop, Country, Cinematic, Latin, Reggae, Dance, Downtempo, R&B, Trance, House, Jungle, Soul, Celtic, Lullaby
+Advanced Options expandable section
+"Create with Description" button
+
+B. Lyrics Mode
+
+Enter Lyrics field (2800 character limit)
+"Random Lyrics" button
+Enter Style of Music field (90 character limit)
+Clear button
+Same Mood & Genre selection as Description mode
+Advanced Options
+"Create with Lyrics" button
+
+C. Image to Song Mode
+
+Upload image interface ("Turn Your Photos Into Music")
+Describe your song field (Optional, 90 character limit)
+Same Mood & Genre selection
+Advanced Options
+"Create with Image to Song" button
+
+2. Advanced Options (Available in all creation modes)
+
+Song Name (Optional text field)
+Vocal Toggle (On/Off switch)
+Vocal Gender (Optional - only when Vocal is ON): Male 👱🏻‍♂️, Female 👱🏻‍♀️, Random
+Recording Type (Radio buttons):
+
+Studio (default)
+Live (Concert)
+
+
+
+
+3. Browse/Explore Features
+Sections:
+
+Main search bar: "Describe your song to start..." with "Generate Now" button
+Playlists for you - Curated collections:
+
+Feeling Blue (14 Songs)
+Chill Car Radio (8 Songs)
+Tunes for Furry Pals (10 Songs)
+Vibes of Summer (7 Songs)
+Sunday Cooking (8 Songs)
+Fuel the Burn (9 Songs)
+Pop Goes Country (8 Songs)
+Gateway to Realms (9 Songs)
+Songs for Laughs (7 Songs)
+Rock & Roar (7 Songs)
+Pick Me Up (11 Songs)
+
+
+New releases - Community-created songs with metadata:
+
+Song thumbnail/artwork
+Song title
+Genre tags
+Username
+Play count
+Listen count
+Like icon
+
+
+Best of Donna Song Contests - Featured contest entries
+Popular Weekly - Trending songs with play/listen stats
+
+
+4. Library Features
+
+Playlists section
+
+"Liked Songs" playlist (shows count)
+"Add Playlist" button
+
+
+Songs section
+
+Search bar: "Search in songs..."
+List of user's created songs with:
+
+Song artwork
+Title
+Genre tags
+Add to Playlist button
+Options menu
+
+
+
+
+
+
+5. Pricing Model
+Credits System:
+
+1 Song = 1 Credit
+Package Options:
+
+5 Credits - $1.99
+25 Credits - $8.99 (was $10.00, Save 10%)
+50 Credits - $15.99 (was $20.00, Save 20%) [Most Popular]
+
+
+
+Benefits Highlighted:
+
+Fast Song Creation - "Generate Hits in Seconds"
+Top-Notch Studio Quality - "Advanced details"
+Royalty Free - "Use songs anywhere you want"
+
+
+6. Song Output Features
+Each generated song includes:
+
+Album artwork/cover image
+Song title
+Genre tags (e.g., "Classical, Uplifting")
+Add to Playlist functionality
+Play/pause controls
+Additional options menu
+
+
+7. User Interface Elements
+Top Navigation:
+
+Logo (Donna)
+Credit counter (e.g., "0 Credit")
+"Get More" button
+User avatar/profile
+
+Bottom Navigation (Mobile):
+
+Explore
+Create
+Library
+
+Visual Design:
+
+Dark theme with gradient background (green/blue tones)
+Colorful genre icons with abstract art
+Card-based layout for songs and playlists
+Responsive design (mobile + desktop)
+
+
+8. Technical Output Deliverables
+Song Creation Outputs:
+
+Audio file (playable in browser)
+Generated artwork/thumbnail
+Metadata (title, genre, mood tags)
+User attribution
+Play/listen counts
+Like functionality
+
+User Actions:
+
+Create songs
+Save to library
+Create playlists
+Like/favorite songs
+Share (implied)
+Search/browse
+Purchase credits
+
+
+Key Differentiators
+
+Three creation methods (description, lyrics, image-to-song)
+Extensive customization (26 moods, 25+ genres)
+Advanced vocal controls (gender selection)
+Recording type options (studio vs live)
+Community features (contests, popular weekly)
+Royalty-free licensing
+Credit-based pricing with volume discounts
+
+This platform is essentially an AI music generation tool that allows users to create custom songs through text descriptions, custom lyrics, or image uploads, with extensive genre and mood customization options.now this site Suno—AI for Music Creators29 stepsI've completed a comprehensive scrape of Suno.com. Here's the complete documentation of their AI music platform:
+SUNO - Complete Platform Documentation
+
+Website Structure & Pages
+Main Pages
+
+Home (suno.com/home)
+About (suno.com/about)
+Work at Suno/Careers (suno.com/careers)
+Blog (suno.com/blog)
+Pricing (suno.com/pricing)
+Hub (suno.com/hub) - Educational content/blog
+Help/Support (help.suno.com)
+Contact Us
+Community Guidelines
+FAQs
+Terms of Service
+Privacy Policy
+
+Social Media Presence
+
+Twitter (@sunomusic)
+Instagram (@sunomusic)
+TikTok (@sunomusic)
+Discord (invite/suno)
+
+
+Core Features & Capabilities
+1. Song Creation Methods
+Simple Mode (Chat Interface):
+
+Text input: "Chat to make music"
+Dynamic prompt examples that rotate (e.g., "Make any song you can imagine", "Make a house song about quitting your job", "Make a jazz song about water", "Turn any idea into a song")
+"Generate random prompt" button
+One-click "Create" button
+
+Advanced Mode:
+Three main sections with expandable controls:
+A. Lyrics Section
+
+Two modes:
+
+Auto: Describe your lyrics (AI generates them)
+Write Lyrics: Manually write your own lyrics
+
+
+"Generate Lyrics" button
+"Instrumental" toggle (for instrumental-only tracks)
+Text area for lyrics input/description
+
+B. Styles Section
+
+Free-form text input: "Enter style tags"
+60+ Pre-defined Genre Buttons including:
+
+Ambient techno, Techno, Reggae, Trance, Dream Pop, Trap R&B, Bachata, Lo-Fi, Future bass, City pop, Hip Hop, Disco, Shoegaze, Synthwave, Rockabilly, Country, Amapiano, Chanson, Synthpop, Glitch Hop, Afro-Cuban jazz, Chicago Blues, Grunge, Barbershop quartet, Drill, Symphonic metal, Afro-Rock, Samba, Cumbia, Electropop, Chillwave, Afrobeats, Funk, Afroswing, Swing, Americana, Soul, Tango, Ska, Doo-wop, Math Rock, Organic house, Breakbeat, Classical, Flamenco, Dubstep, Brass band, Boom bap, Dancehall, Mariachi, R&B, Bedroom pop, Tech house, Surf Rock
+
+
+
+C. Audio Section
+
+Upload button (upload existing audio)
+Record button (record your own audio)
+
+
+2. Pricing Plans (Monthly/Yearly options)
+Free Plan - $0/month
+
+Access to v4.5-all model
+50 credits renew daily (10 songs)
+No commercial use
+Standard features only
+Upload up to 1 min of audio
+Shared creation queue
+No add-on credit purchases
+
+Pro Plan - $8/month (Most Popular)
+
+Save $24 by billing yearly
+Access to latest and most advanced v5 model
+2,500 credits/month (up to 500 songs)
+Commercial use rights for new songs made
+Standard + Pro features (personas and advanced editing)
+Split songs into up to 12 vocal and instrument stems
+Upload up to 8 min of audio
+Add new vocals or instrumentals to existing songs
+Early access to new features
+Ability to purchase add-on credits
+Priority queue, up to 10 songs at once
+
+Premier Plan - $24/month (Best Value)
+
+Save $72 by billing yearly
+Access to Suno Studio (exclusive)
+Access to latest and most advanced v5 model
+10,000 credits/month (up to 2,000 songs)
+Commercial use rights for new songs made
+All Pro features
+Split songs into up to 12 stems
+Upload up to 8 min of audio
+Add new vocals or instrumentals to existing songs
+Early access to new features
+Ability to purchase add-on credits
+Priority queue, up to 10 songs at once
+
+
+3. Advanced Features (Pro/Premier)
+Suno Studio (Premier only)
+
+"First-of-its-kind web-based generative audio workstation"
+Combines traditional editing with AI generation
+Start, edit, remix capabilities
+Upload or record your own audio
+Rewrite lyrics
+Reorder sections
+Advanced mixing capabilities
+
+Stem Separation
+
+Export up to 12 time-aligned WAV stems
+Use seamlessly in Ableton, Logic, or any DAW
+Clean, professional-quality outputs
+
+Personas Feature
+
+Style steering with custom personas
+"Inspo" (inspiration) tools
+Exclusions capability
+Vocal gender selection
+
+Audio Upload/Recording
+
+Free: Up to 1 min
+Pro/Premier: Up to 8 min
+Add new vocals to existing songs
+Add new instrumentals to existing songs
+Record directly in-app
+
+
+4. Platform Benefits (Marketing Points)
+
+Fast Song Creation - "Generate Hits in Seconds"
+Mind blowing song quality - Professional studio quality
+10 free songs, daily - For non-commercial use
+Free AI music generator - Market-leading AI song generator
+Share it with the world - Easy sharing to social platforms
+Granular creation controls - Personas, Inspo, exclusions, vocal gender
+Commercial rights to your songs - For paid subscribers
+Your complete creative workspace - All-in-one platform
+Experience the modern song maker - Advanced editing capabilities
+Create everyday. Keep it all. - Up to 500 songs/month (Pro), 2,000 songs/month (Premier)
+Extract stems. Drop into your DAW. - Professional workflow integration
+
+
+5. Community & Browse Features
+Homepage Browse Section:
+
+Showcases user-generated songs with:
+
+Song artwork/cover image
+Song title
+Artist username with avatar
+Play count (e.g., "39K", "90K", "241K")
+Like count with button (e.g., "2.0K", "4.3K")
+Play button
+
+
+
+Featured Content:
+
+Examples show songs with 60K-325K plays
+Like counts ranging from 227 to 9.2K
+Professional-quality song titles and artwork
+User profiles linked
+
+Social Proof:
+
+Featured in: Forbes, Rolling Stone, Variety, Wired, Billboard, Complex
+Mobile app reviews:
+
+iOS: 4.9 stars, 363k+ reviews, Top 10 music app
+Android: 4.8 stars, 653k+ reviews, Top 10 music app
+
+
+
+Instagram Integration:
+
+Features from influencers/users:
+
+@timbaland
+@spellspellspell
+@nickfloats
+@milesmusickid
+@devanibiza
+@techguyver
+
+
+
+
+6. Technical Outputs & Deliverables
+Song Creation Outputs:
+
+Full audio track (playable in browser)
+AI-generated artwork/cover
+Metadata (title, artist, genre tags)
+Lyrics (if applicable)
+Play/listen tracking
+Social sharing capabilities
+Like/favorite functionality
+
+Export Options:
+
+Standard audio file download
+Stem separation (Pro/Premier):
+
+Up to 12 individual stems
+Time-aligned WAV format
+DAW-ready files
+
+
+
+Editing Capabilities:
+
+Rewrite sections
+Reorder parts
+Add vocals/instrumentals
+Remix existing tracks
+Upload reference audio
+
+
+7. AI Models
+
+v4.5-all - Free tier model
+v5 - Latest and most advanced (Pro/Premier only)
+Continuous improvements
+Early access to new features for paid users
+
+
+8. Hub/Educational Content
+Blog articles covering:
+
+"How To Make Beats With Suno" (step-by-step guides)
+"Top 5 Free Audio Editors in 2026"
+"Best Free Music Making Software in 2026"
+"5 Ways To Create Music With AI Using Suno"
+"AI Rap Lyrics Generators"
+"Generate Copyright-Free Music: The Ultimate Guide"
+"AI Song Lyrics Generator"
+"Song Maker tutorials"
+Gift ideas for music lovers
+AI video generator comparisons
+
+
+9. Key Differentiators from Competitors
+
+Suno Studio - Unique web-based DAW with AI integration
+12 stem separation - Industry-leading stem extraction
+Up to 2,000 songs/month - Highest volume on Premier plan
+v5 AI model - Most advanced AI music generation
+8 min audio upload - Longer than most competitors
+Personas & style controls - Advanced customization
+Priority queue - Create up to 10 songs simultaneously
+Mobile apps - Top 10 music app on both iOS and Android
+Commercial rights - Clear licensing for paid plans
+Daily free credits - 10 songs per day on free plan
+
+
+10. User Experience Elements
+Visual Design:
+
+Gradient backgrounds (orange/pink/purple tones on landing)
+Dark mode for advanced creation interface
+Card-based song display
+Clean, modern typography
+Professional album artwork for all songs
+
+Navigation:
+
+Top header: Logo, Sign In, Sign Up
+Footer: Brand links, Support links, Social media
+Simple, intuitive creation flow
+One-click creation option vs. advanced mode
+
+Call-to-Actions:
+
+"Sign up for free"
+"Subscribe" (for paid plans)
+"Make a song"
+"Create"
+"Download on iPhone/Android"
+
+
+Comparison: Suno vs. Donna (MusicDonna)
+FeatureSunoDonnaFree Credits50 daily (10 songs)0 (pay-per-use)Pricing$0-$24/month$1.99-$15.99 one-timeMax Songs/MonthUp to 2,000 (Premier)Pay per songStem Separation✅ Up to 12 stems❌ Not mentionedAudio Upload✅ Up to 8 min❌ Not availableDAW Integration✅ Professional workflow❌ Not mentionedCommercial Rights✅ Pro/Premier plans✅ All songsCreation ModesSimple + Advanced3 modes (Description/Lyrics/Image)Vocal Gender✅ Yes✅ YesGenres60+ predefined25+ predefinedMoodsVia style tags26 predefined optionsImage-to-Song❌ Not available✅ YesStudio/DAW✅ Suno Studio (Premier)❌ Not availableMobile Apps✅ iOS + Android (4.8-4.9★)Not mentionedAI Modelsv4.5 (free), v5 (paid)Not specified
+Suno is positioned as a more professional, comprehensive platform with subscription-based pricing, while Donna focuses on simplicity and pay-per-song accessibility.AI Song Generator Free | Compose Music AI22 stepsI've completed a comprehensive scrape of aisonggenerator.ai. Here's the complete documentation:
+AI Song Generator - Complete Platform Documentation
+Domain: aisonggenerator.ai
+Company: COREX AI INC.
+Tagline: "Professional AI Song Generator"
+
+Website Structure & Pages
+Main Navigation
+
+Home - Landing page with creation interface
+Create - Dedicated creation studio
+Pricing - Subscription plans
+My Songs - User's song library
+Tutorials - Getting started guides and documentation
+
+Footer Links
+
+Privacy Policy
+Terms of Service
+Refund Policy
+Email: hi@aisonggenerator.ai
+
+Multi-Language Support (17 languages)
+English, Español, Français, Português, Italiano, 日本語, ภาษาไทย, Polski, Deutsch, Dansk, Norsk bokmål, Nederlands, 简体中文, 繁體中文, Türkçe, العربية, 한국어
+
+Core Features & Creation Modes
+Two Creation Modes
+1. Simple Mode
+
+Quick generation with natural language
+Just describe what you want
+Minimal configuration required
+Best for beginners and rapid prototyping
+
+2. Custom Mode (Main interface with detailed controls)
+Input Fields:
+
+Song Title (0/30 character limit)
+Song Style (0/120 character limit)
+
+Example: "mexican music, cumbia, male voice"
+Link to "Style and Genre List" reference
+
+
+Song Lyrics (1447/2000 character limit)
+
+Full lyrics input
+Custom or AI-generated
+
+
+
+Quick Tag Buttons:
+
+# Genre - Genre selection shortcuts
+# Moods - Mood/emotion tags
+# Voices - Voice type selection
+# Tempos - Tempo/speed options
+
+Toggles:
+
+Instrumental Mode - Create music without vocals
+Display Public - Make song visible to community
+
+Actions:
+
+"Generate with AI" button
+Sign in with Google for free trial
+
+
+AI Model Versions
+V4.5 Model (NEW - Latest)
+
+"Most advanced music generation model yet"
+Enhanced genre recognition
+Richer vocals
+Extended song length
+Model version selector with "NEW" badge
+
+V4 Model (Previous)
+
+Available for selection
+Dropdown to change versions
+
+
+Pricing Plans
+Free Plan - $0/month
+
+1 AI song generation per day (2 songs)
+✅ MP3 Download
+❌ WAV & MIDI Download
+❌ Voice & Instrumental Separation
+❌ Music Extension & Recreation
+❌ Music Editing (Coming in January)
+❌ Music Cloning (Coming in January)
+❌ Private Generation
+❌ Priority Generation Queue
+❌ Dedicated Support
+❌ Commercial license
+❌ V4.5 Model
+
+Basic Plan - $9.9/month
+Annual: 33% off - Save $60
+Credits: 1,800 credits annually (720 songs)
+Features:
+
+✅ MP3 Download
+✅ WAV & MIDI Download
+✅ Voice & Instrumental Separation
+✅ Music Extension & Recreation
+✅ Music Editing (Available January)
+✅ Music Cloning (Available January)
+✅ Private Generation
+✅ Priority Generation Queue
+✅ Dedicated Support
+✅ Commercial license & Unrestricted usage rights
+✅ V4.5 Music Generation Model
+
+"Perfect for individuals and small projects"
+Premium Plan - $19.9/month ⭐ Most Popular
+Annual: 33% off - Save $120
+Credits: Get 12,000 credits instantly with annual plan (4,800 songs)
+All Basic features plus:
+
+Same feature set as Basic
+12,000 credits annually
+"Ideal for professional creators and small studios"
+
+Enterprise Plan - $39.9/month
+Annual: 60% off - Save $720
+Credits: UNLIMITED credits instantly with annual plan
+All Premium features plus:
+
+✅ UNLIMITED credits annually
+All other features same as Premium
+"Perfect for professional studios and businesses"
+
+Billing Options:
+
+Yearly (Save 33% ⭐️)
+Monthly
+
+
+Advanced Features (Paid Plans)
+Currently Available:
+
+MP3, WAV & MIDI Download - Multiple format exports
+Voice & Instrumental Separation - Split songs into stems
+Music Extension & Recreation
+
+"Extend your existing music beyond time limits or transform its style"
+"Perfect for creating seamless loops or exploring different variations"
+
+
+Private Generation - Keep songs private from community
+Priority Generation Queue - Faster processing
+Commercial License - Use songs for commercial purposes
+Dedicated Support - Premium customer service
+
+Coming in January:
+
+Music Editing
+
+"Edit any part of your created music with precise control"
+"Modify specific lyrics or segments"
+"Adjust tempo, style, or other parameters"
+
+
+Music Cloning
+
+"Upload any song (your own or other artists')"
+"Clone the voice and style"
+"Apply it to your new lyrics or melodies"
+
+
+
+
+User Interface Features
+Creation Studio Layout:
+
+Left Panel: Creation controls
+Center: Music player/preview
+Right Panel: "My Music" library
+
+Song list view
+Refresh button
+"Download Commercial License" button
+Pagination (Page 1, 2, 3)
+Empty state: "No songs created yet"
+
+
+
+Premium Features Callout:
+
+"Unlock premium features" section
+More credits
+Private mode
+Download MP3, WAV, or MIDI
+"Upgrade Now" button
+
+
+Social Proof & Trust Signals
+User Base:
+
+"Trusted by 25,000+ musicians, content creators, and music enthusiasts worldwide"
+5-star rating display
+
+User Testimonials (10 total):
+
+John Davidson - Amateur Musician
+Emily Roberts - YouTube Creator
+Mark Thompson - Independent Artist
+Sofia Rodriguez - Music Teacher
+Chris Anderson - Podcast Host
+Linda Chen - Digital Content Creator
+Robert Kim - Aspiring Songwriter
+Jessica Martinez - Music Producer
+William Turner - Hobbyist Musician
+Anna Watson - Social Media Manager
+
+
+Key Marketing Points
+AI Song Maker Benefits:
+
+"Your Personal Music Creation Studio"
+"Experience the power of artificial intelligence in music creation"
+"Intuitive AI song maker"
+
+Two Flexible Creation Modes
+
+"Simple Mode for quick generation"
+"Custom Mode for detailed control over your song creation"
+
+Natural Language Input
+
+"Simply describe your desired song in plain English"
+"Our AI song creator will bring your vision to life"
+
+Custom Lyrics Support
+
+"Input your own lyrics in Custom Mode"
+"Create songs that tell your unique story"
+
+Multiple Music Styles
+
+"Generate songs across various genres and styles"
+"Match your creative vision"
+
+High-Quality Output
+
+"Professional-grade songs"
+"Advanced AI technology and music generation algorithms"
+
+Free to Use
+
+"Create AI-generated songs without any cost or subscription requirements"
+Daily free credits available
+
+
+How It Works (3-Step Process)
+
+Choose Your Mode
+
+"Simple Mode for quick generation"
+"Custom Mode for detailed control"
+
+
+Input Your Details
+
+"Describe your desired song or input custom lyrics"
+"Style preferences, and title in Custom Mode"
+
+
+Generate Your Song
+
+"Click generate and wait a few minutes"
+"Our AI creates your custom song"
+
+
+
+
+FAQ Content (10 Questions)
+
+What is AI Song Generator?
+
+"Free online tool that uses AI to create custom songs"
+
+
+How does the AI song creator work?
+
+"Advanced AI algorithms analyze your input"
+"Generate complete songs with vocals and music"
+
+
+What's the difference between Simple and Custom modes?
+
+Simple: describe what you want
+Custom: specify title, style, lyrics, and parameters
+
+
+Is AI Song Maker really free?
+
+"Completely free to use"
+"No cost or subscription required" (for free tier)
+
+
+How long does it take to generate a song?
+
+"Within a few minutes"
+"Varies depending on complexity"
+
+
+Can I use the generated songs commercially?
+
+"Yes, all songs are royalty-free"
+"Can be used for personal and commercial purposes"
+
+
+What music styles are available?
+
+"Pop, rock, classical, jazz, electronic, and many more"
+
+
+Do I need musical experience?
+
+"Not at all!"
+"User-friendly and accessible to everyone"
+
+
+What file format do I receive?
+
+"High-quality MP3 format"
+"Easy to use across different platforms"
+
+
+Can I edit the generated songs?
+
+"Songs are final"
+"Can generate new versions with different parameters"
+
+
+
+
+Partner Network
+Listed partner sites:
+
+Dong AIGC
+AIPURE AI
+Flux Image AI
+BAI.tools
+iuu AI
+AI Tool Trek
+AI With Me
+aieasy.life AI Tools
+Google Veo3 AI Video Generator
+Dang.ai
+Tool Pilot
+aitoolnet.com
+
+
+Technical Details
+Output Formats:
+
+MP3 (all plans)
+WAV (paid plans)
+MIDI (paid plans)
+
+Processing:
+
+AI-powered generation
+Few minutes per song
+Queue system (priority for paid users)
+
+Community Features:
+
+Public song display (optional)
+User profiles
+Song sharing
+
+
+Key Differentiators
+
+Free Daily Credits - 1 generation/day (2 songs)
+V4.5 Advanced Model - Latest AI music technology
+Music Cloning (Coming) - Clone voice/style from any song
+Unlimited Enterprise Plan - Unlimited song generation
+Multi-format Export - MP3, WAV, MIDI
+17 Languages - Extensive localization
+Commercial Rights - Royalty-free with paid plans
+Voice/Instrumental Separation - Professional stem extraction
+Music Extension - Extend songs beyond time limits
+Natural Language Input - Easy for non-musicians
+
+
+Comparison Summary: All Three Platforms
+FeatureAI Song GeneratorSunoDonnaFree Daily Credits1 gen (2 songs)50 (10 songs)0Starting Price$9.9/mo$8/mo$1.99 one-timeUnlimited Plan$39.9/moNoNoStem Separation✅ (paid)✅ Up to 12 stems❌Music Cloning✅ (Coming Jan)❌❌Music Editing✅ (Coming Jan)✅ Suno Studio❌Lyrics Input✅ Custom mode✅ Advanced✅ YesImage-to-Song❌❌✅ YesLanguages171 (English)Not specifiedCommercial RightsPaid plansPro/PremierAll songsModel VersionsV4, V4.5v4.5, v5Not specified
+AI Song Generator positions itself as the most flexible platform with upcoming advanced features like music cloning, competitive pricing including an unlimited option, and extensive language support.
