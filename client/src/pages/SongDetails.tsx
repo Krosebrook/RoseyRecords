@@ -5,8 +5,10 @@ import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock } from "lu
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function SongDetails() {
+  usePageTitle("Song Details");
   const [, params] = useRoute("/songs/:id");
   const id = parseInt(params?.id || "0");
   const { data: song, isLoading, error } = useSong(id);

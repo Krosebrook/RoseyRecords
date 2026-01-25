@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { GENRES, MOODS } from "@shared/schema";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 interface ChordData {
   root: string;
@@ -51,6 +52,7 @@ type GenerationMode = "sample" | "full";
 type GenerationEngine = "replicate" | "stable";
 
 export default function Studio() {
+  usePageTitle("Studio");
   const { toast } = useToast();
   
   const [audioPrompt, setAudioPrompt] = useState("");

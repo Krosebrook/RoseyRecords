@@ -1,8 +1,10 @@
 import { Link } from "wouter";
 import { ArrowRight, Music, Sparkles, Mic2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function Landing() {
+  usePageTitle("AI Music & Lyrics Generator");
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Navbar */}
@@ -37,12 +39,12 @@ export default function Landing() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 font-display" data-testid="text-hero-title">
-              Unleash Your <br />
-              <span className="text-gradient">Inner Artist</span>
+              Create Music with <br />
+              <span className="text-gradient">HarmoniQ</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed" data-testid="text-hero-description">
-              Generate studio-quality lyrics and songs with the power of advanced AI. 
-              No musical experience required.
+              Your AI-powered music studio. Generate lyrics, instrumentals, and singing vocals — 
+              no musical experience required.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -88,20 +90,20 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Sparkles className="w-8 h-8 text-secondary" />}
-              title="AI Lyricist"
-              description="Generate catchy hooks, deep verses, and rhyming bridges instantly based on your mood and topic."
+              title="HarmoniQ Lyrics"
+              description="Generate catchy hooks, deep verses, and rhyming bridges instantly. Choose between fast OpenAI or comprehensive Gemini song concepts."
               testId="feature-ai-lyricist"
             />
             <FeatureCard 
               icon={<Mic2 className="w-8 h-8 text-primary" />}
-              title="Voice Synthesis"
-              description="Turn your lyrics into spoken word or melody sketches with our integrated voice engine."
+              title="HarmoniQ Vocals"
+              description="Transform your lyrics into real singing vocals with AI. Choose from multiple voice styles and hear your words come to life."
               testId="feature-voice-synthesis"
             />
             <FeatureCard 
               icon={<Music className="w-8 h-8 text-accent" />}
-              title="Genre Adaptation"
-              description="From Pop to Punk, Rap to Rock. Our AI adapts the writing style to fit your musical genre perfectly."
+              title="HarmoniQ Studio"
+              description="Create instrumentals up to 3 minutes long. Mix vocals with beats, download your tracks, and build your sound."
               testId="feature-genre-adaptation"
             />
           </div>
@@ -109,7 +111,7 @@ export default function Landing() {
       </section>
 
       <footer className="py-12 border-t border-border text-center text-muted-foreground text-sm">
-        <p data-testid="text-footer">© 2024 HarmoniQ Studio. Powered by Artificial Intelligence.</p>
+        <p data-testid="text-footer">© 2026 HarmoniQ. AI-Powered Music Creation Platform.</p>
       </footer>
     </div>
   );

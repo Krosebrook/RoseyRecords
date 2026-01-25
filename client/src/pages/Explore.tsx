@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Song } from "@shared/schema";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 interface PublicSongCardProps {
   song: Song;
@@ -87,6 +88,7 @@ function PublicSongCard({ song, isLiked }: PublicSongCardProps) {
 }
 
 export default function Explore() {
+  usePageTitle("Explore");
   const { data: songs, isLoading } = usePublicSongs();
   const { data: likedData } = useLikedSongIds();
   const likedIds = likedData?.likedIds || [];

@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type AIEngine = "openai" | "gemini";
 
 export default function Generate() {
+  usePageTitle("Create Lyrics");
   const { generateLyrics, getRandomPrompt, isGenerating, currentLyrics, setCurrentLyrics } = useChatGeneration();
   const { mutate: saveSong, isPending: isSaving } = useCreateSong();
   const { toast } = useToast();

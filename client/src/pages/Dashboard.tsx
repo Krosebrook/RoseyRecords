@@ -4,8 +4,10 @@ import { SongCard } from "@/components/SongCard";
 import { Plus } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function Dashboard() {
+  usePageTitle("My Library");
   const { data: songs, isLoading } = useSongs();
 
   return (
