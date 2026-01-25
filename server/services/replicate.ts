@@ -1,5 +1,16 @@
+/**
+ * Replicate AI Service
+ * 
+ * Provides AI music generation via Meta's MusicGen model and
+ * AI singing vocals via Suno's Bark model.
+ * 
+ * MusicGen: Short instrumental tracks (5-30 seconds)
+ * Bark: AI singing vocals with natural voice synthesis
+ */
+
 import Replicate from "replicate";
 
+/** Get authenticated Replicate client */
 const getReplicate = () => {
   if (!process.env.REPLICATE_API_KEY) {
     throw new Error("REPLICATE_API_KEY is not configured");
@@ -44,6 +55,10 @@ function extractAudioUrl(output: unknown): string {
   return "";
 }
 
+/**
+ * Generate instrumental music using Meta's MusicGen model.
+ * Synchronous operation that waits for generation to complete.
+ */
 export async function generateMusic(params: MusicGenerationParams): Promise<MusicGenerationResult> {
   const replicate = getReplicate();
   
@@ -75,6 +90,10 @@ export async function generateMusic(params: MusicGenerationParams): Promise<Musi
   };
 }
 
+/**
+ * Generate music that continues or transforms an existing audio input.
+ * Uses MusicGen's melody continuation feature.
+ */
 export async function generateMusicFromMelody(
   inputAudioUrl: string, 
   prompt: string,
@@ -109,6 +128,7 @@ export async function generateMusicFromMelody(
   };
 }
 
+/** Check status of an async prediction by ID */
 export async function checkPredictionStatus(predictionId: string): Promise<{
   status: string;
   output?: string;
@@ -146,6 +166,7 @@ function buildMusicPrompt(params: MusicGenerationParams): string {
   return parts.join(", ");
 }
 
+/** Generate short sound effects using MusicGen */
 export async function generateSoundEffect(prompt: string, duration?: number): Promise<MusicGenerationResult> {
   const replicate = getReplicate();
   const normalizedDuration = Math.min(Math.max(duration || 5, 3), 15);
@@ -174,6 +195,10 @@ export async function generateSoundEffect(prompt: string, duration?: number): Pr
   };
 }
 
+/**
+ * Start async music generation. Returns prediction ID for status polling.
+ * Use checkPredictionStatus() to monitor progress.
+ */
 export async function startMusicGeneration(params: MusicGenerationParams): Promise<string> {
   const replicate = getReplicate();
   
@@ -205,6 +230,11 @@ export interface SingingVocalsResult {
   audioUrl: string;
 }
 
+/**
+ * Generate AI singing vocals using Suno's Bark model.
+ * Wraps lyrics in ♪ symbols to trigger singing mode instead of speech.
+ * Synchronous operation that waits for generation to complete.
+ */
 export async function generateSingingVocals(params: SingingVocalsParams): Promise<SingingVocalsResult> {
   const replicate = getReplicate();
   
@@ -231,6 +261,10 @@ export async function generateSingingVocals(params: SingingVocalsParams): Promis
   return { audioUrl };
 }
 
+/**
+ * Start async singing vocals generation. Returns prediction ID for status polling.
+ * Use checkPredictionStatus() to monitor progress.
+ */
 export async function startSingingVocals(params: SingingVocalsParams): Promise<string> {
   const replicate = getReplicate();
   
@@ -249,6 +283,7 @@ export async function startSingingVocals(params: SingingVocalsParams): Promise<s
   return prediction.id;
 }
 
+/** Available Bark voice presets for singing generation (0-5 male, 6-9 female) */
 export const BARK_VOICE_PRESETS = [
   { id: "v2/en_speaker_0", name: "Speaker 0 (Male)", gender: "male" },
   { id: "v2/en_speaker_1", name: "Speaker 1 (Male)", gender: "male" },

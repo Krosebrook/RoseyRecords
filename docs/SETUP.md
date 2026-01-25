@@ -92,7 +92,7 @@ This starts:
 - **Frontend**: http://localhost:5000
 - **API**: http://localhost:5000/api/*
 
-The frontend and backend run on the same port through Vite's proxy configuration.
+Both frontend and backend are served from the same port using a unified Express/Vite integration (no proxy needed).
 
 ## Project Structure
 

@@ -11,7 +11,6 @@ import OpenAI from "openai";
 import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
-import * as elevenlabsService from "./services/elevenlabs";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -733,87 +732,7 @@ Also suggest a fitting title for the song.`;
     }
   });
 
-  // ElevenLabs Routes
-  app.get("/api/elevenlabs/voices", isAuthenticated, async (req, res) => {
-    try {
-      if (!elevenlabsService.isConfigured()) {
-        return res.status(503).json({ message: "ElevenLabs is not configured" });
-      }
-      const voices = await elevenlabsService.getVoices();
-      res.json({ voices });
-    } catch (err) {
-      console.error("Error fetching voices:", err);
-      res.status(500).json({ message: "Failed to fetch voices" });
-    }
-  });
-
-  app.post("/api/elevenlabs/text-to-speech", isAuthenticated, async (req, res) => {
-    try {
-      if (!elevenlabsService.isConfigured()) {
-        return res.status(503).json({ message: "ElevenLabs is not configured" });
-      }
-      
-      const { text, voiceId, modelId, stability, similarityBoost, style } = req.body;
-      
-      if (!text || typeof text !== "string" || text.trim().length === 0) {
-        return res.status(400).json({ message: "Text is required" });
-      }
-      
-      if (text.length > 5000) {
-        return res.status(400).json({ message: "Text too long (max 5000 characters)" });
-      }
-      
-      // Clamp values to valid ranges
-      const clampedStability = typeof stability === "number" ? Math.max(0, Math.min(1, stability)) : undefined;
-      const clampedSimilarity = typeof similarityBoost === "number" ? Math.max(0, Math.min(1, similarityBoost)) : undefined;
-      const clampedStyle = typeof style === "number" ? Math.max(0, Math.min(1, style)) : undefined;
-      
-      const result = await elevenlabsService.textToSpeech({
-        text: text.trim(),
-        voiceId,
-        modelId,
-        stability: clampedStability,
-        similarityBoost: clampedSimilarity,
-        style: clampedStyle
-      });
-      
-      res.json(result);
-    } catch (err) {
-      console.error("Error generating speech:", err);
-      res.status(500).json({ message: "Failed to generate speech" });
-    }
-  });
-
-  app.post("/api/elevenlabs/sound-effect", isAuthenticated, async (req, res) => {
-    try {
-      if (!elevenlabsService.isConfigured()) {
-        return res.status(503).json({ message: "ElevenLabs is not configured" });
-      }
-      
-      const { text, durationSeconds, promptInfluence } = req.body;
-      
-      if (!text || typeof text !== "string" || text.trim().length === 0) {
-        return res.status(400).json({ message: "Text description is required" });
-      }
-      
-      const result = await elevenlabsService.generateSoundEffect({
-        text: text.trim(),
-        durationSeconds,
-        promptInfluence
-      });
-      
-      res.json(result);
-    } catch (err) {
-      console.error("Error generating sound effect:", err);
-      res.status(500).json({ message: "Failed to generate sound effect" });
-    }
-  });
-
-  app.get("/api/elevenlabs/status", isAuthenticated, async (req, res) => {
-    res.json({ configured: elevenlabsService.isConfigured() });
-  });
-
-  // Bark singing vocals routes
+  // Bark singing vocals routes (AI singing via Replicate)
   app.get("/api/bark/voices", isAuthenticated, async (req, res) => {
     res.json({ voices: replicateService.BARK_VOICE_PRESETS });
   });

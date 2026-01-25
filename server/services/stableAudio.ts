@@ -1,6 +1,19 @@
+/**
+ * Stable Audio Service via fal.ai
+ * 
+ * Provides extended duration music generation (up to 3 minutes).
+ * Uses Stability AI's audio generation models for high-quality
+ * instrumental tracks with customizable BPM, key, genre, and mood.
+ * 
+ * Key features:
+ * - Sample previews (15 seconds)
+ * - Full tracks (up to 180 seconds)
+ * - Async generation with status polling
+ * - Audio-to-audio transformation
+ */
+
 import { fal } from "@fal-ai/client";
 
-// Support both FAL_API_KEY and FAL_KEY for compatibility
 const FAL_KEY = process.env.FAL_API_KEY || process.env.FAL_KEY;
 
 if (FAL_KEY) {
