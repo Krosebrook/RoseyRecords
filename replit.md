@@ -88,9 +88,6 @@ Preferred communication style: Simple, everyday language.
 - **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
   - Environment variable: `FAL_API_KEY` or `FAL_KEY`
 
-- **ElevenLabs**: Used for AI vocal synthesis (text-to-speech, singing vocals)
-  - Environment variable: `ELEVENLABS_API_KEY`
-
 ### API Routes
 
 #### Generation Routes
@@ -118,12 +115,6 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/stable-audio/start` - Start async generation for longer tracks
 - `GET /api/stable-audio/status/:requestId` - Check async generation status
 - `POST /api/stable-audio/transform` - Transform existing audio
-
-#### ElevenLabs Routes (Vocals)
-- `GET /api/elevenlabs/voices` - List available voices
-- `POST /api/elevenlabs/text-to-speech` - Generate vocals from text
-- `POST /api/elevenlabs/sound-effect` - Generate sound effects
-- `GET /api/elevenlabs/status` - Check if ElevenLabs is configured
 
 #### Bark Routes (Singing AI via Replicate)
 - `GET /api/bark/voices` - List available singing voice presets
