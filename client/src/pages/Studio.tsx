@@ -10,13 +10,14 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward, Mic } from "lucide-react";
+import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward, Mic, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { Onboarding, STUDIO_ONBOARDING_STEPS } from "@/components/Onboarding";
 
 interface ChordData {
   root: string;
@@ -54,6 +55,7 @@ type GenerationEngine = "replicate" | "stable";
 export default function Studio() {
   usePageTitle("Studio");
   const { toast } = useToast();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   const [audioPrompt, setAudioPrompt] = useState("");
   const [targetDuration, setTargetDuration] = useState("60");
@@ -569,17 +571,41 @@ export default function Studio() {
     };
   }, []);
 
+  const handleShowTour = () => {
+    setShowOnboarding(true);
+  };
+
   return (
     <Layout>
+      <Onboarding
+        steps={STUDIO_ONBOARDING_STEPS}
+        storageKey="harmoniq-studio-onboarding"
+        isOpen={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
+        onSkip={() => setShowOnboarding(false)}
+      />
+      
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <Music className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <Music className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
+              <p className="text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShowTour}
+            className="text-muted-foreground hover:text-foreground"
+            data-testid="button-studio-tour"
+          >
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Tour
+          </Button>
         </div>
 
         <Tabs defaultValue="audio" className="space-y-4">

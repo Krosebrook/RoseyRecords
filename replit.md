@@ -13,6 +13,9 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### January 2026
+- Added AI-guided user onboarding with interactive walkthrough tours
+- Added usePageTitle hook for dynamic browser titles across all pages
+- Updated HarmoniQ branding throughout UI (hero, feature cards, footer)
 - Added Gemini AI integration for advanced song concept generation (BPM, key, energy analysis)
 - Added Replicate integration for AI music/audio generation (short clips, 5-30s)
 - Added Stable Audio integration via fal.ai for extended duration tracks (up to 3 minutes)

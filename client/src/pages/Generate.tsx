@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useChatGeneration } from "@/hooks/use-chat-generation";
 import { useCreateSong } from "@/hooks/use-songs";
-import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, ChevronDown, Check, Sparkles, Zap, Music, Lightbulb } from "lucide-react";
+import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, ChevronDown, Check, Sparkles, Zap, Music, Lightbulb, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 
 type AIEngine = "openai" | "gemini";
 
@@ -18,6 +19,7 @@ export default function Generate() {
   const { generateLyrics, getRandomPrompt, isGenerating, currentLyrics, setCurrentLyrics } = useChatGeneration();
   const { mutate: saveSong, isPending: isSaving } = useCreateSong();
   const { toast } = useToast();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   const [topic, setTopic] = useState("");
   const [generatedTitle, setGeneratedTitle] = useState("");
@@ -117,18 +119,41 @@ export default function Generate() {
 
   const loading = isGenerating || isGeneratingLocal;
 
+  const handleShowTour = () => {
+    setShowOnboarding(true);
+  };
+
   return (
     <Layout>
+      <Onboarding
+        steps={GENERATE_ONBOARDING_STEPS}
+        storageKey="harmoniq-generate-onboarding"
+        isOpen={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
+        onSkip={() => setShowOnboarding(false)}
+      />
+      
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)]">
         {/* Controls Panel */}
         <div className="w-full lg:w-[380px] flex flex-col gap-4">
           <div className="glass-panel p-6 rounded-2xl flex-1 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
-            <div>
-              <h2 className="text-2xl font-bold mb-1 flex items-center gap-2" data-testid="text-generator-title">
-                <Wand2 className="w-6 h-6 text-primary" />
-                Lyric Generator
-              </h2>
-              <p className="text-sm text-muted-foreground">Describe your song idea</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-1 flex items-center gap-2" data-testid="text-generator-title">
+                  <Wand2 className="w-6 h-6 text-primary" />
+                  Lyric Generator
+                </h2>
+                <p className="text-sm text-muted-foreground">Describe your song idea</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShowTour}
+                className="text-muted-foreground hover:text-foreground h-8 w-8"
+                data-testid="button-generate-tour"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
             </div>
 
             <div className="space-y-4">

@@ -176,6 +176,66 @@ On Replit, authentication works automatically. For local development outside Rep
 
 Note: Local development is typically done on Replit where auth is pre-configured.
 
+## User Onboarding
+
+HarmoniQ includes an interactive onboarding system that guides new users through the application features.
+
+### How It Works
+
+- **First Visit**: When users visit the Studio or Generate pages for the first time, an interactive tour automatically starts
+- **Step-by-Step**: The tour highlights UI elements and explains each feature
+- **Skip/Replay**: Users can skip the tour or replay it anytime using the "Tour" button in the page header
+
+### Onboarding Components
+
+The onboarding system is implemented in `client/src/components/Onboarding.tsx`:
+
+- **Onboarding**: Main walkthrough component with overlay and highlighting
+- **STUDIO_ONBOARDING_STEPS**: Tour configuration for the Music Studio
+- **GENERATE_ONBOARDING_STEPS**: Tour configuration for the Lyrics Generator
+
+### Adding Onboarding to New Pages
+
+1. Import the onboarding components:
+```tsx
+import { Onboarding } from "@/components/Onboarding";
+```
+
+2. Define your steps:
+```tsx
+const MY_PAGE_STEPS = [
+  {
+    id: "welcome",
+    title: "Welcome",
+    description: "Description here",
+    position: "center",
+  },
+  {
+    id: "feature",
+    title: "Feature Name",
+    description: "How to use this feature",
+    targetSelector: "[data-testid='my-element']",
+    position: "bottom",
+  },
+];
+```
+
+3. Add state and the Onboarding component to your page:
+```tsx
+const [showOnboarding, setShowOnboarding] = useState(false);
+
+<Onboarding
+  steps={MY_PAGE_STEPS}
+  storageKey="harmoniq-mypage-onboarding"
+  isOpen={showOnboarding}
+  onComplete={() => setShowOnboarding(false)}
+  onSkip={() => setShowOnboarding(false)}
+/>
+
+// Add a Tour button to trigger replay:
+<Button onClick={() => setShowOnboarding(true)}>Tour</Button>
+```
+
 ## Troubleshooting
 
 ### Database Connection Issues
@@ -192,6 +252,22 @@ If you see "Service not configured" errors:
 2. Check the key name matches exactly (case-sensitive)
 3. Restart the application after adding secrets
 
+### Audio Generation Failures
+
+If audio generation fails with billing/credit errors:
+
+1. **fal.ai (Stable Audio)**: Check your fal.ai account balance at [fal.ai/dashboard](https://fal.ai/dashboard)
+2. **Replicate (MusicGen/Bark)**: Check your Replicate credits at [replicate.com/account](https://replicate.com/account)
+3. Both services require active billing - free tiers may have limited usage
+
+### Lyrics Generation Issues
+
+If lyrics fail to generate:
+
+1. Ensure OpenAI/Gemini integration is active (configured via Replit AI Integrations)
+2. Check server logs for specific error messages
+3. Try switching between OpenAI and Gemini engines
+
 ### Port Already in Use
 
 If port 5000 is already in use:
@@ -205,6 +281,18 @@ If port 5000 is already in use:
 1. Run `npm install` to ensure dependencies are installed
 2. Run `npm run check` to see TypeScript errors
 3. Check the console for specific error messages
+
+## Feature Status
+
+| Feature | Requires | Status |
+|---------|----------|--------|
+| Lyrics Generation (OpenAI) | AI Integrations | Working |
+| Song Concepts (Gemini) | AI Integrations | Working |
+| Chord Progression | Gemini | Working |
+| Scale Finder | Gemini | Working |
+| Audio Generation | FAL_API_KEY | Requires credits |
+| Singing Vocals | REPLICATE_API_KEY | Requires credits |
+| Mix Tab | Generated audio | UI ready |
 
 ## Feature Flags
 
