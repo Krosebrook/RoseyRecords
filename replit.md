@@ -20,8 +20,12 @@ Preferred communication style: Simple, everyday language.
 - Added AI engine selector (OpenAI vs Gemini) to Generate page
 - Implemented chord progression generator and scale finder tools
 - Audio player with progress bar and seek functionality for longer tracks
-- Added ElevenLabs integration for AI vocal synthesis (text-to-speech/singing)
-- Added Vocals tab to Studio page with voice selection, stability, and similarity controls
+- Added Bark AI singing vocals via Replicate (true singing, not spoken)
+- Added Vocals tab to Studio page with voice selection and temperature controls
+- Added Mix tab for combining instrumentals and vocals with volume/delay controls
+- Implemented PWA with manifest.json, service worker, and offline caching
+- Added lazy loading for all routes using React.lazy and Suspense
+- Added localStorage utilities for saving work-in-progress drafts
 
 ## System Architecture
 
@@ -120,6 +124,12 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/elevenlabs/text-to-speech` - Generate vocals from text
 - `POST /api/elevenlabs/sound-effect` - Generate sound effects
 - `GET /api/elevenlabs/status` - Check if ElevenLabs is configured
+
+#### Bark Routes (Singing AI via Replicate)
+- `GET /api/bark/voices` - List available singing voice presets
+- `POST /api/bark/generate` - Generate singing vocals from lyrics
+- `POST /api/bark/generate/start` - Start async singing generation
+- `GET /api/bark/status` - Check if Bark (Replicate) is configured
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations

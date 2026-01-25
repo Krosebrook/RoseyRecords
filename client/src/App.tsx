@@ -4,42 +4,62 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
-import NotFound from "@/pages/not-found";
+import { lazy, Suspense } from "react";
 
-// Pages
-import Landing from "@/pages/Landing";
-import Dashboard from "@/pages/Dashboard";
-import Generate from "@/pages/Generate";
-import SongDetails from "@/pages/SongDetails";
-import Explore from "@/pages/Explore";
-import Studio from "@/pages/Studio";
+const Landing = lazy(() => import("@/pages/Landing"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Generate = lazy(() => import("@/pages/Generate"));
+const SongDetails = lazy(() => import("@/pages/SongDetails"));
+const Explore = lazy(() => import("@/pages/Explore"));
+const Studio = lazy(() => import("@/pages/Studio"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen bg-background"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    return <PageLoader />;
   }
 
   if (!isAuthenticated) {
     return <Redirect to="/" />;
   }
 
-  return <Component />;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  );
 }
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // If loading auth state, show nothing or spinner
   if (isLoading) {
-    return null;
+    return <PageLoader />;
   }
 
   return (
     <Switch>
       <Route path="/">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <Landing />}
+        {isAuthenticated ? (
+          <Redirect to="/dashboard" />
+        ) : (
+          <Suspense fallback={<PageLoader />}>
+            <Landing />
+          </Suspense>
+        )}
       </Route>
 
       <Route path="/dashboard">
@@ -62,7 +82,11 @@ function Router() {
         <ProtectedRoute component={Studio} />
       </Route>
 
-      <Route component={NotFound} />
+      <Route>
+        <Suspense fallback={<PageLoader />}>
+          <NotFound />
+        </Suspense>
+      </Route>
     </Switch>
   );
 }

@@ -193,3 +193,71 @@ export async function startMusicGeneration(params: MusicGenerationParams): Promi
   
   return prediction.id;
 }
+
+export interface SingingVocalsParams {
+  lyrics: string;
+  voicePreset?: string;
+  textTemp?: number;
+  waveformTemp?: number;
+}
+
+export interface SingingVocalsResult {
+  audioUrl: string;
+}
+
+export async function generateSingingVocals(params: SingingVocalsParams): Promise<SingingVocalsResult> {
+  const replicate = getReplicate();
+  
+  const formattedLyrics = `♪ ${params.lyrics.trim()} ♪`;
+  
+  const output = await replicate.run(
+    "suno-ai/bark:b76242b40d67c76ab6742e987628a2a9ac019e11d56ab96c4e91ce03b79b2787",
+    {
+      input: {
+        prompt: formattedLyrics,
+        text_temp: params.textTemp ?? 0.7,
+        waveform_temp: params.waveformTemp ?? 0.7,
+        history_prompt: params.voicePreset || "v2/en_speaker_6"
+      }
+    }
+  );
+  
+  const audioUrl = extractAudioUrl(output);
+  
+  if (!audioUrl) {
+    throw new Error("No audio URL received from Bark");
+  }
+  
+  return { audioUrl };
+}
+
+export async function startSingingVocals(params: SingingVocalsParams): Promise<string> {
+  const replicate = getReplicate();
+  
+  const formattedLyrics = `♪ ${params.lyrics.trim()} ♪`;
+  
+  const prediction = await replicate.predictions.create({
+    version: "b76242b40d67c76ab6742e987628a2a9ac019e11d56ab96c4e91ce03b79b2787",
+    input: {
+      prompt: formattedLyrics,
+      text_temp: params.textTemp ?? 0.7,
+      waveform_temp: params.waveformTemp ?? 0.7,
+      history_prompt: params.voicePreset || "v2/en_speaker_6"
+    }
+  });
+  
+  return prediction.id;
+}
+
+export const BARK_VOICE_PRESETS = [
+  { id: "v2/en_speaker_0", name: "Speaker 0 (Male)", gender: "male" },
+  { id: "v2/en_speaker_1", name: "Speaker 1 (Male)", gender: "male" },
+  { id: "v2/en_speaker_2", name: "Speaker 2 (Male)", gender: "male" },
+  { id: "v2/en_speaker_3", name: "Speaker 3 (Male)", gender: "male" },
+  { id: "v2/en_speaker_4", name: "Speaker 4 (Male)", gender: "male" },
+  { id: "v2/en_speaker_5", name: "Speaker 5 (Male)", gender: "male" },
+  { id: "v2/en_speaker_6", name: "Speaker 6 (Female)", gender: "female" },
+  { id: "v2/en_speaker_7", name: "Speaker 7 (Female)", gender: "female" },
+  { id: "v2/en_speaker_8", name: "Speaker 8 (Female)", gender: "female" },
+  { id: "v2/en_speaker_9", name: "Speaker 9 (Female)", gender: "female" }
+] as const;

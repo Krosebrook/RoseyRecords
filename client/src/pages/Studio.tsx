@@ -88,23 +88,30 @@ export default function Studio() {
   const [productionTip, setProductionTip] = useState<string | null>(null);
   const [isGettingTip, setIsGettingTip] = useState(false);
 
-  // Vocals state
-  interface VoiceInfo {
-    voice_id: string;
+  // Vocals state (Bark singing AI)
+  interface BarkVoice {
+    id: string;
     name: string;
-    category: string;
-    labels: Record<string, string>;
+    gender: string;
   }
   const [vocalsText, setVocalsText] = useState("");
-  const [voices, setVoices] = useState<VoiceInfo[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState("");
-  const [stability, setStability] = useState(0.5);
-  const [similarityBoost, setSimilarityBoost] = useState(0.75);
+  const [barkVoices, setBarkVoices] = useState<BarkVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState("v2/en_speaker_6");
+  const [textTemp, setTextTemp] = useState(0.7);
+  const [waveformTemp, setWaveformTemp] = useState(0.7);
   const [isGeneratingVocals, setIsGeneratingVocals] = useState(false);
   const [vocalsUrl, setVocalsUrl] = useState<string | null>(null);
-  const [elevenlabsConfigured, setElevenlabsConfigured] = useState(false);
+  const [barkConfigured, setBarkConfigured] = useState(false);
   const vocalsAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlayingVocals, setIsPlayingVocals] = useState(false);
+
+  // Mixing state
+  const [instrumentalVolume, setInstrumentalVolume] = useState(0.7);
+  const [vocalsVolume, setVocalsVolume] = useState(0.8);
+  const [vocalsDelay, setVocalsDelay] = useState(0);
+  const [isMixPlaying, setIsMixPlaying] = useState(false);
+  const mixInstrumentalRef = useRef<HTMLAudioElement | null>(null);
+  const mixVocalsRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -397,60 +404,62 @@ export default function Studio() {
     }
   };
 
-  // ElevenLabs functions
+  // Bark singing AI functions
   useEffect(() => {
-    const checkElevenlabs = async () => {
+    const checkBark = async () => {
       try {
-        const res = await fetch("/api/elevenlabs/status", { credentials: "include" });
+        const res = await fetch("/api/bark/status", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          setElevenlabsConfigured(data.configured);
+          setBarkConfigured(data.configured);
           if (data.configured) {
-            fetchVoices();
+            fetchBarkVoices();
           }
         }
       } catch {
-        setElevenlabsConfigured(false);
+        setBarkConfigured(false);
       }
     };
-    checkElevenlabs();
+    checkBark();
   }, []);
 
-  const fetchVoices = async () => {
+  const fetchBarkVoices = async () => {
     try {
-      const res = await fetch("/api/elevenlabs/voices", { credentials: "include" });
+      const res = await fetch("/api/bark/voices", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setVoices(data.voices || []);
-        if (data.voices?.length > 0) {
-          setSelectedVoice(data.voices[0].voice_id);
-        }
+        setBarkVoices(data.voices || []);
       }
     } catch (err) {
-      console.error("Failed to fetch voices:", err);
+      console.error("Failed to fetch Bark voices:", err);
     }
   };
 
   const handleGenerateVocals = async () => {
     if (!vocalsText.trim()) {
-      toast({ title: "Please enter lyrics", variant: "destructive" });
+      toast({ title: "Please enter lyrics to sing", variant: "destructive" });
+      return;
+    }
+
+    if (vocalsText.length > 2000) {
+      toast({ title: "Lyrics too long (max 2000 characters for singing)", variant: "destructive" });
       return;
     }
 
     setIsGeneratingVocals(true);
     try {
-      const response = await apiRequest("POST", "/api/elevenlabs/text-to-speech", {
-        text: vocalsText.trim(),
-        voiceId: selectedVoice,
-        stability,
-        similarityBoost
+      const response = await apiRequest("POST", "/api/bark/generate", {
+        lyrics: vocalsText.trim(),
+        voicePreset: selectedVoice,
+        textTemp,
+        waveformTemp
       });
       const data = await response.json();
       setVocalsUrl(data.audioUrl);
-      toast({ title: "Vocals generated successfully!" });
+      toast({ title: "Singing vocals generated!" });
     } catch (err) {
       console.error("Vocals generation error:", err);
-      toast({ title: "Failed to generate vocals", variant: "destructive" });
+      toast({ title: "Failed to generate singing vocals", variant: "destructive" });
     } finally {
       setIsGeneratingVocals(false);
     }
@@ -490,6 +499,74 @@ export default function Studio() {
     }
   };
 
+  // Mixing functions
+  const stopMixPlayback = () => {
+    if (mixInstrumentalRef.current) {
+      mixInstrumentalRef.current.pause();
+      mixInstrumentalRef.current.currentTime = 0;
+    }
+    if (mixVocalsRef.current) {
+      mixVocalsRef.current.pause();
+      mixVocalsRef.current.currentTime = 0;
+    }
+    setIsMixPlaying(false);
+  };
+
+  const playMix = () => {
+    const instrumentalUrl = fullTrackUrl || sampleUrl;
+    if (!instrumentalUrl || !vocalsUrl) {
+      toast({ title: "Generate both instrumental and vocals first", variant: "destructive" });
+      return;
+    }
+
+    stopMixPlayback();
+
+    const instrumental = new Audio(instrumentalUrl);
+    const vocals = new Audio(vocalsUrl);
+    
+    instrumental.volume = instrumentalVolume;
+    vocals.volume = vocalsVolume;
+    
+    mixInstrumentalRef.current = instrumental;
+    mixVocalsRef.current = vocals;
+
+    instrumental.play();
+    
+    if (vocalsDelay > 0) {
+      setTimeout(() => {
+        vocals.play();
+      }, vocalsDelay * 1000);
+    } else {
+      vocals.play();
+    }
+
+    setIsMixPlaying(true);
+
+    instrumental.onended = () => {
+      stopMixPlayback();
+    };
+  };
+
+  const handleDownloadMix = async () => {
+    const instrumentalUrl = fullTrackUrl || sampleUrl;
+    if (!instrumentalUrl || !vocalsUrl) {
+      toast({ title: "Generate both instrumental and vocals first", variant: "destructive" });
+      return;
+    }
+    
+    toast({ 
+      title: "Download Individual Tracks", 
+      description: "Due to browser limitations, please download the instrumental and vocals separately, then combine them in any audio editor." 
+    });
+  };
+
+  // Cleanup mix on unmount
+  useEffect(() => {
+    return () => {
+      stopMixPlayback();
+    };
+  }, []);
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -504,7 +581,7 @@ export default function Studio() {
         </div>
 
         <Tabs defaultValue="audio" className="space-y-4">
-          <TabsList className="grid w-full max-w-[500px] grid-cols-3">
+          <TabsList className="grid w-full max-w-[600px] grid-cols-4">
             <TabsTrigger value="audio" className="flex items-center gap-2" data-testid="tab-audio">
               <Headphones className="w-4 h-4" />
               Audio
@@ -512,6 +589,10 @@ export default function Studio() {
             <TabsTrigger value="vocals" className="flex items-center gap-2" data-testid="tab-vocals">
               <Mic className="w-4 h-4" />
               Vocals
+            </TabsTrigger>
+            <TabsTrigger value="mix" className="flex items-center gap-2" data-testid="tab-mix">
+              <Sparkles className="w-4 h-4" />
+              Mix
             </TabsTrigger>
             <TabsTrigger value="theory" className="flex items-center gap-2" data-testid="tab-theory">
               <Piano className="w-4 h-4" />
@@ -833,11 +914,11 @@ export default function Studio() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {!elevenlabsConfigured ? (
+                  {!barkConfigured ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>ElevenLabs is not configured</p>
-                      <p className="text-sm mt-2">Add your ELEVENLABS_API_KEY to enable vocal generation</p>
+                      <p>Bark AI is not configured</p>
+                      <p className="text-sm mt-2">Add your REPLICATE_API_KEY to enable singing vocals</p>
                     </div>
                   ) : (
                     <>
@@ -847,11 +928,11 @@ export default function Studio() {
                           id="vocals-text"
                           value={vocalsText}
                           onChange={(e) => setVocalsText(e.target.value)}
-                          placeholder="Enter the lyrics you want to turn into vocals..."
+                          placeholder="Enter the lyrics you want the AI to sing..."
                           className="min-h-[120px] resize-none"
                           data-testid="input-vocals-text"
                         />
-                        <p className="text-xs text-muted-foreground">{vocalsText.length}/5000 characters</p>
+                        <p className="text-xs text-muted-foreground">{vocalsText.length}/2000 characters (shorter works best for singing)</p>
                       </div>
 
                       <div className="space-y-2">
@@ -861,9 +942,9 @@ export default function Studio() {
                             <SelectValue placeholder="Select a voice" />
                           </SelectTrigger>
                           <SelectContent>
-                            {voices.map(v => (
-                              <SelectItem key={v.voice_id} value={v.voice_id}>
-                                {v.name} ({v.category})
+                            {barkVoices.map(v => (
+                              <SelectItem key={v.id} value={v.id}>
+                                {v.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -872,28 +953,28 @@ export default function Studio() {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Stability: {stability.toFixed(2)}</Label>
+                          <Label>Text Temp: {textTemp.toFixed(2)}</Label>
                           <Slider
-                            value={[stability]}
-                            onValueChange={([v]) => setStability(v)}
-                            min={0}
+                            value={[textTemp]}
+                            onValueChange={([v]) => setTextTemp(v)}
+                            min={0.1}
                             max={1}
                             step={0.05}
-                            data-testid="slider-stability"
+                            data-testid="slider-text-temp"
                           />
-                          <p className="text-xs text-muted-foreground">Higher = more consistent, lower = more expressive</p>
+                          <p className="text-xs text-muted-foreground">Higher = more expressive singing</p>
                         </div>
                         <div className="space-y-2">
-                          <Label>Similarity: {similarityBoost.toFixed(2)}</Label>
+                          <Label>Waveform Temp: {waveformTemp.toFixed(2)}</Label>
                           <Slider
-                            value={[similarityBoost]}
-                            onValueChange={([v]) => setSimilarityBoost(v)}
-                            min={0}
+                            value={[waveformTemp]}
+                            onValueChange={([v]) => setWaveformTemp(v)}
+                            min={0.1}
                             max={1}
                             step={0.05}
-                            data-testid="slider-similarity"
+                            data-testid="slider-waveform-temp"
                           />
-                          <p className="text-xs text-muted-foreground">Higher = closer to original voice</p>
+                          <p className="text-xs text-muted-foreground">Higher = more variation in voice</p>
                         </div>
                       </div>
 
@@ -906,12 +987,12 @@ export default function Studio() {
                         {isGeneratingVocals ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Generating Vocals...
+                            Generating Singing Vocals...
                           </>
                         ) : (
                           <>
                             <Mic className="w-4 h-4 mr-2" />
-                            Generate Vocals
+                            Generate Singing Vocals
                           </>
                         )}
                       </Button>
@@ -971,6 +1052,154 @@ export default function Studio() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="mix" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  Mix & Preview
+                </CardTitle>
+                <CardDescription data-testid="text-mix-description">
+                  Combine your instrumental and vocals into a complete song
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!(fullTrackUrl || sampleUrl) || !vocalsUrl ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Generate both instrumental and vocals first</p>
+                    <p className="text-sm mt-2">Use the Audio and Vocals tabs to create your tracks</p>
+                    <div className="flex gap-4 justify-center mt-4">
+                      <Badge variant={(fullTrackUrl || sampleUrl) ? "default" : "secondary"}>
+                        {(fullTrackUrl || sampleUrl) ? "Instrumental Ready" : "Need Instrumental"}
+                      </Badge>
+                      <Badge variant={vocalsUrl ? "default" : "secondary"}>
+                        {vocalsUrl ? "Vocals Ready" : "Need Vocals"}
+                      </Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="p-4 bg-secondary/20 rounded-lg">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Headphones className="w-5 h-5 text-primary" />
+                            <span className="font-medium">Instrumental</span>
+                            <Badge variant="outline" className="ml-auto">Ready</Badge>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Volume: {Math.round(instrumentalVolume * 100)}%</Label>
+                            <Slider
+                              value={[instrumentalVolume]}
+                              onValueChange={([v]) => {
+                                setInstrumentalVolume(v);
+                                if (mixInstrumentalRef.current) {
+                                  mixInstrumentalRef.current.volume = v;
+                                }
+                              }}
+                              min={0}
+                              max={1}
+                              step={0.05}
+                              data-testid="slider-instrumental-volume"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="p-4 bg-secondary/20 rounded-lg">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Mic className="w-5 h-5 text-primary" />
+                            <span className="font-medium">Singing Vocals</span>
+                            <Badge variant="outline" className="ml-auto">Ready</Badge>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Volume: {Math.round(vocalsVolume * 100)}%</Label>
+                            <Slider
+                              value={[vocalsVolume]}
+                              onValueChange={([v]) => {
+                                setVocalsVolume(v);
+                                if (mixVocalsRef.current) {
+                                  mixVocalsRef.current.volume = v;
+                                }
+                              }}
+                              min={0}
+                              max={1}
+                              step={0.05}
+                              data-testid="slider-vocals-volume"
+                            />
+                          </div>
+                          <div className="space-y-2 mt-4">
+                            <Label>Delay: {vocalsDelay.toFixed(1)}s</Label>
+                            <Slider
+                              value={[vocalsDelay]}
+                              onValueChange={([v]) => setVocalsDelay(v)}
+                              min={0}
+                              max={5}
+                              step={0.1}
+                              data-testid="slider-vocals-delay"
+                            />
+                            <p className="text-xs text-muted-foreground">Adjust when vocals start relative to instrumental</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      <Button
+                        onClick={isMixPlaying ? stopMixPlayback : playMix}
+                        size="lg"
+                        data-testid="button-play-mix"
+                      >
+                        {isMixPlaying ? (
+                          <>
+                            <Pause className="w-5 h-5 mr-2" />
+                            Stop Mix
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-5 h-5 mr-2" />
+                            Play Mix
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        asChild
+                        data-testid="button-download-instrumental"
+                      >
+                        <a href={fullTrackUrl || sampleUrl || ""} download="instrumental.mp3">
+                          <Download className="w-4 h-4 mr-2" />
+                          Instrumental
+                        </a>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        asChild
+                        data-testid="button-download-vocals-mix"
+                      >
+                        <a href={vocalsUrl} download="vocals.wav">
+                          <Download className="w-4 h-4 mr-2" />
+                          Vocals
+                        </a>
+                      </Button>
+                    </div>
+
+                    <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                      <p className="font-medium mb-2">Tip: Creating a final mixed track</p>
+                      <p>Download both tracks and use a free audio editor like Audacity to combine them with precise timing control. This gives you full control over the final mix.</p>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="theory" className="space-y-4">

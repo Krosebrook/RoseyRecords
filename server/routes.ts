@@ -813,5 +813,70 @@ Also suggest a fitting title for the song.`;
     res.json({ configured: elevenlabsService.isConfigured() });
   });
 
+  // Bark singing vocals routes
+  app.get("/api/bark/voices", isAuthenticated, async (req, res) => {
+    res.json({ voices: replicateService.BARK_VOICE_PRESETS });
+  });
+
+  app.post("/api/bark/generate", isAuthenticated, async (req, res) => {
+    try {
+      if (!process.env.REPLICATE_API_KEY) {
+        return res.status(503).json({ message: "Replicate is not configured" });
+      }
+      
+      const { lyrics, voicePreset, textTemp, waveformTemp } = req.body;
+      
+      if (!lyrics || typeof lyrics !== "string" || lyrics.trim().length === 0) {
+        return res.status(400).json({ message: "Lyrics are required" });
+      }
+      
+      if (lyrics.length > 2000) {
+        return res.status(400).json({ message: "Lyrics too long (max 2000 characters for singing)" });
+      }
+      
+      const result = await replicateService.generateSingingVocals({
+        lyrics: lyrics.trim(),
+        voicePreset,
+        textTemp: typeof textTemp === "number" ? Math.max(0.1, Math.min(1.0, textTemp)) : undefined,
+        waveformTemp: typeof waveformTemp === "number" ? Math.max(0.1, Math.min(1.0, waveformTemp)) : undefined
+      });
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating singing vocals:", err);
+      res.status(500).json({ message: "Failed to generate singing vocals" });
+    }
+  });
+
+  app.post("/api/bark/generate/start", isAuthenticated, async (req, res) => {
+    try {
+      if (!process.env.REPLICATE_API_KEY) {
+        return res.status(503).json({ message: "Replicate is not configured" });
+      }
+      
+      const { lyrics, voicePreset, textTemp, waveformTemp } = req.body;
+      
+      if (!lyrics || typeof lyrics !== "string" || lyrics.trim().length === 0) {
+        return res.status(400).json({ message: "Lyrics are required" });
+      }
+      
+      const predictionId = await replicateService.startSingingVocals({
+        lyrics: lyrics.trim(),
+        voicePreset,
+        textTemp: typeof textTemp === "number" ? Math.max(0.1, Math.min(1.0, textTemp)) : undefined,
+        waveformTemp: typeof waveformTemp === "number" ? Math.max(0.1, Math.min(1.0, waveformTemp)) : undefined
+      });
+      
+      res.json({ predictionId });
+    } catch (err) {
+      console.error("Error starting singing vocals:", err);
+      res.status(500).json({ message: "Failed to start singing vocals" });
+    }
+  });
+
+  app.get("/api/bark/status", isAuthenticated, async (req, res) => {
+    res.json({ configured: !!process.env.REPLICATE_API_KEY });
+  });
+
   return httpServer;
 }
