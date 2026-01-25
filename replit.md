@@ -13,6 +13,7 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### January 2026
+- Added Audio Visualizer page with circular equalizer, frequency spectrum, and waveform display
 - Added AI-guided user onboarding with interactive walkthrough tours
 - Added usePageTitle hook for dynamic browser titles across all pages
 - Updated HarmoniQ branding throughout UI (hero, feature cards, footer)
@@ -73,6 +74,7 @@ Preferred communication style: Simple, everyday language.
 - `/dashboard` - User's song library
 - `/generate` - AI lyrics generation with OpenAI/Gemini toggle
 - `/studio` - Music studio with audio generation and music theory tools
+- `/visualizer` - Interactive audio visualizer with synthwave aesthetic
 - `/explore` - Browse public songs
 - `/songs/:id` - Song details view
 

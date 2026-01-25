@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Music, LayoutDashboard, Mic2, LogOut, User, Compass, Headphones } from "lucide-react";
+import { Music, LayoutDashboard, Mic2, LogOut, User, Compass, Headphones, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -11,6 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/dashboard", label: "My Library", icon: LayoutDashboard },
     { href: "/generate", label: "Create", icon: Mic2 },
     { href: "/studio", label: "Studio", icon: Headphones },
+    { href: "/visualizer", label: "Visualizer", icon: Activity },
     { href: "/explore", label: "Explore", icon: Compass },
   ];
 

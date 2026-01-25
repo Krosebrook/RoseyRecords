@@ -12,6 +12,7 @@ const Generate = lazy(() => import("@/pages/Generate"));
 const SongDetails = lazy(() => import("@/pages/SongDetails"));
 const Explore = lazy(() => import("@/pages/Explore"));
 const Studio = lazy(() => import("@/pages/Studio"));
+const Visualizer = lazy(() => import("@/pages/Visualizer"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function PageLoader() {
@@ -80,6 +81,10 @@ function Router() {
 
       <Route path="/studio">
         <ProtectedRoute component={Studio} />
+      </Route>
+
+      <Route path="/visualizer">
+        <ProtectedRoute component={Visualizer} />
       </Route>
 
       <Route>
