@@ -56,7 +56,7 @@ export default function SongDetails() {
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>
           
-          <div className="glass-panel p-8 rounded-3xl relative overflow-hidden">
+          <div className="glass-panel p-4 md:p-8 rounded-2xl md:rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 relative z-10">
@@ -72,7 +72,7 @@ export default function SongDetails() {
                     </span>
                   )}
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black mb-4 font-display tracking-tight text-white" data-testid="text-song-title">{song.title}</h1>
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-black mb-4 font-display tracking-tight text-white" data-testid="text-song-title">{song.title}</h1>
                 <div className="flex flex-wrap gap-3 items-center text-sm">
                   {song.genre && (
                     <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
@@ -90,7 +90,7 @@ export default function SongDetails() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 <Button
                   size="icon"
                   variant="outline"
@@ -98,7 +98,7 @@ export default function SongDetails() {
                   title="Copy Lyrics"
                   data-testid="button-copy-lyrics"
                 >
-                  <Share2 className="w-5 h-5" />
+                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
                 <Button
                   size="icon"
@@ -108,7 +108,7 @@ export default function SongDetails() {
                   title="Delete Song"
                   data-testid="button-delete-song"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               </div>
             </div>
@@ -121,8 +121,8 @@ export default function SongDetails() {
               </div>
             )}
 
-            <div className="mt-8 pt-8 border-t border-white/10">
-              <pre className="whitespace-pre-wrap font-mono text-lg leading-relaxed text-foreground/90 max-w-2xl" data-testid="text-lyrics">
+            <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-white/10">
+              <pre className="whitespace-pre-wrap font-mono text-sm md:text-lg leading-relaxed text-foreground/90 max-w-2xl" data-testid="text-lyrics">
                 {song.lyrics}
               </pre>
             </div>

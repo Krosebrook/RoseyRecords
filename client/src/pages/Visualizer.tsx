@@ -295,9 +295,9 @@ export default function Visualizer() {
   return (
     <div className="min-h-screen bg-[#0a0a1a] flex flex-col">
       {/* Header */}
-      <header className="p-4 border-b border-cyan-900/30">
+      <header className="p-3 md:p-4 border-b border-cyan-900/30">
         <h1 
-          className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-500"
+          className="text-lg sm:text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-500"
           style={{ fontFamily: "'Orbitron', sans-serif" }}
           data-testid="visualizer-title"
         >
@@ -341,11 +341,11 @@ export default function Visualizer() {
       </div>
 
       {/* Controls */}
-      <div className="p-4 md:p-6 bg-gradient-to-t from-[#0a0a1a] to-transparent">
+      <div className="p-3 md:p-6 bg-gradient-to-t from-[#0a0a1a] to-transparent">
         {/* Progress bar */}
-        <div className="mb-4">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-xs text-cyan-400 w-12">{formatTime(currentTime)}</span>
+        <div className="mb-3 md:mb-4">
+          <div className="flex items-center gap-2 md:gap-3 mb-2">
+            <span className="text-[10px] md:text-xs text-cyan-400 w-10 md:w-12">{formatTime(currentTime)}</span>
             <Slider
               value={[currentTime]}
               max={duration || 100}
@@ -354,22 +354,22 @@ export default function Visualizer() {
               className="flex-1"
               data-testid="slider-progress"
             />
-            <span className="text-xs text-cyan-400 w-12 text-right">{formatTime(duration)}</span>
+            <span className="text-[10px] md:text-xs text-cyan-400 w-10 md:w-12 text-right">{formatTime(duration)}</span>
           </div>
           
-          {/* Track markers */}
-          <div className="flex justify-between px-12">
+          {/* Track markers - hidden on very small screens */}
+          <div className="hidden sm:flex justify-between px-12">
             {[0, 0.25, 0.5, 0.75, 1].map((pos, i) => (
               <div 
                 key={i}
-                className="w-3 h-3 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-2 border-cyan-300/50"
+                className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-2 border-cyan-300/50"
               />
             ))}
           </div>
         </div>
 
         {/* Control buttons */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-2 md:gap-4">
           <label className="cursor-pointer">
             <input
               type="file"
@@ -377,8 +377,8 @@ export default function Visualizer() {
               onChange={handleFileUpload}
               className="hidden"
             />
-            <div className="p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30 transition-colors">
-              <Upload className="w-5 h-5" />
+            <div className="p-2 md:p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30 transition-colors">
+              <Upload className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </label>
 
@@ -386,17 +386,17 @@ export default function Visualizer() {
             size="icon"
             variant="ghost"
             onClick={() => setIsMuted(!isMuted)}
-            className="p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30"
+            className="p-2 md:p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30 h-auto w-auto"
             data-testid="button-mute"
           >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
           </Button>
 
           <Slider
             value={[volume * 100]}
             max={100}
             onValueChange={(v) => setVolume(v[0] / 100)}
-            className="w-24"
+            className="w-16 md:w-24"
             data-testid="slider-volume"
           />
 
@@ -404,29 +404,29 @@ export default function Visualizer() {
             size="icon"
             onClick={handlePlayPause}
             disabled={!audioFile}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-red-600 border-2 border-orange-400/50 text-white hover:from-orange-400 hover:to-red-500 disabled:opacity-50"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-orange-500 to-red-600 border-2 border-orange-400/50 text-white hover:from-orange-400 hover:to-red-500 disabled:opacity-50"
             data-testid="button-play-pause"
           >
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+            {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6" /> : <Play className="w-5 h-5 md:w-6 md:h-6 ml-0.5" />}
           </Button>
 
           <Button
             size="icon"
             variant="ghost"
             onClick={toggleLoop}
-            className={`p-3 rounded-full border transition-colors ${
+            className={`p-2 md:p-3 rounded-full border transition-colors h-auto w-auto ${
               isLooping 
                 ? "bg-orange-500/30 border-orange-500/50 text-orange-400" 
                 : "bg-cyan-900/30 border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30"
             }`}
             data-testid="button-loop"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
         </div>
 
         {/* Audio name */}
-        <p className="text-center mt-4 text-sm text-cyan-400/70" data-testid="text-audio-name">
+        <p className="text-center mt-3 md:mt-4 text-xs md:text-sm text-cyan-400/70 truncate px-4" data-testid="text-audio-name">
           {audioName}
         </p>
       </div>

@@ -586,21 +586,21 @@ export default function Studio() {
       />
       
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Music className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+              <Music className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
-              <p className="text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
+              <h1 className="text-xl sm:text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShowTour}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground self-end sm:self-auto"
             data-testid="button-studio-tour"
           >
             <HelpCircle className="w-4 h-4 mr-2" />
@@ -609,24 +609,26 @@ export default function Studio() {
         </div>
 
         <Tabs defaultValue="audio" className="space-y-4">
-          <TabsList className="grid w-full max-w-[600px] grid-cols-4">
-            <TabsTrigger value="audio" className="flex items-center gap-2" data-testid="tab-audio">
-              <Headphones className="w-4 h-4" />
-              Audio
-            </TabsTrigger>
-            <TabsTrigger value="vocals" className="flex items-center gap-2" data-testid="tab-vocals">
-              <Mic className="w-4 h-4" />
-              Vocals
-            </TabsTrigger>
-            <TabsTrigger value="mix" className="flex items-center gap-2" data-testid="tab-mix">
-              <Sparkles className="w-4 h-4" />
-              Mix
-            </TabsTrigger>
-            <TabsTrigger value="theory" className="flex items-center gap-2" data-testid="tab-theory">
-              <Piano className="w-4 h-4" />
-              Theory
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:max-w-[600px] md:grid-cols-4">
+              <TabsTrigger value="audio" className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4" data-testid="tab-audio">
+                <Headphones className="w-4 h-4" />
+                <span className="whitespace-nowrap">Audio</span>
+              </TabsTrigger>
+              <TabsTrigger value="vocals" className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4" data-testid="tab-vocals">
+                <Mic className="w-4 h-4" />
+                <span className="whitespace-nowrap">Vocals</span>
+              </TabsTrigger>
+              <TabsTrigger value="mix" className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4" data-testid="tab-mix">
+                <Sparkles className="w-4 h-4" />
+                <span className="whitespace-nowrap">Mix</span>
+              </TabsTrigger>
+              <TabsTrigger value="theory" className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4" data-testid="tab-theory">
+                <Piano className="w-4 h-4" />
+                <span className="whitespace-nowrap">Theory</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="audio" className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">

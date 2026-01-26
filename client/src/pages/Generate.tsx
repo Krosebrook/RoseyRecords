@@ -133,10 +133,10 @@ export default function Generate() {
         onSkip={() => setShowOnboarding(false)}
       />
       
-      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)]">
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 md:gap-6 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)]">
         {/* Controls Panel */}
         <div className="w-full lg:w-[380px] flex flex-col gap-4">
-          <div className="glass-panel p-6 rounded-2xl flex-1 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
+          <div className="glass-panel p-4 md:p-6 rounded-2xl lg:flex-1 flex flex-col gap-4 md:gap-5 lg:overflow-y-auto custom-scrollbar">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1 flex items-center gap-2" data-testid="text-generator-title">
@@ -355,8 +355,8 @@ export default function Generate() {
         </div>
 
         {/* Output Panel */}
-        <div className="w-full lg:flex-1 flex flex-col gap-4 h-full min-h-[500px]">
-          <div className="glass-panel p-6 md:p-8 rounded-2xl flex-1 relative overflow-hidden flex flex-col">
+        <div className="w-full lg:flex-1 flex flex-col gap-4 min-h-[400px] lg:min-h-0 lg:h-full">
+          <div className="glass-panel p-4 md:p-8 rounded-2xl flex-1 relative overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
