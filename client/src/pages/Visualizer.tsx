@@ -438,6 +438,10 @@ export default function Visualizer() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => setIsPlaying(false)}
+        onError={(e) => {
+          console.error("Audio loading error:", e);
+          setIsPlaying(false);
+        }}
         data-testid="audio-element"
       />
     </div>

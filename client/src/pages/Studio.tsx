@@ -136,6 +136,10 @@ export default function Studio() {
       audio.onloadedmetadata = () => {
         setCurrentDuration(audio.duration);
       };
+      audio.onerror = () => {
+        console.error("Audio loading error for URL:", currentAudioUrl);
+        setIsPlaying(false);
+      };
       audio.muted = isMuted;
       audioRef.current = audio;
     }
