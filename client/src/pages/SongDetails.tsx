@@ -1,15 +1,23 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { useSong, useDeleteSong } from "@/hooks/use-songs";
-import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock } from "lucide-react";
+import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock, Copy, Link2, Twitter, Facebook } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function SongDetails() {
   usePageTitle("Song Details");
   const [, params] = useRoute("/songs/:id");
+  const [, setLocation] = useLocation();
   const id = parseInt(params?.id || "0");
   const { data: song, isLoading, error } = useSong(id);
   const { mutate: deleteSong, isPending: isDeleting } = useDeleteSong();
@@ -34,14 +42,58 @@ export default function SongDetails() {
 
   const handleDelete = () => {
     if (confirm("Are you sure? This cannot be undone.")) {
-      deleteSong(id);
-      window.location.href = "/dashboard";
+      deleteSong(id, {
+        onSuccess: () => {
+          setLocation("/dashboard");
+        }
+      });
+    }
+  };
+
+  const copyToClipboard = async (text: string, successMessage: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast({ title: "Copied!", description: successMessage });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        toast({ title: "Copied!", description: successMessage });
+      }
+    } catch (err) {
+      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
     }
   };
 
   const handleCopyLyrics = () => {
-    navigator.clipboard.writeText(song.lyrics);
-    toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
+    copyToClipboard(song.lyrics, "Lyrics copied to clipboard.");
+  };
+
+  const handleCopyLink = () => {
+    copyToClipboard(window.location.href, "Song link copied to clipboard.");
+  };
+
+  const handleShareTwitter = () => {
+    const text = `Check out "${song.title}" on HarmoniQ!`;
+    const url = window.location.href;
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    const win = window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    if (!win) {
+      toast({ title: "Popup blocked", description: "Please allow popups to share.", variant: "destructive" });
+    }
+  };
+
+  const handleShareFacebook = () => {
+    const url = window.location.href;
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    const win = window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    if (!win) {
+      toast({ title: "Popup blocked", description: "Please allow popups to share.", variant: "destructive" });
+    }
   };
 
   return (
@@ -91,15 +143,37 @@ export default function SongDetails() {
               </div>
 
               <div className="flex gap-2 flex-shrink-0">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={handleCopyLyrics}
-                  title="Copy Lyrics"
-                  data-testid="button-copy-lyrics"
-                >
-                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      title="Share"
+                      data-testid="button-share"
+                    >
+                      <Share2 className="w-4 h-4 md:w-5 md:h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleCopyLyrics} data-testid="menu-copy-lyrics">
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Lyrics
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCopyLink} data-testid="menu-copy-link">
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Copy Link
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleShareTwitter} data-testid="menu-share-twitter">
+                      <Twitter className="w-4 h-4 mr-2" />
+                      Share on X
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShareFacebook} data-testid="menu-share-facebook">
+                      <Facebook className="w-4 h-4 mr-2" />
+                      Share on Facebook
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   size="icon"
                   variant="destructive"

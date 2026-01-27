@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Music, LayoutDashboard, Mic2, LogOut, User, Compass, Headphones, Activity } from "lucide-react";
+import { Music, LayoutDashboard, Mic2, LogOut, User, Compass, Headphones, Activity, ListMusic, Heart, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/studio", label: "Studio", icon: Headphones },
     { href: "/visualizer", label: "Visualizer", icon: Activity },
     { href: "/explore", label: "Explore", icon: Compass },
+    { href: "/playlists", label: "Playlists", icon: ListMusic },
+    { href: "/favorites", label: "Favorites", icon: Heart },
   ];
 
   return (
@@ -26,9 +28,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <span className="text-xl font-bold tracking-tight font-display" data-testid="text-brand-name">HarmoniQ</span>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = location === item.href || (item.href === "/dashboard" && location.startsWith("/songs/"));
+            const isActive = location === item.href || 
+              (item.href === "/dashboard" && location.startsWith("/songs/")) ||
+              (item.href === "/playlists" && location.startsWith("/playlists/"));
             return (
               <Link 
                 key={item.href} 
@@ -67,14 +71,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-xs text-muted-foreground truncate" data-testid="text-user-email">{user?.email}</p>
             </div>
           </div>
-          <button 
-            onClick={() => logout()} 
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors"
-            data-testid="button-logout"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
+          
+          <div className="flex gap-2">
+            <Link
+              href="/settings"
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors",
+                location === "/settings" 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+              data-testid="button-settings"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </Link>
+            <button 
+              onClick={() => logout()} 
+              className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </aside>
 

@@ -126,7 +126,9 @@ export class DatabaseStorage implements IStorage {
     
     if (likes.length === 0) return [];
     
-    const songIds = likes.map(l => l.songId);
+    const songIds = likes.map(l => l.songId).filter(id => typeof id === 'number' && !isNaN(id));
+    if (songIds.length === 0) return [];
+    
     const likedSongs: Song[] = [];
     for (const id of songIds) {
       const song = await this.getSong(id);

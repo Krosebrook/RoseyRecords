@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -8,6 +8,16 @@ import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integra
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import OpenAI from "openai";
+
+// Helper to validate numeric IDs from route params
+function parseNumericId(value: string, res: Response): number | null {
+  const id = Number(value);
+  if (isNaN(id) || !Number.isInteger(id) || id < 1) {
+    res.status(400).json({ message: 'Invalid ID parameter' });
+    return null;
+  }
+  return id;
+}
 import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
@@ -88,7 +98,10 @@ export async function registerRoutes(
 
   // GET /api/songs/:id
   app.get(api.songs.get.path, isAuthenticated, async (req: any, res) => {
-    const song = await storage.getSong(Number(req.params.id));
+    const songId = parseNumericId(req.params.id, res);
+    if (songId === null) return;
+    
+    const song = await storage.getSong(songId);
     
     if (!song) {
       return res.status(404).json({ message: 'Song not found' });
@@ -126,8 +139,11 @@ export async function registerRoutes(
 
   // DELETE /api/songs/:id
   app.delete(api.songs.delete.path, isAuthenticated, async (req: any, res) => {
+    const songId = parseNumericId(req.params.id, res);
+    if (songId === null) return;
+    
     const userId = req.user.claims.sub;
-    const song = await storage.getSong(Number(req.params.id));
+    const song = await storage.getSong(songId);
     
     if (!song) {
       return res.status(404).json({ message: 'Song not found' });
@@ -137,14 +153,16 @@ export async function registerRoutes(
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    await storage.deleteSong(Number(req.params.id));
+    await storage.deleteSong(songId);
     res.status(204).send();
   });
 
   // POST /api/songs/:id/like
   app.post(api.songs.like.path, isAuthenticated, async (req: any, res) => {
+    const songId = parseNumericId(req.params.id, res);
+    if (songId === null) return;
+    
     const userId = req.user.claims.sub;
-    const songId = Number(req.params.id);
     const song = await storage.getSong(songId);
     
     if (!song) {
@@ -157,7 +175,9 @@ export async function registerRoutes(
 
   // POST /api/songs/:id/play
   app.post(api.songs.incrementPlay.path, async (req, res) => {
-    const songId = Number(req.params.id);
+    const songId = parseNumericId(req.params.id, res);
+    if (songId === null) return;
+    
     const song = await storage.getSong(songId);
     
     if (!song) {
@@ -176,6 +196,13 @@ export async function registerRoutes(
     res.json({ likedIds: ids });
   });
 
+  // GET /api/songs/liked - Get user's liked songs with full details
+  app.get('/api/songs/liked', isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const likedSongs = await storage.getLikedSongs(userId);
+    res.json(likedSongs);
+  });
+
   // ==========================================
   // PLAYLIST ROUTES
   // ==========================================
@@ -189,7 +216,10 @@ export async function registerRoutes(
 
   // GET /api/playlists/:id
   app.get(api.playlists.get.path, isAuthenticated, async (req: any, res) => {
-    const playlist = await storage.getPlaylistWithSongs(Number(req.params.id));
+    const playlistId = parseNumericId(req.params.id, res);
+    if (playlistId === null) return;
+    
+    const playlist = await storage.getPlaylistWithSongs(playlistId);
     
     if (!playlist) {
       return res.status(404).json({ message: 'Playlist not found' });
@@ -226,8 +256,11 @@ export async function registerRoutes(
 
   // DELETE /api/playlists/:id
   app.delete(api.playlists.delete.path, isAuthenticated, async (req: any, res) => {
+    const playlistId = parseNumericId(req.params.id, res);
+    if (playlistId === null) return;
+    
     const userId = req.user.claims.sub;
-    const playlist = await storage.getPlaylist(Number(req.params.id));
+    const playlist = await storage.getPlaylist(playlistId);
     
     if (!playlist) {
       return res.status(404).json({ message: 'Playlist not found' });
@@ -237,15 +270,17 @@ export async function registerRoutes(
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    await storage.deletePlaylist(Number(req.params.id));
+    await storage.deletePlaylist(playlistId);
     res.status(204).send();
   });
 
   // POST /api/playlists/:id/songs
   app.post(api.playlists.addSong.path, isAuthenticated, async (req: any, res) => {
     try {
+      const playlistId = parseNumericId(req.params.id, res);
+      if (playlistId === null) return;
+      
       const { songId } = api.playlists.addSong.input.parse(req.body);
-      const playlistId = Number(req.params.id);
       
       const userId = req.user.claims.sub;
       const playlist = await storage.getPlaylist(playlistId);
@@ -273,8 +308,11 @@ export async function registerRoutes(
 
   // DELETE /api/playlists/:id/songs/:songId
   app.delete(api.playlists.removeSong.path, isAuthenticated, async (req: any, res) => {
-    const playlistId = Number(req.params.id);
-    const songId = Number(req.params.songId);
+    const playlistId = parseNumericId(req.params.id, res);
+    if (playlistId === null) return;
+    
+    const songId = parseNumericId(req.params.songId, res);
+    if (songId === null) return;
     
     const userId = req.user.claims.sub;
     const playlist = await storage.getPlaylist(playlistId);

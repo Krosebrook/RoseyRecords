@@ -13,6 +13,13 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### January 2026
+- Added Search & Filtering to Dashboard and Explore pages (search, genre filter, mood filter, sorting)
+- Added Playlists page with full CRUD operations for playlist management
+- Added Playlist Details page to view and manage songs within playlists
+- Added Favorites page to view all liked songs
+- Added Settings page with profile display, dark mode toggle, and notification preferences
+- Added song sharing features (copy lyrics, copy link, Twitter/Facebook sharing)
+- Enhanced navigation sidebar with Playlists, Favorites, and Settings links
 - Added Audio Visualizer page with circular equalizer, frequency spectrum, and waveform display
 - Added AI-guided user onboarding with interactive walkthrough tours
 - Added usePageTitle hook for dynamic browser titles across all pages
@@ -71,12 +78,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Application Pages
 - `/` - Landing page (redirects to dashboard if authenticated)
-- `/dashboard` - User's song library
+- `/dashboard` - User's song library with search and filtering
 - `/generate` - AI lyrics generation with OpenAI/Gemini toggle
 - `/studio` - Music studio with audio generation and music theory tools
 - `/visualizer` - Interactive audio visualizer with synthwave aesthetic
-- `/explore` - Browse public songs
-- `/songs/:id` - Song details view
+- `/explore` - Browse public songs with search, filters, and sorting
+- `/playlists` - Manage song playlists
+- `/playlists/:id` - View playlist details and songs
+- `/favorites` - View liked songs
+- `/settings` - User profile, appearance, and notification settings
+- `/songs/:id` - Song details view with sharing options
 
 ## External Dependencies
 

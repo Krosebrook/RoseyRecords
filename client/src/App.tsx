@@ -13,6 +13,10 @@ const SongDetails = lazy(() => import("@/pages/SongDetails"));
 const Explore = lazy(() => import("@/pages/Explore"));
 const Studio = lazy(() => import("@/pages/Studio"));
 const Visualizer = lazy(() => import("@/pages/Visualizer"));
+const Playlists = lazy(() => import("@/pages/Playlists"));
+const PlaylistDetails = lazy(() => import("@/pages/PlaylistDetails"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
+const Settings = lazy(() => import("@/pages/Settings"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function PageLoader() {
@@ -85,6 +89,22 @@ function Router() {
 
       <Route path="/visualizer">
         <ProtectedRoute component={Visualizer} />
+      </Route>
+
+      <Route path="/playlists">
+        <ProtectedRoute component={Playlists} />
+      </Route>
+
+      <Route path="/playlists/:id">
+        <ProtectedRoute component={PlaylistDetails} />
+      </Route>
+
+      <Route path="/favorites">
+        <ProtectedRoute component={Favorites} />
+      </Route>
+
+      <Route path="/settings">
+        <ProtectedRoute component={Settings} />
       </Route>
 
       <Route>
