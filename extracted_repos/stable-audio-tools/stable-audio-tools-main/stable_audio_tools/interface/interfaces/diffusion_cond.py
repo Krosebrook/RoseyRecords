@@ -259,26 +259,25 @@ def generate_cond(
     torchaudio.save(output_wav, audio, sample_rate)
 
     # If file_format is other than wav, convert to other file format
-    cmd = ""
+    cmd_args = None
     if file_format == "m4a aac_he_v2 32k":
         # note: need to compile ffmpeg with --enable-libfdk_aac
-        cmd = f"ffmpeg -i \"{output_wav}\" -c:a libfdk_aac -profile:a aac_he_v2 -b:a 32k -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-c:a", "libfdk_aac", "-profile:a", "aac_he_v2", "-b:a", "32k", "-y", output_filename]
     elif file_format == "m4a aac_he_v2 64k":
-        cmd = f"ffmpeg -i \"{output_wav}\" -c:a libfdk_aac -profile:a aac_he_v2 -b:a 64k -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-c:a", "libfdk_aac", "-profile:a", "aac_he_v2", "-b:a", "64k", "-y", output_filename]
     elif file_format == "flac":
-        cmd = f"ffmpeg -i \"{output_wav}\" -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-y", output_filename]
     elif file_format == "mp3 320k":
-        cmd = f"ffmpeg -i \"{output_wav}\" -b:a 320k -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-b:a", "320k", "-y", output_filename]
     elif file_format == "mp3 128k":
-        cmd = f"ffmpeg -i \"{output_wav}\" -b:a 128k -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-b:a", "128k", "-y", output_filename]
     elif file_format == "mp3 v0":
-        cmd = f"ffmpeg -i \"{output_wav}\" -q:a 0 -y \"{output_filename}\""
+        cmd_args = ["ffmpeg", "-i", output_wav, "-q:a", "0", "-y", output_filename]
     else: # wav
         pass
-    if cmd:
-        import shlex
-        cmd += " -loglevel error" # make output less verbose in the cmd window
-        subprocess.run(shlex.split(cmd), shell=False, check=True)
+    if cmd_args:
+        cmd_args.extend(["-loglevel", "error"])  # make output less verbose in the cmd window
+        subprocess.run(cmd_args, shell=False, check=True)
     
     # Let's look at a nice spectrogram too
     audio_spectrogram = audio_spectrogram_image(audio, sample_rate=sample_rate)
