@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward, Mic, HelpCircle } from "lucide-react";
+import { Music, Headphones, Piano, Guitar, Loader2, Play, Pause, Volume2, VolumeX, Lightbulb, RefreshCw, Sparkles, Clock, Wand2, Download, SkipForward, Mic, HelpCircle, Save, Library } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, STUDIO_ONBOARDING_STEPS } from "@/components/Onboarding";
+import { useCreateSong } from "@/hooks/use-songs";
 
 interface ChordData {
   root: string;
@@ -74,7 +75,9 @@ interface SunoUserInfo {
 export default function Studio() {
   usePageTitle("Studio");
   const { toast } = useToast();
+  const { mutate: saveSong, isPending: isSavingSong } = useCreateSong();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [savedToLibrary, setSavedToLibrary] = useState(false);
   
   const [audioPrompt, setAudioPrompt] = useState("");
   const [targetDuration, setTargetDuration] = useState("60");
@@ -209,6 +212,7 @@ export default function Studio() {
     setSampleUrl(null);
     setFullTrackUrl(null);
     setCurrentAudioUrl(null);
+    setSavedToLibrary(false);
     
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => Math.min(prev + 5, 90));
@@ -258,6 +262,7 @@ export default function Studio() {
     setIsGeneratingAudio(true);
     setGenerationProgress(0);
     setFullTrackUrl(null);
+    setSavedToLibrary(false);
     
     const duration = parseInt(targetDuration);
     const estimatedTime = duration > 47 ? 30000 : 15000;
@@ -329,6 +334,32 @@ export default function Studio() {
       audioRef.current.currentTime = (value[0] / 100) * audioRef.current.duration;
       setPlaybackProgress(value[0]);
     }
+  };
+
+  const handleSaveToLibrary = () => {
+    if (!currentAudioUrl) return;
+    
+    const title = sunoTitle || audioPrompt.slice(0, 50) || "Untitled Track";
+    const lyrics = sunoLyrics || "";
+    
+    saveSong({
+      title,
+      lyrics,
+      description: audioPrompt,
+      genre: selectedGenre,
+      mood: selectedMood,
+      audioUrl: currentAudioUrl,
+      hasVocal: generationEngine === "suno" && !sunoInstrumental,
+      isPublic: false
+    }, {
+      onSuccess: () => {
+        setSavedToLibrary(true);
+        toast({
+          title: "Saved to Library",
+          description: `"${title}" has been added to your song library.`
+        });
+      }
+    });
   };
 
   const switchToSample = () => {
@@ -607,6 +638,7 @@ export default function Studio() {
     setGenerationProgress(0);
     setFullTrackUrl(null);
     setSunoTaskId(null);
+    setSavedToLibrary(false);
     
     // Clear any existing intervals/timeouts
     if (sunoProgressIntervalRef.current) {
@@ -974,8 +1006,12 @@ export default function Studio() {
                           {sunoConfig?.provider === "defapi" ? "DefAPI" : "Suno"} Pro - Studio Quality
                         </div>
                         {sunoUserInfo && (
-                          <Badge variant="outline" className="text-xs" data-testid="badge-suno-credits">
-                            {sunoUserInfo.credits} credits
+                          <Badge 
+                            variant="outline" 
+                            className={cn("text-xs", sunoUserInfo.credits === -1 && "bg-green-500/20 text-green-500 border-green-500/30")}
+                            data-testid="badge-suno-credits"
+                          >
+                            {sunoUserInfo.credits === -1 ? "Unlimited" : `${sunoUserInfo.credits} credits`}
                           </Badge>
                         )}
                       </div>
@@ -1168,17 +1204,39 @@ export default function Studio() {
                               )}
                             </Button>
                             {currentAudioUrl && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="rounded-full bg-primary/10"
-                                asChild
-                                data-testid="button-download"
-                              >
-                                <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
-                                  <Download className="w-4 h-4" />
-                                </a>
-                              </Button>
+                              <>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="rounded-full bg-primary/10"
+                                  asChild
+                                  data-testid="button-download"
+                                >
+                                  <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
+                                    <Download className="w-4 h-4" />
+                                  </a>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className={cn(
+                                    "rounded-full",
+                                    savedToLibrary ? "bg-green-500/20 text-green-500" : "bg-primary/10"
+                                  )}
+                                  onClick={handleSaveToLibrary}
+                                  disabled={isSavingSong || savedToLibrary}
+                                  data-testid="button-save-library"
+                                  title={savedToLibrary ? "Saved to library" : "Save to library"}
+                                >
+                                  {isSavingSong ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : savedToLibrary ? (
+                                    <Library className="w-4 h-4" />
+                                  ) : (
+                                    <Save className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>

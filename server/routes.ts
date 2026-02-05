@@ -971,11 +971,25 @@ Also suggest a fitting title for the song.`;
   });
 
   // GET /api/suno/user - Get user info and credits
-  app.get("/api/suno/user", isAuthenticated, async (req, res) => {
+  app.get("/api/suno/user", isAuthenticated, async (req: any, res) => {
     try {
       if (!sunoService.isSunoConfigured()) {
         return res.status(503).json({ 
           message: "Suno is not configured" 
+        });
+      }
+      
+      // Check for admin unlimited credits mode
+      const adminUserIds = (process.env.ADMIN_USER_IDS || "").split(",").filter(Boolean);
+      const currentUserId = req.user?.claims?.sub;
+      const isAdmin = currentUserId && adminUserIds.includes(currentUserId);
+      
+      if (isAdmin) {
+        return res.json({
+          userId: currentUserId,
+          credits: -1, // -1 indicates unlimited
+          plan: "admin",
+          isAdmin: true
         });
       }
       

@@ -13,13 +13,15 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### February 2026
+- **Save to Library**: Generated songs now save directly to user's library from Studio page
+- **Admin Unlimited Credits**: Set `ADMIN_USER_IDS` env var with comma-separated user IDs for unlimited access
 - **Suno AI Integration**: Added professional music generation with realistic vocals
   - Full songs with singing (up to 4+ minutes)
   - Multiple music styles (Pop, Rock, Hip Hop, Electronic, etc.)
   - Model selection (v3, v3.5, v4, v5)
   - Optional custom lyrics or AI-generated
   - Instrumental-only mode
-  - Environment variable: `SUNO_API_KEY`
+  - Environment variable: `DEFAPI_API_KEY` (recommended)
 - **Security Audit**: Fixed command injection vulnerability in audio processing
   - Added input validation for all external process calls
   - Whitelisted allowed model names and parameters
