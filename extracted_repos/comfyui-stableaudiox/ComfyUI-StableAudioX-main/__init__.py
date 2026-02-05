@@ -105,7 +105,7 @@ def ensure_dependencies():
             install_cmd = [sys.executable, "-m", "pip", "install"] + missing_deps
             print(f"AudioX: Running: {' '.join(install_cmd)}")
 
-            result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300)
+            result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300, shell=False)
 
             if result.returncode == 0:
                 print("AudioX: All dependencies installed successfully!")
@@ -143,7 +143,7 @@ def ensure_dependencies():
                     try:
                         result = subprocess.run([
                             sys.executable, "-m", "pip", "install", dep
-                        ], capture_output=True, text=True, timeout=120)
+                        ], capture_output=True, text=True, timeout=120, shell=False)
 
                         if result.returncode == 0:
                             print(f"AudioX: ✓ {dep} installed")
@@ -175,7 +175,7 @@ except ImportError:
     try:
         result = subprocess.run([
             sys.executable, "-m", "pip", "install", "vector-quantize-pytorch"
-        ], capture_output=True, text=True, timeout=120)
+        ], capture_output=True, text=True, timeout=120, shell=False)
         if result.returncode == 0:
             print("AudioX: ✅ vector_quantize_pytorch installed successfully!")
             # Force reload the module

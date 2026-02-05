@@ -27,7 +27,7 @@ def install_package(package_name):
         print(f"Installing {package_name}...")
         result = subprocess.run([
             sys.executable, "-m", "pip", "install", package_name
-        ], capture_output=True, text=True, timeout=300)
+        ], capture_output=True, text=True, timeout=300, shell=False)
         
         if result.returncode == 0:
             print(f"✓ {package_name} installed successfully")

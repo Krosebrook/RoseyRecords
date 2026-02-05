@@ -276,8 +276,9 @@ def generate_cond(
     else: # wav
         pass
     if cmd:
+        import shlex
         cmd += " -loglevel error" # make output less verbose in the cmd window
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(shlex.split(cmd), shell=False, check=True)
     
     # Let's look at a nice spectrogram too
     audio_spectrogram = audio_spectrogram_image(audio, sample_rate=sample_rate)

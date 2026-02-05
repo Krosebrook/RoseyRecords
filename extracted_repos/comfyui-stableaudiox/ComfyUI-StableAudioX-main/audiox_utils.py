@@ -63,10 +63,10 @@ def load_audiox_model_from_file(model_path: str, config_path: Optional[str] = No
                 import sys
                 if "einops_exts" in str(dep_error):
                     print("AudioX: Installing einops-exts...")
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "einops-exts"])
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "einops-exts"], shell=False)
                 elif "dac" in str(dep_error):
                     print("AudioX: Installing descript-audio-codec...")
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "descript-audio-codec"])
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "descript-audio-codec"], shell=False)
 
                 # Try importing again
                 import einops_exts
@@ -122,7 +122,7 @@ def load_audiox_model_from_file(model_path: str, config_path: Optional[str] = No
             try:
                 result = subprocess.run([
                     sys.executable, "-m", "pip", "install", "vector-quantize-pytorch"
-                ], capture_output=True, text=True, timeout=120)
+                ], capture_output=True, text=True, timeout=120, shell=False)
                 if result.returncode == 0:
                     print("✅ vector_quantize_pytorch installed successfully!")
                     # Try import again
