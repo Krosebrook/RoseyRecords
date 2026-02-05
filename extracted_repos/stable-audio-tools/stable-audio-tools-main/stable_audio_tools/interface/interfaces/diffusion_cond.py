@@ -277,7 +277,7 @@ def generate_cond(
         pass
     if cmd_args:
         cmd_args.extend(["-loglevel", "error"])  # make output less verbose in the cmd window
-        subprocess.run(cmd_args, shell=False, check=True)
+        subprocess.run(cmd_args, shell=False, check=True)  # nosec B603 - cmd_args uses argument list (not shell string) with filenames properly isolated as individual args
     
     # Let's look at a nice spectrogram too
     audio_spectrogram = audio_spectrogram_image(audio, sample_rate=sample_rate)

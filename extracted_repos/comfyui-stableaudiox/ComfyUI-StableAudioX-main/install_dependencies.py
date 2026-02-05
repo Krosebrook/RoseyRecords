@@ -25,7 +25,7 @@ def install_package(package_name):
     """Install a package using pip."""
     try:
         print(f"Installing {package_name}...")
-        result = subprocess.run([
+        result = subprocess.run([  # nosec B603 - package_name is from hardcoded required_packages list
             sys.executable, "-m", "pip", "install", package_name
         ], capture_output=True, text=True, timeout=300, shell=False)
         

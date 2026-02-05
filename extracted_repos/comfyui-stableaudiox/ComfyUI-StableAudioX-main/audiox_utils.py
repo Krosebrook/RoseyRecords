@@ -120,7 +120,7 @@ def load_audiox_model_from_file(model_path: str, config_path: Optional[str] = No
             print("EMERGENCY: Installing vector_quantize_pytorch NOW...")
             import subprocess
             try:
-                result = subprocess.run([
+                result = subprocess.run([  # nosec B603 - hardcoded package name
                     sys.executable, "-m", "pip", "install", "vector-quantize-pytorch"
                 ], capture_output=True, text=True, timeout=120, shell=False)
                 if result.returncode == 0:

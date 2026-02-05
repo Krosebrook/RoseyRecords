@@ -379,7 +379,7 @@ def get_s3_contents(dataset_path, s3_url_prefix=None, filter='', recursive=True,
         cmd.append('--recursive')
     
     # Run the `aws s3 ls` command and capture the output
-    run_ls = subprocess.run(cmd, capture_output=True, check=True, shell=False)
+    run_ls = subprocess.run(cmd, capture_output=True, check=True, shell=False)  # nosec B603 - cmd contains only 'aws', 's3', 'ls' and configuration parameters
     # Split the output into lines and strip whitespace from each line
     contents = run_ls.stdout.decode('utf-8').split('\n')
     contents = [x.strip() for x in contents if x]

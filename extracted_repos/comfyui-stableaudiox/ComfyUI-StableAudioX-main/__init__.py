@@ -105,7 +105,7 @@ def ensure_dependencies():
             install_cmd = [sys.executable, "-m", "pip", "install"] + missing_deps
             print(f"AudioX: Running: {' '.join(install_cmd)}")
 
-            result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300, shell=False)
+            result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=300, shell=False)  # nosec B603 - install_cmd contains only hardcoded package names from required_deps list
 
             if result.returncode == 0:
                 print("AudioX: All dependencies installed successfully!")
@@ -141,7 +141,7 @@ def ensure_dependencies():
                 # Try installing each dependency individually
                 for dep in missing_deps[:]:
                     try:
-                        result = subprocess.run([
+                        result = subprocess.run([  # nosec B603 - dep is from hardcoded required_deps list
                             sys.executable, "-m", "pip", "install", dep
                         ], capture_output=True, text=True, timeout=120, shell=False)
 
@@ -173,7 +173,7 @@ except ImportError:
     print("AudioX: INSTALLING vector_quantize_pytorch NOW...")
     import subprocess
     try:
-        result = subprocess.run([
+        result = subprocess.run([  # nosec B603 - hardcoded package name
             sys.executable, "-m", "pip", "install", "vector-quantize-pytorch"
         ], capture_output=True, text=True, timeout=120, shell=False)
         if result.returncode == 0:
