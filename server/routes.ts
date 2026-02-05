@@ -875,7 +875,7 @@ Also suggest a fitting title for the song.`;
         model: model || "chirp-v4"
       });
       
-      const result = await sunoService.generateSunoMusic(validatedParams);
+      const result = await sunoService.startSunoGeneration(validatedParams);
       
       res.json(result);
     } catch (err) {

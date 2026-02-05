@@ -1,14 +1,8 @@
 /**
  * Suno AI Music Generation Service
  * 
- * Provides high-quality AI music generation with vocals via third-party Suno API.
- * Falls back to MusicGen + Bark combination when Suno API is not configured.
- * 
- * Suno produces studio-quality tracks up to 4+ minutes with realistic vocals.
+ * Provides high-quality AI music generation with vocals via third-party Suno API providers.
  */
-
-// Third-party Suno API endpoints (unofficial but stable)
-const SUNO_API_BASE = "https://api.sunoapi.org";
 
 export interface SunoGenerationParams {
   prompt: string;
@@ -16,8 +10,8 @@ export interface SunoGenerationParams {
   title?: string;
   style?: string;
   instrumental?: boolean;
-  model?: "chirp-v3" | "chirp-v3.5" | "chirp-v4" | "chirp-v5";
-  duration?: number; // in seconds (max 240)
+  model?: string;
+  duration?: number;
 }
 
 export interface SunoGenerationResult {
@@ -42,242 +36,117 @@ export interface SunoStatusResult {
   error?: string;
 }
 
-/** Check if Suno API is configured */
-export function isSunoConfigured(): boolean {
-  return !!process.env.SUNO_API_KEY;
+export interface MusicProvider {
+  generate(params: SunoGenerationParams): Promise<SunoGenerationResult>;
+  getStatus(taskId: string): Promise<SunoStatusResult>;
 }
 
-/** Get Suno API key with validation */
-function getSunoApiKey(): string {
-  const key = process.env.SUNO_API_KEY;
-  if (!key) {
-    throw new Error("SUNO_API_KEY is not configured");
+/** Kie.ai (Managed Provider) */
+class KieProvider implements MusicProvider {
+  private baseUrl = process.env.KIE_BASE_URL || "https://api.kie.ai";
+  private apiKey = process.env.KIE_API_KEY || "";
+
+  async generate(params: SunoGenerationParams): Promise<SunoGenerationResult> {
+    const res = await fetch(`${this.baseUrl}/api/v1/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        prompt: params.prompt,
+        model: params.model || "chirp-v4",
+        make_instrumental: params.instrumental ?? false,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Kie.ai generation failed: ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return {
+      id: data.task_id,
+      status: "processing",
+    };
   }
-  return key;
+
+  async getStatus(taskId: string): Promise<SunoStatusResult> {
+    const res = await fetch(`${this.baseUrl}/api/v1/status?task_id=${encodeURIComponent(taskId)}`, {
+      headers: { "Authorization": `Bearer ${this.apiKey}` },
+    });
+
+    if (!res.ok) throw new Error(`Kie.ai status check failed: ${res.statusText}`);
+
+    const data = await res.json();
+    return {
+      id: taskId,
+      status: mapStatus(data.status),
+      audioUrl: data.audio_url,
+      imageUrl: data.image_url,
+    } as any;
+  }
 }
 
-/**
- * Start async music generation with Suno.
- * Returns a task ID that can be polled for status.
- */
-export async function startSunoGeneration(params: SunoGenerationParams): Promise<SunoGenerationResult> {
-  const apiKey = getSunoApiKey();
-  
-  const body: Record<string, unknown> = {
-    prompt: params.prompt,
-    make_instrumental: params.instrumental ?? false,
-    model: params.model || "chirp-v4",
-    wait_audio: false, // async mode
-  };
-  
-  if (params.lyrics) {
-    body.lyrics = params.lyrics;
+/** SunoAPI.org (Original implementation) */
+class SunoOrgProvider implements MusicProvider {
+  private baseUrl = "https://api.sunoapi.org";
+  private apiKey = process.env.SUNO_API_KEY || "";
+
+  async generate(params: SunoGenerationParams): Promise<SunoGenerationResult> {
+    const body: any = {
+      prompt: params.prompt,
+      make_instrumental: params.instrumental ?? false,
+      model: params.model || "chirp-v4",
+      wait_audio: false,
+    };
+    if (params.lyrics) body.lyrics = params.lyrics;
+    if (params.title) body.title = params.title;
+    if (params.style) body.style = params.style;
+
+    const res = await fetch(`${this.baseUrl}/api/generate`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error(`SunoOrg generation failed: ${res.statusText}`);
+    const data = await res.json();
+    const clip = Array.isArray(data) ? data[0] : data;
+
+    return {
+      id: clip.id || clip.task_id,
+      status: mapStatus(clip.status),
+      audioUrl: clip.audio_url,
+    };
   }
-  
-  if (params.title) {
-    body.title = params.title;
+
+  async getStatus(taskId: string): Promise<SunoStatusResult> {
+    const res = await fetch(`${this.baseUrl}/api/get/${taskId}`, {
+      headers: { "Authorization": `Bearer ${this.apiKey}` },
+    });
+
+    if (!res.ok) throw new Error(`SunoOrg status check failed: ${res.statusText}`);
+    const data = await res.json();
+    const clip = Array.isArray(data) ? data[0] : data;
+
+    return {
+      id: clip.id || taskId,
+      status: mapStatus(clip.status),
+      audioUrl: clip.audio_url,
+      title: clip.title,
+      lyrics: clip.lyrics,
+      style: clip.style,
+      duration: clip.duration,
+      error: clip.error,
+    };
   }
-  
-  if (params.style) {
-    body.style = params.style;
-  }
-  
-  const response = await fetch(`${SUNO_API_BASE}/api/generate`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Suno API error: ${response.status} - ${errorText}`);
-  }
-  
-  const data = await response.json();
-  
-  // Suno returns an array of clips
-  const clip = Array.isArray(data) ? data[0] : data;
-  
-  return {
-    id: clip.id || clip.task_id,
-    status: mapSunoStatus(clip.status),
-    audioUrl: clip.audio_url,
-    title: clip.title,
-    lyrics: clip.lyrics,
-    style: clip.style,
-    duration: clip.duration,
-  };
 }
 
-/**
- * Generate music synchronously (waits for completion).
- * Use for shorter tracks or when immediate result is needed.
- */
-export async function generateSunoMusic(params: SunoGenerationParams): Promise<SunoGenerationResult> {
-  const apiKey = getSunoApiKey();
-  
-  const body: Record<string, unknown> = {
-    prompt: params.prompt,
-    make_instrumental: params.instrumental ?? false,
-    model: params.model || "chirp-v4",
-    wait_audio: true, // sync mode - wait for result
-  };
-  
-  if (params.lyrics) {
-    body.lyrics = params.lyrics;
-  }
-  
-  if (params.title) {
-    body.title = params.title;
-  }
-  
-  if (params.style) {
-    body.style = params.style;
-  }
-  
-  const response = await fetch(`${SUNO_API_BASE}/api/generate`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Suno API error: ${response.status} - ${errorText}`);
-  }
-  
-  const data = await response.json();
-  const clip = Array.isArray(data) ? data[0] : data;
-  
-  return {
-    id: clip.id || clip.task_id,
-    status: "complete",
-    audioUrl: clip.audio_url,
-    title: clip.title,
-    lyrics: clip.lyrics,
-    style: clip.style,
-    duration: clip.duration,
-  };
-}
-
-/**
- * Check status of an async generation task.
- */
-export async function checkSunoStatus(taskId: string): Promise<SunoStatusResult> {
-  const apiKey = getSunoApiKey();
-  
-  const response = await fetch(`${SUNO_API_BASE}/api/get/${taskId}`, {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Suno API error: ${response.status} - ${errorText}`);
-  }
-  
-  const data = await response.json();
-  const clip = Array.isArray(data) ? data[0] : data;
-  
-  return {
-    id: clip.id || taskId,
-    status: mapSunoStatus(clip.status),
-    audioUrl: clip.audio_url,
-    title: clip.title,
-    lyrics: clip.lyrics,
-    style: clip.style,
-    duration: clip.duration,
-    error: clip.error,
-  };
-}
-
-/**
- * Generate lyrics only using Suno's lyric generation.
- */
-export async function generateSunoLyrics(prompt: string): Promise<{ lyrics: string }> {
-  const apiKey = getSunoApiKey();
-  
-  const response = await fetch(`${SUNO_API_BASE}/api/generate_lyrics`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt }),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Suno API error: ${response.status} - ${errorText}`);
-  }
-  
-  const data = await response.json();
-  
-  return {
-    lyrics: data.text || data.lyrics || "",
-  };
-}
-
-/**
- * Extend an existing track (continuation).
- */
-export async function extendSunoTrack(
-  audioId: string, 
-  prompt?: string,
-  continueAt?: number
-): Promise<SunoGenerationResult> {
-  const apiKey = getSunoApiKey();
-  
-  const body: Record<string, unknown> = {
-    audio_id: audioId,
-    wait_audio: true,
-  };
-  
-  if (prompt) {
-    body.prompt = prompt;
-  }
-  
-  if (continueAt !== undefined) {
-    body.continue_at = continueAt;
-  }
-  
-  const response = await fetch(`${SUNO_API_BASE}/api/extend_audio`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Suno API error: ${response.status} - ${errorText}`);
-  }
-  
-  const data = await response.json();
-  const clip = Array.isArray(data) ? data[0] : data;
-  
-  return {
-    id: clip.id,
-    status: "complete",
-    audioUrl: clip.audio_url,
-    title: clip.title,
-    lyrics: clip.lyrics,
-    duration: clip.duration,
-  };
-}
-
-/** Map Suno status strings to our normalized status */
-function mapSunoStatus(status: string): SunoStatusResult["status"] {
+function mapStatus(status: string): SunoStatusResult["status"] {
   switch (status?.toLowerCase()) {
     case "complete":
     case "completed":
@@ -295,31 +164,55 @@ function mapSunoStatus(status: string): SunoStatusResult["status"] {
   }
 }
 
-/** Available Suno music styles for UI */
+const providers = new Map<string, MusicProvider>([
+  ["sunoorg", new SunoOrgProvider()],
+  ["kie", new KieProvider()],
+]);
+
+function getProvider(): MusicProvider {
+  const name = process.env.SUNO_PROVIDER || (process.env.KIE_API_KEY ? "kie" : "sunoorg");
+  const p = providers.get(name);
+  if (!p) throw new Error(`Unknown Suno provider: ${name}`);
+  return p;
+}
+
+export function isSunoConfigured(): boolean {
+  return !!(process.env.SUNO_API_KEY || process.env.KIE_API_KEY);
+}
+
+export async function startSunoGeneration(params: SunoGenerationParams): Promise<SunoGenerationResult> {
+  return getProvider().generate(params);
+}
+
+export async function checkSunoStatus(taskId: string): Promise<SunoStatusResult> {
+  return getProvider().getStatus(taskId);
+}
+
+export async function generateSunoLyrics(prompt: string): Promise<{ lyrics: string }> {
+  // Use original provider for lyrics generation or fallback
+  const apiKey = process.env.SUNO_API_KEY || process.env.KIE_API_KEY;
+  const baseUrl = "https://api.sunoapi.org"; // default
+  
+  const response = await fetch(`${baseUrl}/api/generate_lyrics`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt }),
+  });
+  
+  if (!response.ok) return { lyrics: "" };
+  const data = await response.json();
+  return { lyrics: data.text || data.lyrics || "" };
+}
+
 export const SUNO_STYLES = [
-  "Pop",
-  "Rock",
-  "Hip Hop",
-  "R&B",
-  "Electronic",
-  "Jazz",
-  "Classical",
-  "Country",
-  "Folk",
-  "Metal",
-  "Indie",
-  "Latin",
-  "K-Pop",
-  "Lo-Fi",
-  "Synthwave",
-  "Ambient",
-  "Soul",
-  "Funk",
-  "Reggae",
-  "Blues",
+  "Pop", "Rock", "Hip Hop", "R&B", "Electronic", "Jazz", "Classical", "Country", 
+  "Folk", "Metal", "Indie", "Latin", "K-Pop", "Lo-Fi", "Synthwave", "Ambient", 
+  "Soul", "Funk", "Reggae", "Blues"
 ] as const;
 
-/** Available Suno model versions */
 export const SUNO_MODELS = [
   { id: "chirp-v3", name: "v3 (Legacy)", description: "Original model" },
   { id: "chirp-v3.5", name: "v3.5", description: "Improved vocals" },
@@ -327,33 +220,10 @@ export const SUNO_MODELS = [
   { id: "chirp-v5", name: "v5 (Latest)", description: "Studio-quality, up to 4 min tracks" },
 ] as const;
 
-/** Allowed model IDs for validation */
-export const ALLOWED_SUNO_MODELS = SUNO_MODELS.map(m => m.id);
-
-/** Validate and sanitize Suno generation params */
 export function validateSunoParams(params: SunoGenerationParams): SunoGenerationParams {
   const validated = { ...params };
-  
-  // Validate model - default to v4 if invalid
-  if (validated.model && !ALLOWED_SUNO_MODELS.includes(validated.model)) {
-    validated.model = "chirp-v4";
-  }
-  
-  // Validate style - if provided and not in allowed list, remove it
-  if (validated.style && !SUNO_STYLES.includes(validated.style as typeof SUNO_STYLES[number])) {
-    validated.style = undefined;
-  }
-  
-  // Sanitize text inputs (basic validation)
-  if (validated.prompt) {
-    validated.prompt = validated.prompt.slice(0, 2000).trim();
-  }
-  if (validated.lyrics) {
-    validated.lyrics = validated.lyrics.slice(0, 5000).trim();
-  }
-  if (validated.title) {
-    validated.title = validated.title.slice(0, 100).trim();
-  }
-  
+  if (validated.prompt) validated.prompt = validated.prompt.slice(0, 2000).trim();
+  if (validated.lyrics) validated.lyrics = validated.lyrics.slice(0, 5000).trim();
+  if (validated.title) validated.title = validated.title.slice(0, 100).trim();
   return validated;
 }
