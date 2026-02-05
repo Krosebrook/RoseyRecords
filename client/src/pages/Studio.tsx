@@ -664,6 +664,11 @@ export default function Studio() {
       
       const data = await response.json();
       
+      // Check for API error response
+      if (data.message || data.error) {
+        throw new Error(data.message || data.error);
+      }
+      
       if (data.audioUrl) {
         // Sync completion - clear interval and finish
         if (sunoProgressIntervalRef.current) {
@@ -694,7 +699,8 @@ export default function Studio() {
       }
       setIsGeneratingAudio(false);
       setGenerationProgress(0);
-      toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate with Suno" });
+      const errorMsg = err instanceof Error ? err.message : "Could not generate with Suno";
+      toast({ variant: "destructive", title: "Generation Failed", description: errorMsg });
     }
   };
 

@@ -179,9 +179,22 @@ class DefAPIProvider implements MusicProvider {
     });
 
     const data = await res.json();
+    console.log("[DefAPI] Generate response:", JSON.stringify(data));
+
+    // Handle error responses from DefAPI
+    if (data.error || data.message) {
+      throw new Error(data.error || data.message || "DefAPI generation failed");
+    }
+
+    // DefAPI returns task_id in the response
+    const taskId = data.task_id || data.id || data.data?.task_id;
+    if (!taskId) {
+      console.error("[DefAPI] No task_id in response:", data);
+      throw new Error("No task ID returned from DefAPI");
+    }
 
     return {
-      id: data.task_id || data.id,
+      id: taskId,
       status: "processing",
     };
   }
@@ -203,6 +216,7 @@ class DefAPIProvider implements MusicProvider {
     );
 
     const data = await res.json();
+    console.log("[DefAPI] Status response for", taskId, ":", JSON.stringify(data));
 
     const status = mapDefAPIStatus(data.status || data.state);
     const clips =
