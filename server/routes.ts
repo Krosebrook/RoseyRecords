@@ -21,6 +21,7 @@ function parseNumericId(value: string, res: Response): number | null {
 import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
+import * as sunoService from "./services/suno";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -175,7 +176,8 @@ export async function registerRoutes(
 
   // POST /api/songs/:id/play
   app.post(api.songs.incrementPlay.path, async (req, res) => {
-    const songId = parseNumericId(req.params.id, res);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const songId = parseNumericId(idParam, res);
     if (songId === null) return;
     
     const song = await storage.getSong(songId);
@@ -833,6 +835,161 @@ Also suggest a fitting title for the song.`;
 
   app.get("/api/bark/status", isAuthenticated, async (req, res) => {
     res.json({ configured: !!process.env.REPLICATE_API_KEY });
+  });
+
+  // ==========================================
+  // SUNO AI MUSIC GENERATION ROUTES
+  // ==========================================
+  
+  // GET /api/suno/status - Check if Suno is configured
+  app.get("/api/suno/status", isAuthenticated, async (req, res) => {
+    res.json({ 
+      configured: sunoService.isSunoConfigured(),
+      styles: sunoService.SUNO_STYLES,
+      models: sunoService.SUNO_MODELS
+    });
+  });
+
+  // POST /api/suno/generate - Generate music with Suno (sync mode)
+  app.post("/api/suno/generate", isAuthenticated, async (req, res) => {
+    try {
+      if (!sunoService.isSunoConfigured()) {
+        return res.status(503).json({ 
+          message: "Suno is not configured. Please add SUNO_API_KEY to use this feature." 
+        });
+      }
+      
+      const { prompt, lyrics, title, style, instrumental, model } = req.body;
+      
+      if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      // Validate and sanitize params
+      const validatedParams = sunoService.validateSunoParams({
+        prompt: prompt.trim(),
+        lyrics: lyrics?.trim(),
+        title: title?.trim(),
+        style,
+        instrumental: instrumental ?? false,
+        model: model || "chirp-v4"
+      });
+      
+      const result = await sunoService.generateSunoMusic(validatedParams);
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating Suno music:", err);
+      const message = err instanceof Error ? err.message : "Failed to generate music";
+      res.status(500).json({ message });
+    }
+  });
+
+  // POST /api/suno/generate/start - Start async music generation
+  app.post("/api/suno/generate/start", isAuthenticated, async (req, res) => {
+    try {
+      if (!sunoService.isSunoConfigured()) {
+        return res.status(503).json({ 
+          message: "Suno is not configured. Please add SUNO_API_KEY to use this feature." 
+        });
+      }
+      
+      const { prompt, lyrics, title, style, instrumental, model } = req.body;
+      
+      if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      // Validate and sanitize params
+      const validatedParams = sunoService.validateSunoParams({
+        prompt: prompt.trim(),
+        lyrics: lyrics?.trim(),
+        title: title?.trim(),
+        style,
+        instrumental: instrumental ?? false,
+        model: model || "chirp-v4"
+      });
+      
+      const result = await sunoService.startSunoGeneration(validatedParams);
+      
+      res.json(result);
+    } catch (err) {
+      console.error("Error starting Suno generation:", err);
+      const message = err instanceof Error ? err.message : "Failed to start generation";
+      res.status(500).json({ message });
+    }
+  });
+
+  // GET /api/suno/status/:taskId - Check generation status
+  app.get("/api/suno/status/:taskId", isAuthenticated, async (req, res) => {
+    try {
+      if (!sunoService.isSunoConfigured()) {
+        return res.status(503).json({ 
+          message: "Suno is not configured" 
+        });
+      }
+      
+      const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+      
+      if (!taskId) {
+        return res.status(400).json({ message: "Task ID is required" });
+      }
+      
+      const status = await sunoService.checkSunoStatus(taskId);
+      res.json(status);
+    } catch (err) {
+      console.error("Error checking Suno status:", err);
+      const message = err instanceof Error ? err.message : "Failed to check status";
+      res.status(500).json({ message });
+    }
+  });
+
+  // POST /api/suno/lyrics - Generate lyrics only
+  app.post("/api/suno/lyrics", isAuthenticated, async (req, res) => {
+    try {
+      if (!sunoService.isSunoConfigured()) {
+        return res.status(503).json({ 
+          message: "Suno is not configured" 
+        });
+      }
+      
+      const { prompt } = req.body;
+      
+      if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      const result = await sunoService.generateSunoLyrics(prompt.trim());
+      res.json(result);
+    } catch (err) {
+      console.error("Error generating Suno lyrics:", err);
+      const message = err instanceof Error ? err.message : "Failed to generate lyrics";
+      res.status(500).json({ message });
+    }
+  });
+
+  // POST /api/suno/extend - Extend existing track
+  app.post("/api/suno/extend", isAuthenticated, async (req, res) => {
+    try {
+      if (!sunoService.isSunoConfigured()) {
+        return res.status(503).json({ 
+          message: "Suno is not configured" 
+        });
+      }
+      
+      const { audioId, prompt, continueAt } = req.body;
+      
+      if (!audioId || typeof audioId !== "string") {
+        return res.status(400).json({ message: "Audio ID is required" });
+      }
+      
+      const result = await sunoService.extendSunoTrack(audioId, prompt, continueAt);
+      res.json(result);
+    } catch (err) {
+      console.error("Error extending Suno track:", err);
+      const message = err instanceof Error ? err.message : "Failed to extend track";
+      res.status(500).json({ message });
+    }
   });
 
   return httpServer;

@@ -50,7 +50,13 @@ const DURATION_OPTIONS = [
 ];
 
 type GenerationMode = "sample" | "full";
-type GenerationEngine = "replicate" | "stable";
+type GenerationEngine = "replicate" | "stable" | "suno";
+
+interface SunoConfig {
+  configured: boolean;
+  styles: string[];
+  models: { id: string; name: string; description: string }[];
+}
 
 export default function Studio() {
   usePageTitle("Studio");
@@ -116,6 +122,15 @@ export default function Studio() {
   const [isMixPlaying, setIsMixPlaying] = useState(false);
   const mixInstrumentalRef = useRef<HTMLAudioElement | null>(null);
   const mixVocalsRef = useRef<HTMLAudioElement | null>(null);
+
+  // Suno state (professional AI music with vocals)
+  const [sunoConfig, setSunoConfig] = useState<SunoConfig | null>(null);
+  const [sunoLyrics, setSunoLyrics] = useState("");
+  const [sunoTitle, setSunoTitle] = useState("");
+  const [sunoStyle, setSunoStyle] = useState("Pop");
+  const [sunoModel, setSunoModel] = useState("chirp-v4");
+  const [sunoInstrumental, setSunoInstrumental] = useState(false);
+  const [sunoTaskId, setSunoTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -507,6 +522,170 @@ export default function Studio() {
     }
   };
 
+  // Suno AI functions (professional music with vocals)
+  useEffect(() => {
+    const checkSuno = async () => {
+      try {
+        const res = await fetch("/api/suno/status", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setSunoConfig(data);
+          if (data.styles?.length > 0) {
+            setSunoStyle(data.styles[0]);
+          }
+        }
+      } catch {
+        setSunoConfig({ configured: false, styles: [], models: [] });
+      }
+    };
+    checkSuno();
+  }, []);
+
+  // Ref to track Suno polling timeout for cleanup on unmount
+  const sunoPollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sunoProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup Suno polling on unmount
+  useEffect(() => {
+    return () => {
+      if (sunoPollTimeoutRef.current) {
+        clearTimeout(sunoPollTimeoutRef.current);
+      }
+      if (sunoProgressIntervalRef.current) {
+        clearInterval(sunoProgressIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const handleSunoGenerate = async () => {
+    if (!audioPrompt) {
+      toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
+      return;
+    }
+    
+    if (!sunoConfig?.configured) {
+      toast({ 
+        variant: "destructive", 
+        title: "Suno Not Configured", 
+        description: "Please add SUNO_API_KEY to use professional music generation" 
+      });
+      return;
+    }
+    
+    setGenerationMode("full");
+    setIsGeneratingAudio(true);
+    setGenerationProgress(0);
+    setFullTrackUrl(null);
+    setSunoTaskId(null);
+    
+    // Clear any existing intervals/timeouts
+    if (sunoProgressIntervalRef.current) {
+      clearInterval(sunoProgressIntervalRef.current);
+    }
+    if (sunoPollTimeoutRef.current) {
+      clearTimeout(sunoPollTimeoutRef.current);
+    }
+    
+    sunoProgressIntervalRef.current = setInterval(() => {
+      setGenerationProgress(prev => Math.min(prev + 2, 90));
+    }, 1000);
+    
+    try {
+      const response = await apiRequest("POST", "/api/suno/generate", {
+        prompt: audioPrompt,
+        lyrics: sunoLyrics || undefined,
+        title: sunoTitle || undefined,
+        style: sunoStyle,
+        instrumental: sunoInstrumental,
+        model: sunoModel
+      });
+      
+      const data = await response.json();
+      
+      if (data.audioUrl) {
+        // Sync completion - clear interval and finish
+        if (sunoProgressIntervalRef.current) {
+          clearInterval(sunoProgressIntervalRef.current);
+          sunoProgressIntervalRef.current = null;
+        }
+        setGenerationProgress(100);
+        setFullTrackUrl(data.audioUrl);
+        setCurrentAudioUrl(data.audioUrl);
+        setSunoTaskId(data.id);
+        setIsGeneratingAudio(false);
+        toast({ 
+          title: "Suno Track Ready!", 
+          description: `Your studio-quality ${sunoInstrumental ? "instrumental" : "song"} is ready` 
+        });
+      } else if (data.id && data.status === "processing") {
+        // Async - start polling (don't clear interval, keep isGeneratingAudio true)
+        setSunoTaskId(data.id);
+        pollSunoStatus(data.id);
+      } else {
+        throw new Error("Unexpected response from Suno");
+      }
+    } catch (err) {
+      console.error("Suno generation error:", err);
+      if (sunoProgressIntervalRef.current) {
+        clearInterval(sunoProgressIntervalRef.current);
+        sunoProgressIntervalRef.current = null;
+      }
+      setIsGeneratingAudio(false);
+      setGenerationProgress(0);
+      toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate with Suno" });
+    }
+  };
+
+  const pollSunoStatus = (taskId: string) => {
+    const maxAttempts = 60;
+    let attempts = 0;
+    
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/suno/status/${taskId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to check status");
+        
+        const data = await res.json();
+        
+        if (data.status === "complete" && data.audioUrl) {
+          // Completed - clear interval and finish
+          if (sunoProgressIntervalRef.current) {
+            clearInterval(sunoProgressIntervalRef.current);
+            sunoProgressIntervalRef.current = null;
+          }
+          setGenerationProgress(100);
+          setFullTrackUrl(data.audioUrl);
+          setCurrentAudioUrl(data.audioUrl);
+          setIsGeneratingAudio(false);
+          toast({ title: "Suno Track Ready!", description: "Your studio-quality track is complete" });
+          return;
+        }
+        
+        if (data.status === "failed") {
+          throw new Error(data.error || "Generation failed");
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          sunoPollTimeoutRef.current = setTimeout(poll, 3000);
+        } else {
+          throw new Error("Generation timed out");
+        }
+      } catch (err) {
+        // Error - clear interval and reset state
+        if (sunoProgressIntervalRef.current) {
+          clearInterval(sunoProgressIntervalRef.current);
+          sunoProgressIntervalRef.current = null;
+        }
+        setIsGeneratingAudio(false);
+        setGenerationProgress(0);
+        toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Generation failed" });
+      }
+    };
+    
+    poll();
+  };
+
   // Mixing functions
   const stopMixPlayback = () => {
     if (mixInstrumentalRef.current) {
@@ -717,19 +896,111 @@ export default function Studio() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Full Track Duration</Label>
-                    <Select value={targetDuration} onValueChange={setTargetDuration}>
-                      <SelectTrigger data-testid="select-duration">
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DURATION_OPTIONS.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value.toString()}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Full Track Duration</Label>
+                      <Select value={targetDuration} onValueChange={setTargetDuration}>
+                        <SelectTrigger data-testid="select-duration">
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DURATION_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value.toString()}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Engine</Label>
+                      <Select value={generationEngine} onValueChange={(v) => setGenerationEngine(v as GenerationEngine)}>
+                        <SelectTrigger data-testid="select-engine">
+                          <SelectValue placeholder="Select engine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stable">Stable Audio (Instrumental)</SelectItem>
+                          <SelectItem value="replicate">Replicate (Short)</SelectItem>
+                          <SelectItem value="suno" disabled={!sunoConfig?.configured}>
+                            Suno {sunoConfig?.configured ? "(Pro Vocals)" : "(Not Configured)"}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  {generationEngine === "suno" && (
+                    <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Sparkles className="w-4 h-4" />
+                        Suno Pro - Studio Quality with Vocals
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Music Style</Label>
+                          <Select value={sunoStyle} onValueChange={setSunoStyle}>
+                            <SelectTrigger data-testid="select-suno-style">
+                              <SelectValue placeholder="Select style" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(sunoConfig?.styles || []).map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Model</Label>
+                          <Select value={sunoModel} onValueChange={setSunoModel}>
+                            <SelectTrigger data-testid="select-suno-model">
+                              <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(sunoConfig?.models || []).map(m => (
+                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="suno-title">Song Title (optional)</Label>
+                        <Input
+                          id="suno-title"
+                          value={sunoTitle}
+                          onChange={(e) => setSunoTitle(e.target.value)}
+                          placeholder="e.g. Midnight Dreams"
+                          data-testid="input-suno-title"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="suno-lyrics">Lyrics (optional)</Label>
+                        <Textarea
+                          id="suno-lyrics"
+                          value={sunoLyrics}
+                          onChange={(e) => setSunoLyrics(e.target.value)}
+                          placeholder="Enter lyrics or leave blank for AI-generated lyrics..."
+                          className="min-h-[80px]"
+                          data-testid="input-suno-lyrics"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="suno-instrumental"
+                          checked={sunoInstrumental}
+                          onChange={(e) => setSunoInstrumental(e.target.checked)}
+                          className="rounded border-muted-foreground"
+                          data-testid="checkbox-suno-instrumental"
+                        />
+                        <Label htmlFor="suno-instrumental" className="text-sm cursor-pointer">
+                          Instrumental only (no vocals)
+                        </Label>
+                      </div>
+                    </div>
+                  )}
 
                   {isGeneratingAudio && (
                     <div className="space-y-2">
@@ -742,32 +1013,36 @@ export default function Studio() {
                   )}
 
                   <div className="flex gap-2">
+                    {generationEngine !== "suno" && (
+                      <Button
+                        onClick={handleGenerateSample}
+                        disabled={isGeneratingAudio || !audioPrompt}
+                        variant="outline"
+                        className="flex-1"
+                        data-testid="button-generate-sample"
+                      >
+                        {isGeneratingAudio && generationMode === "sample" ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4 mr-2" />
+                        )}
+                        15s Sample
+                      </Button>
+                    )}
                     <Button
-                      onClick={handleGenerateSample}
-                      disabled={isGeneratingAudio || !audioPrompt}
-                      variant="outline"
-                      className="flex-1"
-                      data-testid="button-generate-sample"
-                    >
-                      {isGeneratingAudio && generationMode === "sample" ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-4 h-4 mr-2" />
-                      )}
-                      15s Sample
-                    </Button>
-                    <Button
-                      onClick={handleGenerateFullTrack}
-                      disabled={isGeneratingAudio || !audioPrompt}
+                      onClick={generationEngine === "suno" ? handleSunoGenerate : handleGenerateFullTrack}
+                      disabled={isGeneratingAudio || !audioPrompt || (generationEngine === "suno" && !sunoConfig?.configured)}
                       className="flex-1"
                       data-testid="button-generate-full"
                     >
                       {isGeneratingAudio && generationMode === "full" ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : generationEngine === "suno" ? (
+                        <Music className="w-4 h-4 mr-2" />
                       ) : (
                         <Clock className="w-4 h-4 mr-2" />
                       )}
-                      Full Track
+                      {generationEngine === "suno" ? "Generate with Suno" : "Full Track"}
                     </Button>
                   </div>
                 </CardContent>

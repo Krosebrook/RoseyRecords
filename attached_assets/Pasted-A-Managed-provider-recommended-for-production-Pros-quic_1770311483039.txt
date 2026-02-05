@@ -1,0 +1,476 @@
+A) Managed provider (recommended for production)
+
+Pros: quickest, fewer moving parts, better concurrency/uptime if the vendor is legit.
+Cons: vendor lock-in, you’re trusting them with prompts + generated content metadata.
+Examples: Kie.ai docs describe a Suno API product and endpoints; AIMLAPI likewise markets a Suno API offering.
+
+B) Self-host the wrapper (gcui-art/suno-api) behind your own API
+
+Pros: more control, can wrap with your own auth, logging, caching, cost controls.
+Cons: you’re now the proud owner of “session cookie as critical secret”, CAPTCHA/anti-bot churn, and surprise breakage. The wrapper explicitly implements endpoints like /api/generate and an OpenAI-compatible /v1/chat/completions surface.
+
+C) Dual-mode abstraction (best long-term)
+
+Build a provider interface so you can fail over: managed → self-hosted, or swap vendors without rewiring the whole app. This is the least romantic option, which is why it’s usually the most correct.
+
+My recommendation: A now + C as the structure (so you can swap providers without a rewrite).
+
+Build (Next.js 15 + Supabase + Vercel) — production-grade route
+
+Below is a complete, typed route + provider abstraction + rate limit + DB tracking. This assumes:
+
+Next.js App Router (app/api/music/generate/route.ts)
+
+Supabase Auth (JWT from cookies via @supabase/ssr)
+
+Supabase table to store jobs/results
+
+One provider wired (example: Kie.ai-style async job), with a clean seam to add AIMLAPI or your self-hosted wrapper.
+
+// app/api/music/generate/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import crypto from "crypto";
+import { createClient } from "@/lib/supabase/server";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { Providers, type MusicProvider } from "@/lib/music/providers";
+
+// --------- Input schema (strict) ----------
+const GenerateSchema = z.object({
+  prompt: z.string().min(5).max(1200),
+  instrumental: z.boolean().default(false),
+  model: z.string().min(1).max(64).default("chirp-v4"),
+  // async behavior
+  wait: z.boolean().default(false),
+  // optional: caller-provided idempotency key; else we derive one
+  idempotencyKey: z.string().min(8).max(128).optional(),
+});
+
+function stableHash(input: string) {
+  return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    // 1) AuthN (Supabase session)
+    const supabase = createClient(req);
+    const { data: auth, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !auth?.user) {
+      return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+    }
+    const userId = auth.user.id;
+
+    // 2) Parse + validate body
+    const body = await req.json().catch(() => null);
+    const parsed = GenerateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "BAD_REQUEST", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const input = parsed.data;
+
+    // 3) Rate limit (per-user)
+    // Tune these for your plans; keep them conservative because providers can be brittle.
+    await rateLimitOrThrow({
+      key: `music:generate:${userId}`,
+      limit: 10, // 10 requests
+      windowSeconds: 60, // per minute
+    });
+
+    // 4) Pick provider (env-configured)
+    const providerName = process.env.MUSIC_PROVIDER ?? "kie";
+    const provider: MusicProvider = Providers.get(providerName);
+
+    // 5) Idempotency (protect wallets + user experience)
+    const idem =
+      input.idempotencyKey ??
+      stableHash(`${userId}:${input.model}:${input.instrumental}:${input.prompt}`);
+
+    // 6) Check if we already have a job for this idempotency key
+    const existing = await supabase
+      .from("music_jobs")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("idempotency_key", idem)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing.data?.status === "completed") {
+      return NextResponse.json(
+        {
+          ok: true,
+          reused: true,
+          job: sanitizeJob(existing.data),
+        },
+        { status: 200 }
+      );
+    }
+
+    // 7) Create/Upsert job record
+    const insertRes = await supabase
+      .from("music_jobs")
+      .upsert(
+        {
+          user_id: userId,
+          idempotency_key: idem,
+          provider: providerName,
+          prompt: input.prompt,
+          model: input.model,
+          instrumental: input.instrumental,
+          status: "queued",
+        },
+        { onConflict: "user_id,idempotency_key" }
+      )
+      .select("*")
+      .single();
+
+    if (insertRes.error) {
+      return NextResponse.json(
+        { error: "DB_WRITE_FAILED", details: insertRes.error.message },
+        { status: 500 }
+      );
+    }
+    const job = insertRes.data;
+
+    // 8) Call provider (returns providerJobId + maybe immediate URLs)
+    const result = await provider.generate({
+      prompt: input.prompt,
+      instrumental: input.instrumental,
+      model: input.model,
+      idempotencyKey: idem,
+    });
+
+    // 9) Persist provider job id + status
+    const updated = await supabase
+      .from("music_jobs")
+      .update({
+        provider_job_id: result.providerJobId,
+        status: result.status,
+        // store minimal metadata; do NOT store raw provider auth headers etc.
+        provider_meta: result.providerMeta ?? null,
+        audio_url: result.audioUrl ?? null,
+        image_url: result.imageUrl ?? null,
+      })
+      .eq("id", job.id)
+      .select("*")
+      .single();
+
+    if (updated.error) {
+      return NextResponse.json(
+        { error: "DB_UPDATE_FAILED", details: updated.error.message },
+        { status: 500 }
+      );
+    }
+
+    // 10) If wait=true, do a short poll loop (bounded) for “fast” UX
+    if (input.wait) {
+      const final = await provider.waitForCompletion({
+        providerJobId: result.providerJobId,
+        maxWaitMs: 25_000, // keep under platform timeouts
+      });
+
+      const finalUpdate = await supabase
+        .from("music_jobs")
+        .update({
+          status: final.status,
+          audio_url: final.audioUrl ?? updated.data.audio_url,
+          image_url: final.imageUrl ?? updated.data.image_url,
+          provider_meta: final.providerMeta ?? updated.data.provider_meta,
+        })
+        .eq("id", job.id)
+        .select("*")
+        .single();
+
+      if (!finalUpdate.error) {
+        return NextResponse.json(
+          { ok: true, reused: false, job: sanitizeJob(finalUpdate.data) },
+          { status: 200 }
+        );
+      }
+      // Fall through if update fails—still return latest known job.
+    }
+
+    return NextResponse.json(
+      { ok: true, reused: false, job: sanitizeJob(updated.data) },
+      { status: 202 } // Accepted (async)
+    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "UNKNOWN_ERROR";
+    const status =
+      message.startsWith("RATE_LIMITED") ? 429 :
+      message.startsWith("PROVIDER_") ? 502 :
+      500;
+
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+function sanitizeJob(job: any) {
+  // never leak internal provider auth config; keep only user-safe fields
+  return {
+    id: job.id,
+    created_at: job.created_at,
+    status: job.status,
+    provider: job.provider,
+    provider_job_id: job.provider_job_id,
+    model: job.model,
+    instrumental: job.instrumental,
+    audio_url: job.audio_url,
+    image_url: job.image_url,
+  };
+}
+
+// lib/music/providers.ts
+import { z } from "zod";
+
+export type ProviderGenerateInput = {
+  prompt: string;
+  instrumental: boolean;
+  model: string;
+  idempotencyKey: string;
+};
+
+export type ProviderGenerateOutput = {
+  providerJobId: string;
+  status: "queued" | "running" | "completed" | "failed";
+  audioUrl?: string | null;
+  imageUrl?: string | null;
+  providerMeta?: Record<string, unknown> | null;
+};
+
+export type WaitInput = { providerJobId: string; maxWaitMs: number };
+
+export interface MusicProvider {
+  generate(input: ProviderGenerateInput): Promise<ProviderGenerateOutput>;
+  waitForCompletion(input: WaitInput): Promise<ProviderGenerateOutput>;
+}
+
+// --- Kie.ai-style example (adjust endpoints/fields to vendor docs) ---
+// Kie.ai markets /api/v1/generate for music generation. :contentReference[oaicite:3]{index=3}
+const KieEnv = z.object({
+  KIE_API_KEY: z.string().min(10),
+  KIE_BASE_URL: z.string().url().default("https://api.kie.ai"),
+});
+
+type KieTaskResponse = {
+  task_id: string;
+  status?: string;
+};
+
+type KieStatusResponse = {
+  status: "queued" | "running" | "completed" | "failed";
+  audio_url?: string;
+  image_url?: string;
+};
+
+class KieProvider implements MusicProvider {
+  private baseUrl: string;
+  private apiKey: string;
+
+  constructor() {
+    const env = KieEnv.parse({
+      KIE_API_KEY: process.env.KIE_API_KEY,
+      KIE_BASE_URL: process.env.KIE_BASE_URL ?? "https://api.kie.ai",
+    });
+    this.baseUrl = env.KIE_BASE_URL.replace(/\/$/, "");
+    this.apiKey = env.KIE_API_KEY;
+  }
+
+  async generate(input: ProviderGenerateInput): Promise<ProviderGenerateOutput> {
+    const res = await fetch(`${this.baseUrl}/api/v1/generate`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": `Bearer ${this.apiKey}`,
+        "x-idempotency-key": input.idempotencyKey,
+      },
+      body: JSON.stringify({
+        prompt: input.prompt,
+        model: input.model,
+        make_instrumental: input.instrumental,
+        // keep async by default; your vendor may support callbacks too
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`PROVIDER_KIE_GENERATE_FAILED:${res.status}:${text.slice(0, 300)}`);
+    }
+
+    const data = (await res.json()) as Partial<KieTaskResponse>;
+    const providerJobId = data.task_id;
+    if (!providerJobId) throw new Error("PROVIDER_KIE_BAD_RESPONSE:no_task_id");
+
+    return {
+      providerJobId,
+      status: "queued",
+      providerMeta: { raw: data },
+    };
+  }
+
+  async waitForCompletion(input: WaitInput): Promise<ProviderGenerateOutput> {
+    const start = Date.now();
+    let delay = 500;
+
+    while (Date.now() - start < input.maxWaitMs) {
+      const status = await this.getStatus(input.providerJobId);
+      if (status.status === "completed" || status.status === "failed") {
+        return {
+          providerJobId: input.providerJobId,
+          status: status.status,
+          audioUrl: status.audio_url ?? null,
+          imageUrl: status.image_url ?? null,
+          providerMeta: { raw: status },
+        };
+      }
+      await new Promise((r) => setTimeout(r, delay));
+      delay = Math.min(2500, Math.floor(delay * 1.5));
+    }
+
+    return { providerJobId: input.providerJobId, status: "running" };
+  }
+
+  private async getStatus(taskId: string): Promise<KieStatusResponse> {
+    const res = await fetch(`${this.baseUrl}/api/v1/status?task_id=${encodeURIComponent(taskId)}`, {
+      method: "GET",
+      headers: { "authorization": `Bearer ${this.apiKey}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`PROVIDER_KIE_STATUS_FAILED:${res.status}:${text.slice(0, 300)}`);
+    }
+
+    return (await res.json()) as KieStatusResponse;
+  }
+}
+
+export const Providers = new Map<string, MusicProvider>([
+  ["kie", new KieProvider()],
+  // ["aimlapi", new AimlProvider()],
+  // ["selfhosted", new GcuiProvider()],
+]);
+
+// lib/rateLimit.ts
+// Simple Redis-based limiter is ideal; this in-memory fallback is ONLY for local dev.
+// For prod on Vercel, use Upstash Redis or similar.
+type LimitInput = { key: string; limit: number; windowSeconds: number };
+
+const memory = new Map<string, { count: number; resetAt: number }>();
+
+export async function rateLimitOrThrow(input: LimitInput) {
+  const now = Date.now();
+  const hit = memory.get(input.key);
+  if (!hit || hit.resetAt < now) {
+    memory.set(input.key, { count: 1, resetAt: now + input.windowSeconds * 1000 });
+    return;
+  }
+  if (hit.count >= input.limit) {
+    throw new Error(`RATE_LIMITED:try_again_after_ms=${hit.resetAt - now}`);
+  }
+  hit.count += 1;
+  memory.set(input.key, hit);
+}
+
+-- supabase/migrations/20260205_music_jobs.sql
+create table if not exists public.music_jobs (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid not null,
+  idempotency_key text not null,
+  provider text not null,
+  provider_job_id text null,
+  status text not null default 'queued',
+  prompt text not null,
+  model text not null,
+  instrumental boolean not null default false,
+  audio_url text null,
+  image_url text null,
+  provider_meta jsonb null
+);
+
+create unique index if not exists music_jobs_user_id_idempotency_key
+on public.music_jobs(user_id, idempotency_key);
+
+alter table public.music_jobs enable row level security;
+
+create policy "music_jobs_select_own"
+on public.music_jobs for select
+using (auth.uid() = user_id);
+
+create policy "music_jobs_insert_own"
+on public.music_jobs for insert
+with check (auth.uid() = user_id);
+
+create policy "music_jobs_update_own"
+on public.music_jobs for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+// tests/music.generate.smoke.test.ts (vitest)
+import { describe, it, expect } from "vitest";
+import { z } from "zod";
+
+describe("schema smoke", () => {
+  it("rejects too-short prompts", () => {
+    const S = z.object({ prompt: z.string().min(5) });
+    expect(() => S.parse({ prompt: "yo" })).toThrow();
+  });
+});
+
+Output — what you now have
+
+POST /api/music/generate:
+
+Returns 202 Accepted with a music_jobs record for async generation
+
+If wait=true, it bounded-polls and tries to return a completed job within ~25s
+
+Implements idempotency so repeats don’t spam the provider
+
+Supabase table + RLS to ensure jobs are private per user
+
+Provider abstraction so you can swap Kie/AIMLAPI/self-host with minimal code motion
+
+Implementation Considerations
+
+Provider fields vary. Treat my KieProvider status endpoint as a pattern, not gospel—vendor docs differ and change. Kie.ai’s public docs confirm the product and a generate endpoint, but you should align exact request/response fields to their current spec.
+
+For scale, replace the in-memory rate limiter with Redis (Upstash) and add a background worker (Supabase Edge Function cron or a small queue worker) to finalize jobs without relying on client polling.
+
+Add webhook/callback support if your provider offers it; polling is fine for MVP but wasteful at volume.
+
+Performance/Security Notes
+
+Secrets: keep KIE_API_KEY / vendor keys in Vercel env vars; never expose to client. If you self-host gcui-art/suno-api, treat the session cookie as a high-risk secret (vault it, rotate, audit access).
+
+Abuse controls: validate prompt length, rate limit per user, and consider content filtering depending on your app’s policy surface area.
+
+Timeout safety: serverless timeouts are real; keep synchronous waits short and rely on async job completion.
+
+Data minimization: store only what you need; avoid storing raw provider payloads unless you have a debugging retention policy.
+
+Recommended Next Steps
+
+Decide which provider you’re actually using first (Kie vs AIMLAPI vs self-host). My strong pick: managed provider for production speed, with the provider interface so you can swap later.
+
+Add GET /api/music/jobs/:id and/or GET /api/music/jobs?status=running for the client to poll safely.
+
+Add a worker path: every N seconds, pick running/queued jobs older than X and refresh status → mark completed → notify client (Realtime / SSE).
+
+Add observability: log provider latency + failure codes + retry counts; set alerts when failure rate spikes (that’s usually “Suno changed something again”).
+
+CLAIMS CHECK (with counterexamples/contradictions)
+
+Claim: “Unofficial wrappers commonly expose /api/generate and sometimes OpenAI-like /v1/chat/completions.” Supported by gcui-art/suno-api docs listing these endpoints.
+
+Claim: “Kie.ai exposes a music generation endpoint /api/v1/generate.” Supported by Kie.ai’s Suno API marketing/usage page referencing that endpoint.
+
+Claim: “Managed providers like AIMLAPI and Kie.ai offer Suno proxy APIs.” Both publicly market Suno API offerings.
+
+Counterexample: Suno (the company) could release an official API or partner program; the above patterns would still work structurally, but you’d switch the provider adapter to the official endpoints.
+
+Contradiction risk: Vendor docs can change faster than blog posts; always align the adapter’s request/response mapping to the provider’s current docs (and keep the adapter small so changes are cheap).

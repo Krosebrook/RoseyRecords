@@ -4,13 +4,35 @@
 
 HarmoniQ is an AI-powered music and lyrics generation platform that allows users to create studio-quality lyrics and songs without musical experience. The application features a dark "Music Studio" aesthetic with a synthwave theme, providing tools for generating lyrics from text prompts, exploring public songs, and managing a personal music library.
 
-The platform supports multiple AI engines (OpenAI for fast lyrics, Gemini for full song concepts), integrates with Replicate for audio generation, and uses Replit Auth for user authentication.
+The platform supports multiple AI engines (OpenAI for fast lyrics, Gemini for full song concepts), integrates with Replicate for audio generation, Suno for professional studio-quality vocals, and uses Replit Auth for user authentication.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+### February 2026
+- **Suno AI Integration**: Added professional music generation with realistic vocals
+  - Full songs with singing (up to 4+ minutes)
+  - Multiple music styles (Pop, Rock, Hip Hop, Electronic, etc.)
+  - Model selection (v3, v3.5, v4, v5)
+  - Optional custom lyrics or AI-generated
+  - Instrumental-only mode
+  - Environment variable: `SUNO_API_KEY`
+- **Security Audit**: Fixed command injection vulnerability in audio processing
+  - Added input validation for all external process calls
+  - Whitelisted allowed model names and parameters
+- **PWA Auto-Update System**: Service worker now auto-updates on deployment
+  - Build-timestamp versioning ensures cache invalidation
+  - Users get latest version automatically after publish
+  - No manual cache clearing required
+- **Performance Optimizations**:
+  - Smart cache headers (immutable for hashed assets, no-cache for HTML)
+  - Preload hints for critical CSS/JS assets
+  - Lazy loading for images
+  - Reduced font payload
+- **Studio Page Engine Selector**: Choose between Stable Audio, Replicate, or Suno
 
 ### January 2026
 - Added Search & Filtering to Dashboard and Explore pages (search, genre filter, mood filter, sorting)
@@ -104,6 +126,12 @@ Preferred communication style: Simple, everyday language.
 - **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
   - Environment variable: `FAL_API_KEY` or `FAL_KEY`
 
+- **Suno API**: Used for professional studio-quality music with realistic vocals (up to 4+ minutes)
+  - Third-party API via sunoapi.org or similar services
+  - Environment variable: `SUNO_API_KEY`
+  - Supports multiple models: v3, v3.5, v4, v5 (studio quality)
+  - Features: Custom lyrics, instrumental-only mode, multiple styles
+
 ### API Routes
 
 #### Generation Routes
@@ -137,6 +165,14 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/bark/generate` - Generate singing vocals from lyrics
 - `POST /api/bark/generate/start` - Start async singing generation
 - `GET /api/bark/status` - Check if Bark (Replicate) is configured
+
+#### Suno Routes (Professional Music with Vocals)
+- `GET /api/suno/status` - Check if Suno is configured, get available styles/models
+- `POST /api/suno/generate` - Generate full song with vocals (sync mode)
+- `POST /api/suno/generate/start` - Start async song generation
+- `GET /api/suno/status/:taskId` - Check async generation status
+- `POST /api/suno/lyrics` - Generate lyrics only with Suno
+- `POST /api/suno/extend` - Extend an existing Suno track
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations
