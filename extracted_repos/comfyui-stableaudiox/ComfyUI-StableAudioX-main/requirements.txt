@@ -1,7 +1,7 @@
 # Essential dependencies for AudioX
-torch>=2.0.0
-torchaudio>=2.0.0
-transformers>=4.30.0
+torch>=2.6.0
+torchaudio>=2.6.0
+transformers>=4.48.0
 huggingface_hub>=0.16.0
 einops>=0.6.0
 einops-exts>=0.0.4
@@ -15,7 +15,7 @@ descript-audio-codec>=1.0.0
 pyloudnorm>=0.1.0
 
 # ComfyUI compatibility
-Pillow>=8.0.0
+Pillow>=10.2.0
 
 # EMA utilities for model training
 ema_pytorch>=0.3.0
