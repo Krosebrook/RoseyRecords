@@ -61,6 +61,8 @@ export default function Settings() {
                   alt="Profile" 
                   className="w-20 h-20 rounded-full border-2 border-border"
                   data-testid="img-profile"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">

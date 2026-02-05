@@ -1,7 +1,7 @@
 // script/build.ts
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, writeFile } from "fs/promises";
 var allowlist = [
   "@google/generative-ai",
   "axios",
@@ -31,8 +31,20 @@ var allowlist = [
 ];
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
+  const buildVersion = Date.now().toString();
+  console.log("Build version:", buildVersion);
   console.log("building client...");
   await viteBuild();
+  console.log("injecting build version into service worker...");
+  const swPath = "dist/public/sw.js";
+  try {
+    let swContent = await readFile(swPath, "utf-8");
+    swContent = `self.__BUILD_VERSION__ = "${buildVersion}";
+` + swContent;
+    await writeFile(swPath, swContent);
+  } catch (e) {
+    console.log("Note: Could not inject build version into SW (may be in dev mode)");
+  }
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
   const allDeps = [

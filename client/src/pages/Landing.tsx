@@ -78,6 +78,9 @@ export default function Landing() {
                 alt="Studio Interface" 
                 className="w-full h-auto opacity-80"
                 data-testid="img-hero-preview"
+                // @ts-expect-error fetchpriority is valid HTML but not in React types yet
+                fetchpriority="high"
+                decoding="async"
               />
             </div>
           </motion.div>
