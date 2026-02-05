@@ -1,0 +1,157 @@
+SCOPE_MODE: FULL
+
+Analyze repo/code first, then generate missing files only; do not rewrite unchanged files.
+
+ROLE
+You are a senior full-stack engineer shipping a production-ready integration between an existing app and DefAPI Suno endpoints:
+- Production base: https://api.defapi.org
+- POST /api/suno/generate
+- GET  /api/task/query?task_id=...
+- GET  /api/user
+Auth: Authorization: Bearer <API_KEY>
+Outputs: audio (.mp3/.wav), URLs returned by API.
+Release date: 2025-09-22
+
+GOAL
+The app is already built. Your job is to wire DefAPI Suno into it with best practices:
+- Secure secret handling (Replit Secrets / env var)
+- Typed API client + robust error handling
+- Polling job status with backoff and cancellation
+- UI integration (generate → progress → results → play/download)
+- Credit balance fetch/display
+- Tests + smoke checks
+- Minimal diffs: add new files where possible; only touch existing files where required to connect UI/DI/routes.
+
+CONSTRAINTS
+- DO NOT hardcode API keys anywhere.
+- DO NOT log secrets.
+- Prefer adding new modules over editing many existing files.
+- If the app has a backend, prefer server-side proxy to keep API key off the client.
+- If the app is client-only, implement a minimal backend route in this repo (Express/Next API route/etc.) as a proxy.
+- Keep polling rate conservative to avoid rate limits.
+- Provide clear run instructions and acceptance criteria.
+
+FIRST: REPO DISCOVERY (NO CODE CHANGES YET)
+1) Identify framework and structure:
+   - Is this Next.js, Vite React, Node/Express, Python, etc.?
+   - Where are API calls implemented today?
+   - Where is auth/state management?
+2) Identify best insertion point:
+   - If Next.js: use app/api/* route handlers as proxy.
+   - If Express: add /api/suno/* proxy routes.
+   - If purely frontend: create a small server in-repo (or convert to fullstack minimally) to proxy requests.
+3) Identify existing UI surfaces to attach:
+   - Any “Generate” screen, modal, or workflow step
+   - Existing toast/notifications/loading components
+   - Existing audio player component (or add one)
+
+IMPLEMENTATION PLAN (THEN EXECUTE)
+A) Secrets & Configuration
+- Require env var name: DEFAPI_API_KEY
+- Optionally: DEFAPI_BASE_URL default to https://api.defapi.org
+- Add a config module that validates env at boot and fails fast with actionable error messages.
+
+B) API Integration (Typed Client)
+Create a typed DefAPI client module using fetch with:
+- Request timeout (AbortController)
+- Retries for transient failures (429/5xx) with exponential backoff + jitter
+- Strong schema validation for responses (Zod or equivalent)
+- Clear Error types (status, message, retryable flag)
+
+C) Server-side Proxy (Recommended)
+Implement server routes that the UI calls:
+- POST /api/suno/generate  -> forwards to DefAPI /api/suno/generate with Bearer secret
+- GET  /api/suno/task?task_id=... -> forwards to /api/task/query
+- GET  /api/suno/user -> forwards to /api/user
+Add:
+- Basic origin checks if applicable
+- Rate limiting (lightweight in-memory limiter is fine)
+- No secret leakage in errors
+
+D) Polling Orchestration
+Implement polling utility:
+- Starts after generate returns task_id
+- Poll interval: start at 1.5s, backoff to max 6s
+- Max wait: e.g., 2 minutes (configurable)
+- Cancel when user navigates away or presses “Cancel”
+- Handle statuses: queued/in_progress/succeeded/failed (map defensively; treat unknown as in_progress with cap)
+- On success: return clip list with audio_url(s) and metadata
+
+E) UI Wiring
+Add/modify UI minimally:
+- Inputs: prompt, tags, title, custom_mode, make_instrumental, mv (default chirp-v4-5)
+- Generate button triggers server proxy call
+- Show progress + current status
+- Results list:
+  - Audio player per clip (HTML5 audio)
+  - Download link/button
+  - Show prompt/title/tags used
+- Credit balance:
+  - Fetch from /api/suno/user on page load or on demand
+  - Display credits clearly; handle errors gracefully
+
+F) Documentation
+Add docs:
+- README section: “Suno (DefAPI) Integration”
+- ENV setup for Replit Secrets: DEFAPI_API_KEY
+- How to run locally and in Replit
+- Troubleshooting (401, 429, timeouts, stuck tasks)
+- Security notes
+
+G) Testing
+Add:
+- Unit tests for client (mock fetch)
+- Unit tests for polling/backoff
+- Integration test for proxy routes (supertest if Node)
+- UI smoke test instructions (manual steps acceptable if test harness absent)
+- A single “smoke” script that:
+  - Calls /api/suno/user (validates auth)
+  - Starts a generate with a tiny prompt
+  - Polls until result or timeout
+  - Prints resulting audio_url(s)
+
+DELIVERABLES (MUST PRODUCE)
+1) New files/modules for:
+   - defapi client (typed)
+   - proxy routes (if needed)
+   - polling utility
+   - UI integration component(s)
+   - tests
+   - docs updates
+2) A concise CHANGELOG section listing touched files + why
+3) A final “How to Verify” checklist
+
+API DETAILS (USE THESE)
+- POST https://api.defapi.org/api/suno/generate
+  Headers: Accept: application/json; Content-Type: application/json; Authorization: Bearer ${DEFAPI_API_KEY}
+  Body example:
+  {
+    "mv": "chirp-v4-5",
+    "custom_mode": true,
+    "make_instrumental": false,
+    "prompt": "A cheerful pop song about summer days",
+    "tags": "pop, cheerful, summer",
+    "title": "Summer Days"
+  }
+- GET https://api.defapi.org/api/task/query?task_id=...
+- GET https://api.defapi.org/api/user
+
+SECURITY / BEST PRACTICES REQUIREMENTS
+- Keep DEFAPI_API_KEY server-side only whenever possible
+- Sanitize and limit prompt/tag lengths to reduce abuse (basic validation)
+- Add request timeouts and safe error messages
+- Avoid excessive polling; backoff + max attempts
+- Do not persist audio URLs unless the app already has a persistence layer and user expects it
+
+OUTPUT FORMAT
+After implementing, output:
+- Summary of what you changed
+- File tree of new/modified files
+- Key code snippets only if needed; otherwise rely on committed changes in the repl
+- Verification steps (copy/paste commands)
+
+NOW EXECUTE:
+1) Inspect repository
+2) Implement the plan with minimal edits
+3) Add tests and docs
+4) Provide verification checklist
