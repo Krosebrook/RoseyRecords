@@ -126,11 +126,14 @@ Preferred communication style: Simple, everyday language.
 - **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
   - Environment variable: `FAL_API_KEY` or `FAL_KEY`
 
-- **Suno API**: Used for professional studio-quality music with realistic vocals (up to 4+ minutes)
-  - Third-party API via sunoapi.org or similar services
-  - Environment variable: `SUNO_API_KEY`
-  - Supports multiple models: v3, v3.5, v4, v5 (studio quality)
-  - Features: Custom lyrics, instrumental-only mode, multiple styles
+- **Suno API (via DefAPI)**: Used for professional studio-quality music with realistic vocals (up to 4+ minutes)
+  - Production base: https://api.defapi.org
+  - Primary environment variable: `DEFAPI_API_KEY` (recommended)
+  - Alternative providers: `KIE_API_KEY` (Kie.ai), `SUNO_API_KEY` (SunoAPI.org)
+  - Set `SUNO_PROVIDER` to explicitly choose: "defapi", "kie", or "sunoorg"
+  - Supports multiple models: v3, v3.5, v4, v4.5 (DefAPI default), v5 (studio quality)
+  - Features: Custom lyrics, instrumental-only mode, multiple styles, credit balance tracking
+  - Polling: Exponential backoff (1.5s to 6s), max 2 minute wait
 
 ### API Routes
 
@@ -166,13 +169,13 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/bark/generate/start` - Start async singing generation
 - `GET /api/bark/status` - Check if Bark (Replicate) is configured
 
-#### Suno Routes (Professional Music with Vocals)
-- `GET /api/suno/status` - Check if Suno is configured, get available styles/models
-- `POST /api/suno/generate` - Generate full song with vocals (sync mode)
-- `POST /api/suno/generate/start` - Start async song generation
-- `GET /api/suno/status/:taskId` - Check async generation status
-- `POST /api/suno/lyrics` - Generate lyrics only with Suno
-- `POST /api/suno/extend` - Extend an existing Suno track
+#### Suno Routes (Professional Music with Vocals via DefAPI)
+- `GET /api/suno/status` - Check if Suno is configured, get provider/styles/models/pollingConfig
+- `POST /api/suno/generate` - Start async song generation (forwards to DefAPI /api/suno/generate)
+- `POST /api/suno/generate/start` - Start async song generation (same as above)
+- `GET /api/suno/status/:taskId` - Check async generation status (forwards to DefAPI /api/task/query)
+- `GET /api/suno/user` - Get user info and credit balance (forwards to DefAPI /api/user)
+- `POST /api/suno/lyrics` - Generate lyrics only
 
 ### Database
 - **PostgreSQL**: Primary data store for users, sessions, songs, playlists, and conversations

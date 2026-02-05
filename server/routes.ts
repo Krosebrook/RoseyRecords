@@ -845,8 +845,10 @@ Also suggest a fitting title for the song.`;
   app.get("/api/suno/status", isAuthenticated, async (req, res) => {
     res.json({ 
       configured: sunoService.isSunoConfigured(),
+      provider: sunoService.getConfiguredProvider(),
       styles: sunoService.SUNO_STYLES,
-      models: sunoService.SUNO_MODELS
+      models: sunoService.SUNO_MODELS,
+      pollingConfig: sunoService.POLLING_CONFIG
     });
   });
 
@@ -968,8 +970,8 @@ Also suggest a fitting title for the song.`;
     }
   });
 
-  // POST /api/suno/extend - Extend existing track
-  app.post("/api/suno/extend", isAuthenticated, async (req, res) => {
+  // GET /api/suno/user - Get user info and credits
+  app.get("/api/suno/user", isAuthenticated, async (req, res) => {
     try {
       if (!sunoService.isSunoConfigured()) {
         return res.status(503).json({ 
@@ -977,17 +979,15 @@ Also suggest a fitting title for the song.`;
         });
       }
       
-      const { audioId, prompt, continueAt } = req.body;
-      
-      if (!audioId || typeof audioId !== "string") {
-        return res.status(400).json({ message: "Audio ID is required" });
+      const userInfo = await sunoService.getSunoUserInfo();
+      if (!userInfo) {
+        return res.status(404).json({ message: "User info not available for this provider" });
       }
       
-      const result = await sunoService.extendSunoTrack(audioId, prompt, continueAt);
-      res.json(result);
+      res.json(userInfo);
     } catch (err) {
-      console.error("Error extending Suno track:", err);
-      const message = err instanceof Error ? err.message : "Failed to extend track";
+      console.error("Error fetching Suno user info:", err);
+      const message = err instanceof Error ? err.message : "Failed to fetch user info";
       res.status(500).json({ message });
     }
   });

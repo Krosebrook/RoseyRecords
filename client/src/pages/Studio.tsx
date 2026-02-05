@@ -54,8 +54,21 @@ type GenerationEngine = "replicate" | "stable" | "suno";
 
 interface SunoConfig {
   configured: boolean;
+  provider: string;
   styles: string[];
   models: { id: string; name: string; description: string }[];
+  pollingConfig: {
+    initialDelayMs: number;
+    maxDelayMs: number;
+    maxWaitMs: number;
+    backoffMultiplier: number;
+  };
+}
+
+interface SunoUserInfo {
+  credits: number;
+  userId?: string;
+  plan?: string;
 }
 
 export default function Studio() {
@@ -125,10 +138,11 @@ export default function Studio() {
 
   // Suno state (professional AI music with vocals)
   const [sunoConfig, setSunoConfig] = useState<SunoConfig | null>(null);
+  const [sunoUserInfo, setSunoUserInfo] = useState<SunoUserInfo | null>(null);
   const [sunoLyrics, setSunoLyrics] = useState("");
   const [sunoTitle, setSunoTitle] = useState("");
   const [sunoStyle, setSunoStyle] = useState("Pop");
-  const [sunoModel, setSunoModel] = useState("chirp-v4");
+  const [sunoModel, setSunoModel] = useState("chirp-v4-5");
   const [sunoInstrumental, setSunoInstrumental] = useState(false);
   const [sunoTaskId, setSunoTaskId] = useState<string | null>(null);
 
@@ -535,11 +549,27 @@ export default function Studio() {
           }
         }
       } catch {
-        setSunoConfig({ configured: false, styles: [], models: [] });
+        setSunoConfig({ 
+          configured: false, 
+          provider: "none",
+          styles: [], 
+          models: [],
+          pollingConfig: { initialDelayMs: 1500, maxDelayMs: 6000, maxWaitMs: 120000, backoffMultiplier: 1.5 }
+        });
       }
     };
     checkSuno();
   }, []);
+  
+  // Fetch user info only when Suno is configured with DefAPI
+  useEffect(() => {
+    if (sunoConfig?.configured && sunoConfig?.provider === "defapi") {
+      fetch("/api/suno/user", { credentials: "include" })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => data && setSunoUserInfo(data))
+        .catch(() => {});
+    }
+  }, [sunoConfig?.configured, sunoConfig?.provider]);
 
   // Ref to track Suno polling timeout for cleanup on unmount
   const sunoPollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -637,8 +667,15 @@ export default function Studio() {
   };
 
   const pollSunoStatus = (taskId: string) => {
-    const maxAttempts = 60;
-    let attempts = 0;
+    const config = sunoConfig?.pollingConfig || {
+      initialDelayMs: 1500,
+      maxDelayMs: 6000,
+      maxWaitMs: 120000,
+      backoffMultiplier: 1.5
+    };
+    
+    const startTime = Date.now();
+    let currentDelay = config.initialDelayMs;
     
     const poll = async () => {
       try {
@@ -647,17 +684,18 @@ export default function Studio() {
         
         const data = await res.json();
         
-        if (data.status === "complete" && data.audioUrl) {
+        if (data.status === "complete" && (data.audioUrl || data.clips?.[0]?.audioUrl)) {
           // Completed - clear interval and finish
           if (sunoProgressIntervalRef.current) {
             clearInterval(sunoProgressIntervalRef.current);
             sunoProgressIntervalRef.current = null;
           }
+          const audioUrl = data.audioUrl || data.clips?.[0]?.audioUrl;
           setGenerationProgress(100);
-          setFullTrackUrl(data.audioUrl);
-          setCurrentAudioUrl(data.audioUrl);
+          setFullTrackUrl(audioUrl);
+          setCurrentAudioUrl(audioUrl);
           setIsGeneratingAudio(false);
-          toast({ title: "Suno Track Ready!", description: "Your studio-quality track is complete" });
+          toast({ title: "Track Ready!", description: "Your studio-quality track is complete" });
           return;
         }
         
@@ -665,9 +703,10 @@ export default function Studio() {
           throw new Error(data.error || "Generation failed");
         }
         
-        attempts++;
-        if (attempts < maxAttempts) {
-          sunoPollTimeoutRef.current = setTimeout(poll, 3000);
+        const elapsed = Date.now() - startTime;
+        if (elapsed < config.maxWaitMs) {
+          sunoPollTimeoutRef.current = setTimeout(poll, currentDelay);
+          currentDelay = Math.min(currentDelay * config.backoffMultiplier, config.maxDelayMs);
         } else {
           throw new Error("Generation timed out");
         }
@@ -929,9 +968,16 @@ export default function Studio() {
 
                   {generationEngine === "suno" && (
                     <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                        <Sparkles className="w-4 h-4" />
-                        Suno Pro - Studio Quality with Vocals
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                          <Sparkles className="w-4 h-4" />
+                          {sunoConfig?.provider === "defapi" ? "DefAPI" : "Suno"} Pro - Studio Quality
+                        </div>
+                        {sunoUserInfo && (
+                          <Badge variant="outline" className="text-xs" data-testid="badge-suno-credits">
+                            {sunoUserInfo.credits} credits
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
