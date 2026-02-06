@@ -182,15 +182,19 @@ class DefAPIProvider implements MusicProvider {
     console.log("[DefAPI] Generate response:", JSON.stringify(data));
 
     // Handle error responses from DefAPI
-    if (data.error || data.message) {
-      throw new Error(data.error || data.message || "DefAPI generation failed");
+    // DefAPI returns {message: "ok"} on success, so only treat non-ok messages as errors
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    if (data.code && data.code !== 200 && data.message && data.message !== "ok") {
+      throw new Error(data.message);
     }
 
-    // DefAPI returns task_id in the response
-    const taskId = data.task_id || data.id || data.data?.task_id;
+    // DefAPI returns task_id in the response (may be nested under data)
+    const taskId = data.task_id || data.id || data.data?.task_id || data.data?.id;
     if (!taskId) {
       console.error("[DefAPI] No task_id in response:", data);
-      throw new Error("No task ID returned from DefAPI");
+      throw new Error("No task ID returned from DefAPI - check your credits");
     }
 
     return {
@@ -250,11 +254,12 @@ class DefAPIProvider implements MusicProvider {
     });
 
     const data = await res.json();
+    console.log("[DefAPI] User info response:", JSON.stringify(data));
 
     return {
-      credits: data.credits ?? data.balance ?? 0,
-      userId: data.user_id || data.id,
-      plan: data.plan || data.subscription,
+      credits: data.credits ?? data.balance ?? data.data?.credits ?? data.data?.balance ?? 0,
+      userId: data.user_id || data.id || data.data?.user_id,
+      plan: data.plan || data.subscription || data.data?.plan,
     };
   }
 }

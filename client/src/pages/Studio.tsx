@@ -664,9 +664,9 @@ export default function Studio() {
       
       const data = await response.json();
       
-      // Check for API error response
-      if (data.message || data.error) {
-        throw new Error(data.message || data.error);
+      // Check for API error response (but not success messages like "ok")
+      if (data.error) {
+        throw new Error(data.error);
       }
       
       if (data.audioUrl) {
