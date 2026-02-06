@@ -426,7 +426,50 @@ export default function Studio() {
     }
   };
 
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
+
+  const NOTE_FREQUENCIES: Record<string, number> = {
+    "C": 261.63, "C#": 277.18, "D": 293.66, "D#": 311.13,
+    "E": 329.63, "F": 349.23, "F#": 369.99, "G": 392.00,
+    "G#": 415.30, "A": 440.00, "A#": 466.16, "B": 493.88,
+  };
+
+  const playNoteSound = async (note: string) => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+      const freq = NOTE_FREQUENCIES[note];
+      if (!freq) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.8);
+    } catch {}
+  };
+
   const handlePianoKeyClick = (note: string) => {
+    playNoteSound(note);
     setSelectedNotes(prev => 
       prev.includes(note) 
         ? prev.filter(n => n !== note)
@@ -602,18 +645,12 @@ export default function Studio() {
     }
   }, [sunoConfig?.configured, sunoConfig?.provider]);
 
-  // Ref to track Suno polling timeout for cleanup on unmount
   const sunoPollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const sunoProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Cleanup Suno polling on unmount
   useEffect(() => {
     return () => {
       if (sunoPollTimeoutRef.current) {
         clearTimeout(sunoPollTimeoutRef.current);
-      }
-      if (sunoProgressIntervalRef.current) {
-        clearInterval(sunoProgressIntervalRef.current);
       }
     };
   }, []);
@@ -640,17 +677,11 @@ export default function Studio() {
     setSunoTaskId(null);
     setSavedToLibrary(false);
     
-    // Clear any existing intervals/timeouts
-    if (sunoProgressIntervalRef.current) {
-      clearInterval(sunoProgressIntervalRef.current);
-    }
     if (sunoPollTimeoutRef.current) {
       clearTimeout(sunoPollTimeoutRef.current);
     }
     
-    sunoProgressIntervalRef.current = setInterval(() => {
-      setGenerationProgress(prev => Math.min(prev + 2, 90));
-    }, 1000);
+    setGenerationProgress(5);
     
     try {
       const response = await apiRequest("POST", "/api/suno/generate", {
@@ -664,17 +695,11 @@ export default function Studio() {
       
       const data = await response.json();
       
-      // Check for API error response (but not success messages like "ok")
       if (data.error) {
         throw new Error(data.error);
       }
       
       if (data.audioUrl) {
-        // Sync completion - clear interval and finish
-        if (sunoProgressIntervalRef.current) {
-          clearInterval(sunoProgressIntervalRef.current);
-          sunoProgressIntervalRef.current = null;
-        }
         setGenerationProgress(100);
         setFullTrackUrl(data.audioUrl);
         setCurrentAudioUrl(data.audioUrl);
@@ -685,7 +710,7 @@ export default function Studio() {
           description: `Your studio-quality ${sunoInstrumental ? "instrumental" : "song"} is ready` 
         });
       } else if (data.id && data.status === "processing") {
-        // Async - start polling (don't clear interval, keep isGeneratingAudio true)
+        setGenerationProgress(10);
         setSunoTaskId(data.id);
         pollSunoStatus(data.id);
       } else {
@@ -693,10 +718,6 @@ export default function Studio() {
       }
     } catch (err) {
       console.error("Suno generation error:", err);
-      if (sunoProgressIntervalRef.current) {
-        clearInterval(sunoProgressIntervalRef.current);
-        sunoProgressIntervalRef.current = null;
-      }
       setIsGeneratingAudio(false);
       setGenerationProgress(0);
       const errorMsg = err instanceof Error ? err.message : "Could not generate with Suno";
@@ -714,6 +735,13 @@ export default function Studio() {
     
     const startTime = Date.now();
     let currentDelay = config.initialDelayMs;
+    let lastStatus = "starting";
+    let statusStartTime = Date.now();
+    
+    const statusProgressRange: Record<string, [number, number]> = {
+      "starting": [10, 30],
+      "processing": [30, 90],
+    };
     
     const poll = async () => {
       try {
@@ -723,11 +751,6 @@ export default function Studio() {
         const data = await res.json();
         
         if (data.status === "complete" && (data.audioUrl || data.clips?.[0]?.audioUrl)) {
-          // Completed - clear interval and finish
-          if (sunoProgressIntervalRef.current) {
-            clearInterval(sunoProgressIntervalRef.current);
-            sunoProgressIntervalRef.current = null;
-          }
           const audioUrl = data.audioUrl || data.clips?.[0]?.audioUrl;
           setGenerationProgress(100);
           setFullTrackUrl(audioUrl);
@@ -741,19 +764,27 @@ export default function Studio() {
           throw new Error(data.error || "Generation failed");
         }
         
-        const elapsed = Date.now() - startTime;
-        if (elapsed < config.maxWaitMs) {
-          sunoPollTimeoutRef.current = setTimeout(poll, currentDelay);
-          currentDelay = Math.min(currentDelay * config.backoffMultiplier, config.maxDelayMs);
-        } else {
+        const totalElapsed = Date.now() - startTime;
+        if (totalElapsed >= config.maxWaitMs) {
           throw new Error("Generation timed out");
         }
-      } catch (err) {
-        // Error - clear interval and reset state
-        if (sunoProgressIntervalRef.current) {
-          clearInterval(sunoProgressIntervalRef.current);
-          sunoProgressIntervalRef.current = null;
+        
+        const currentStatus = data.status || lastStatus;
+        if (currentStatus !== lastStatus) {
+          lastStatus = currentStatus;
+          statusStartTime = Date.now();
         }
+        
+        const [rangeMin, rangeMax] = statusProgressRange[currentStatus] || [10, 90];
+        const statusDuration = currentStatus === "processing" ? config.maxWaitMs * 0.7 : config.maxWaitMs * 0.3;
+        const statusElapsed = Date.now() - statusStartTime;
+        const fraction = Math.min(statusElapsed / statusDuration, 0.95);
+        const progress = rangeMin + Math.round((rangeMax - rangeMin) * fraction);
+        setGenerationProgress(Math.min(progress, 95));
+        
+        sunoPollTimeoutRef.current = setTimeout(poll, currentDelay);
+        currentDelay = Math.min(currentDelay * config.backoffMultiplier, config.maxDelayMs);
+      } catch (err) {
         setIsGeneratingAudio(false);
         setGenerationProgress(0);
         toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Generation failed" });
@@ -1093,10 +1124,22 @@ export default function Studio() {
                   {isGeneratingAudio && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Generating...</span>
+                        <span className="text-muted-foreground" data-testid="text-generation-status">
+                          {generationEngine === "suno"
+                            ? generationProgress < 10
+                              ? "Submitting to Suno..."
+                              : generationProgress < 40
+                                ? "Composing your track..."
+                                : generationProgress < 70
+                                  ? "Generating audio..."
+                                  : generationProgress < 100
+                                    ? "Finalizing..."
+                                    : "Complete!"
+                            : "Generating..."}
+                        </span>
                         <span className="text-muted-foreground">{Math.round(generationProgress)}%</span>
                       </div>
-                      <Progress value={generationProgress} className="h-2" />
+                      <Progress value={generationProgress} className="h-2" data-testid="progress-generation" />
                     </div>
                   )}
 
@@ -1334,10 +1377,19 @@ export default function Studio() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {!barkConfigured ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-muted-foreground" data-testid="vocals-not-configured">
                       <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Bark AI is not configured</p>
-                      <p className="text-sm mt-2">Add your REPLICATE_API_KEY to enable singing vocals</p>
+                      <p className="font-medium text-foreground/80">Bark AI Vocals Unavailable</p>
+                      <p className="text-sm mt-2 max-w-xs mx-auto">
+                        The Replicate API key needed for Bark singing vocals is not set up yet.
+                      </p>
+                      {sunoConfig?.configured && (
+                        <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10 max-w-xs mx-auto">
+                          <p className="text-xs text-foreground/70">
+                            For professional vocals with singing, try the <strong>Suno</strong> engine on the Audio tab — it generates complete songs with realistic vocals built in.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>
