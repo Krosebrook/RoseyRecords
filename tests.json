@@ -1,0 +1,764 @@
+{
+  "module": "server/utils.ts",
+  "function": "sanitizeLog",
+  "description": "Comprehensive test suite for the sanitizeLog function which redacts sensitive data from objects before logging",
+  "tests": [
+    {
+      "id": "test-primitive-types",
+      "category": "primitive-values",
+      "name": "Should pass through primitive types unchanged",
+      "cases": [
+        {
+          "description": "null value",
+          "input": null,
+          "expected": null
+        },
+        {
+          "description": "undefined value",
+          "input": "undefined",
+          "expected": "undefined"
+        },
+        {
+          "description": "string value",
+          "input": "hello world",
+          "expected": "hello world"
+        },
+        {
+          "description": "number value",
+          "input": 42,
+          "expected": 42
+        },
+        {
+          "description": "boolean true",
+          "input": true,
+          "expected": true
+        },
+        {
+          "description": "boolean false",
+          "input": false,
+          "expected": false
+        },
+        {
+          "description": "empty string",
+          "input": "",
+          "expected": ""
+        },
+        {
+          "description": "zero number",
+          "input": 0,
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "test-email-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact email fields",
+      "cases": [
+        {
+          "description": "lowercase 'email' field",
+          "input": {"email": "user@example.com"},
+          "expected": {"email": "***REDACTED***"}
+        },
+        {
+          "description": "uppercase 'EMAIL' field",
+          "input": {"EMAIL": "user@example.com"},
+          "expected": {"EMAIL": "***REDACTED***"}
+        },
+        {
+          "description": "mixed case 'Email' field",
+          "input": {"Email": "user@example.com"},
+          "expected": {"Email": "***REDACTED***"}
+        },
+        {
+          "description": "compound key 'user_email'",
+          "input": {"user_email": "user@example.com"},
+          "expected": {"user_email": "***REDACTED***"}
+        },
+        {
+          "description": "compound key 'userEmail'",
+          "input": {"userEmail": "user@example.com"},
+          "expected": {"userEmail": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-password-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact password fields",
+      "cases": [
+        {
+          "description": "lowercase 'password' field",
+          "input": {"password": "secret123"},
+          "expected": {"password": "***REDACTED***"}
+        },
+        {
+          "description": "uppercase 'PASSWORD' field",
+          "input": {"PASSWORD": "secret123"},
+          "expected": {"PASSWORD": "***REDACTED***"}
+        },
+        {
+          "description": "compound key 'oldPassword'",
+          "input": {"oldPassword": "secret123"},
+          "expected": {"oldPassword": "***REDACTED***"}
+        },
+        {
+          "description": "compound key 'new_password'",
+          "input": {"new_password": "secret123"},
+          "expected": {"new_password": "***REDACTED***"}
+        },
+        {
+          "description": "compound key 'confirmPassword'",
+          "input": {"confirmPassword": "secret123"},
+          "expected": {"confirmPassword": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-token-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact token fields",
+      "cases": [
+        {
+          "description": "lowercase 'token' field",
+          "input": {"token": "abc123xyz"},
+          "expected": {"token": "***REDACTED***"}
+        },
+        {
+          "description": "access_token field",
+          "input": {"access_token": "abc123xyz"},
+          "expected": {"access_token": "***REDACTED***"}
+        },
+        {
+          "description": "refresh_token field",
+          "input": {"refresh_token": "abc123xyz"},
+          "expected": {"refresh_token": "***REDACTED***"}
+        },
+        {
+          "description": "bearer_token field",
+          "input": {"bearer_token": "abc123xyz"},
+          "expected": {"bearer_token": "***REDACTED***"}
+        },
+        {
+          "description": "authToken field",
+          "input": {"authToken": "abc123xyz"},
+          "expected": {"authToken": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-secret-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact secret fields",
+      "cases": [
+        {
+          "description": "lowercase 'secret' field",
+          "input": {"secret": "topsecret"},
+          "expected": {"secret": "***REDACTED***"}
+        },
+        {
+          "description": "client_secret field",
+          "input": {"client_secret": "topsecret"},
+          "expected": {"client_secret": "***REDACTED***"}
+        },
+        {
+          "description": "api_secret field",
+          "input": {"api_secret": "topsecret"},
+          "expected": {"api_secret": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-authorization-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact authorization fields",
+      "cases": [
+        {
+          "description": "lowercase 'authorization' field",
+          "input": {"authorization": "Bearer xyz"},
+          "expected": {"authorization": "***REDACTED***"}
+        },
+        {
+          "description": "mixed case 'Authorization' field",
+          "input": {"Authorization": "Bearer xyz"},
+          "expected": {"Authorization": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-cookie-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact cookie fields",
+      "cases": [
+        {
+          "description": "lowercase 'cookie' field",
+          "input": {"cookie": "sessionid=abc123"},
+          "expected": {"cookie": "***REDACTED***"}
+        },
+        {
+          "description": "cookies field (plural)",
+          "input": {"cookies": ["session=abc"]},
+          "expected": {"cookies": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-name-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact name fields",
+      "cases": [
+        {
+          "description": "firstName field",
+          "input": {"firstName": "John"},
+          "expected": {"firstName": "***REDACTED***"}
+        },
+        {
+          "description": "first_name field",
+          "input": {"first_name": "John"},
+          "expected": {"first_name": "***REDACTED***"}
+        },
+        {
+          "description": "lastName field",
+          "input": {"lastName": "Doe"},
+          "expected": {"lastName": "***REDACTED***"}
+        },
+        {
+          "description": "last_name field",
+          "input": {"last_name": "Doe"},
+          "expected": {"last_name": "***REDACTED***"}
+        },
+        {
+          "description": "fullName field",
+          "input": {"fullName": "John Doe"},
+          "expected": {"fullName": "***REDACTED***"}
+        },
+        {
+          "description": "full_name field",
+          "input": {"full_name": "John Doe"},
+          "expected": {"full_name": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-credit-card-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact credit card fields",
+      "cases": [
+        {
+          "description": "creditCard field",
+          "input": {"creditCard": "4111111111111111"},
+          "expected": {"creditCard": "***REDACTED***"}
+        },
+        {
+          "description": "credit_card field",
+          "input": {"credit_card": "4111111111111111"},
+          "expected": {"credit_card": "***REDACTED***"}
+        },
+        {
+          "description": "cardNumber field",
+          "input": {"cardNumber": "4111111111111111"},
+          "expected": {"cardNumber": "***REDACTED***"}
+        },
+        {
+          "description": "cvv field",
+          "input": {"cvv": "123"},
+          "expected": {"cvv": "***REDACTED***"}
+        },
+        {
+          "description": "CVV field (uppercase)",
+          "input": {"CVV": "123"},
+          "expected": {"CVV": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-api-key-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact API key fields",
+      "cases": [
+        {
+          "description": "api_key field",
+          "input": {"api_key": "sk-abc123"},
+          "expected": {"api_key": "***REDACTED***"}
+        },
+        {
+          "description": "apiKey field",
+          "input": {"apiKey": "sk-abc123"},
+          "expected": {"apiKey": "***REDACTED***"}
+        },
+        {
+          "description": "apikey field (no separator)",
+          "input": {"apikey": "sk-abc123"},
+          "expected": {"apikey": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-phone-ssn-redaction",
+      "category": "sensitive-fields",
+      "name": "Should redact phone and SSN fields",
+      "cases": [
+        {
+          "description": "phone field",
+          "input": {"phone": "555-1234"},
+          "expected": {"phone": "***REDACTED***"}
+        },
+        {
+          "description": "phoneNumber field",
+          "input": {"phoneNumber": "555-1234"},
+          "expected": {"phoneNumber": "***REDACTED***"}
+        },
+        {
+          "description": "ssn field",
+          "input": {"ssn": "123-45-6789"},
+          "expected": {"ssn": "***REDACTED***"}
+        },
+        {
+          "description": "SSN field (uppercase)",
+          "input": {"SSN": "123-45-6789"},
+          "expected": {"SSN": "***REDACTED***"}
+        }
+      ]
+    },
+    {
+      "id": "test-nested-objects",
+      "category": "nested-structures",
+      "name": "Should sanitize nested objects recursively",
+      "cases": [
+        {
+          "description": "nested object with sensitive field",
+          "input": {
+            "user": {
+              "id": 1,
+              "email": "user@example.com",
+              "role": "admin"
+            }
+          },
+          "expected": {
+            "user": {
+              "id": 1,
+              "email": "***REDACTED***",
+              "role": "admin"
+            }
+          }
+        },
+        {
+          "description": "deeply nested sensitive fields",
+          "input": {
+            "data": {
+              "auth": {
+                "user": {
+                  "password": "secret"
+                }
+              }
+            }
+          },
+          "expected": {
+            "data": {
+              "auth": {
+                "user": {
+                  "password": "***REDACTED***"
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "multiple nested objects",
+          "input": {
+            "user": {
+              "email": "user@example.com",
+              "profile": {
+                "firstName": "John",
+                "age": 30
+              }
+            }
+          },
+          "expected": {
+            "user": {
+              "email": "***REDACTED***",
+              "profile": {
+                "firstName": "***REDACTED***",
+                "age": 30
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-arrays",
+      "category": "nested-structures",
+      "name": "Should sanitize arrays recursively",
+      "cases": [
+        {
+          "description": "array of objects with sensitive fields",
+          "input": [
+            {"id": 1, "email": "user1@example.com"},
+            {"id": 2, "email": "user2@example.com"}
+          ],
+          "expected": [
+            {"id": 1, "email": "***REDACTED***"},
+            {"id": 2, "email": "***REDACTED***"}
+          ]
+        },
+        {
+          "description": "empty array",
+          "input": [],
+          "expected": []
+        },
+        {
+          "description": "array of primitives",
+          "input": [1, 2, 3, "test"],
+          "expected": [1, 2, 3, "test"]
+        },
+        {
+          "description": "nested arrays",
+          "input": [
+            [{"password": "secret"}],
+            [{"token": "xyz"}]
+          ],
+          "expected": [
+            [{"password": "***REDACTED***"}],
+            [{"token": "***REDACTED***"}]
+          ]
+        },
+        {
+          "description": "array inside object",
+          "input": {
+            "users": [
+              {"firstName": "John", "id": 1},
+              {"firstName": "Jane", "id": 2}
+            ]
+          },
+          "expected": {
+            "users": [
+              {"firstName": "***REDACTED***", "id": 1},
+              {"firstName": "***REDACTED***", "id": 2}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-mixed-sensitive-nonsensitive",
+      "category": "mixed-data",
+      "name": "Should preserve non-sensitive fields while redacting sensitive ones",
+      "cases": [
+        {
+          "description": "mix of sensitive and non-sensitive",
+          "input": {
+            "id": 123,
+            "username": "johndoe",
+            "email": "john@example.com",
+            "password": "secret123",
+            "role": "user",
+            "created_at": "2024-01-01"
+          },
+          "expected": {
+            "id": 123,
+            "username": "johndoe",
+            "email": "***REDACTED***",
+            "password": "***REDACTED***",
+            "role": "user",
+            "created_at": "2024-01-01"
+          }
+        },
+        {
+          "description": "song data (non-sensitive)",
+          "input": {
+            "id": 1,
+            "title": "My Song",
+            "artist": "Test Artist",
+            "lyrics": "Some lyrics here",
+            "duration": 180
+          },
+          "expected": {
+            "id": 1,
+            "title": "My Song",
+            "artist": "Test Artist",
+            "lyrics": "Some lyrics here",
+            "duration": 180
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-empty-objects",
+      "category": "edge-cases",
+      "name": "Should handle empty objects",
+      "cases": [
+        {
+          "description": "empty object",
+          "input": {},
+          "expected": {}
+        },
+        {
+          "description": "object with null values",
+          "input": {"key1": null, "key2": null},
+          "expected": {"key1": null, "key2": null}
+        }
+      ]
+    },
+    {
+      "id": "test-special-values",
+      "category": "edge-cases",
+      "name": "Should handle special JavaScript values",
+      "cases": [
+        {
+          "description": "NaN value",
+          "input": {"value": "NaN"},
+          "expected": {"value": "NaN"},
+          "note": "NaN is typeof 'number' but should pass through"
+        },
+        {
+          "description": "Infinity value",
+          "input": {"value": "Infinity"},
+          "expected": {"value": "Infinity"}
+        },
+        {
+          "description": "Date object",
+          "input": {"timestamp": "Date object"},
+          "expected": {"timestamp": "Date object"},
+          "note": "Date objects should be handled gracefully"
+        }
+      ]
+    },
+    {
+      "id": "test-null-values-in-objects",
+      "category": "edge-cases",
+      "name": "Should handle null values in objects",
+      "cases": [
+        {
+          "description": "null value for sensitive field",
+          "input": {"email": null},
+          "expected": {"email": "***REDACTED***"},
+          "note": "Even null values in sensitive fields should be redacted"
+        },
+        {
+          "description": "null value for non-sensitive field",
+          "input": {"id": null, "name": "test"},
+          "expected": {"id": null, "name": "test"}
+        }
+      ]
+    },
+    {
+      "id": "test-undefined-values-in-objects",
+      "category": "edge-cases",
+      "name": "Should handle undefined values in objects",
+      "cases": [
+        {
+          "description": "undefined value for sensitive field",
+          "input": {"email": "undefined"},
+          "expected": {"email": "***REDACTED***"},
+          "note": "Even undefined values in sensitive fields should be redacted"
+        },
+        {
+          "description": "undefined value for non-sensitive field",
+          "input": {"id": "undefined", "role": "user"},
+          "expected": {"id": "undefined", "role": "user"}
+        }
+      ]
+    },
+    {
+      "id": "test-complex-real-world",
+      "category": "real-world-scenarios",
+      "name": "Should handle complex real-world data structures",
+      "cases": [
+        {
+          "description": "authentication response",
+          "input": {
+            "success": true,
+            "user": {
+              "id": 123,
+              "email": "user@example.com",
+              "firstName": "John",
+              "lastName": "Doe"
+            },
+            "tokens": {
+              "access_token": "eyJhbGc...",
+              "refresh_token": "xyz123",
+              "expires_in": 3600
+            }
+          },
+          "expected": {
+            "success": true,
+            "user": {
+              "id": 123,
+              "email": "***REDACTED***",
+              "firstName": "***REDACTED***",
+              "lastName": "***REDACTED***"
+            },
+            "tokens": {
+              "access_token": "***REDACTED***",
+              "refresh_token": "***REDACTED***",
+              "expires_in": 3600
+            }
+          }
+        },
+        {
+          "description": "payment data",
+          "input": {
+            "orderId": "ORD-123",
+            "amount": 99.99,
+            "currency": "USD",
+            "payment": {
+              "creditCard": "4111111111111111",
+              "cvv": "123",
+              "expiryMonth": 12,
+              "expiryYear": 2025
+            },
+            "customer": {
+              "email": "customer@example.com",
+              "phone": "555-1234",
+              "name": "Jane Smith"
+            }
+          },
+          "expected": {
+            "orderId": "ORD-123",
+            "amount": 99.99,
+            "currency": "USD",
+            "payment": {
+              "creditCard": "***REDACTED***",
+              "cvv": "***REDACTED***",
+              "expiryMonth": 12,
+              "expiryYear": 2025
+            },
+            "customer": {
+              "email": "***REDACTED***",
+              "phone": "***REDACTED***",
+              "name": "Jane Smith"
+            }
+          }
+        },
+        {
+          "description": "API request log",
+          "input": {
+            "method": "POST",
+            "path": "/api/login",
+            "headers": {
+              "authorization": "Bearer xyz",
+              "content-type": "application/json",
+              "user-agent": "Mozilla/5.0"
+            },
+            "body": {
+              "username": "testuser",
+              "password": "secret123"
+            },
+            "timestamp": "2024-01-01T00:00:00Z"
+          },
+          "expected": {
+            "method": "POST",
+            "path": "/api/login",
+            "headers": {
+              "authorization": "***REDACTED***",
+              "content-type": "application/json",
+              "user-agent": "Mozilla/5.0"
+            },
+            "body": {
+              "username": "testuser",
+              "password": "***REDACTED***"
+            },
+            "timestamp": "2024-01-01T00:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-case-insensitivity",
+      "category": "pattern-matching",
+      "name": "Should match sensitive patterns case-insensitively",
+      "cases": [
+        {
+          "description": "all uppercase keys",
+          "input": {
+            "EMAIL": "test@example.com",
+            "PASSWORD": "secret",
+            "TOKEN": "abc"
+          },
+          "expected": {
+            "EMAIL": "***REDACTED***",
+            "PASSWORD": "***REDACTED***",
+            "TOKEN": "***REDACTED***"
+          }
+        },
+        {
+          "description": "mixed case keys",
+          "input": {
+            "EmAiL": "test@example.com",
+            "PaSsWoRd": "secret",
+            "ToKeN": "abc"
+          },
+          "expected": {
+            "EmAiL": "***REDACTED***",
+            "PaSsWoRd": "***REDACTED***",
+            "ToKeN": "***REDACTED***"
+          }
+        },
+        {
+          "description": "camelCase keys with sensitive patterns",
+          "input": {
+            "userPassword": "secret",
+            "apiToken": "abc",
+            "customerEmail": "test@example.com"
+          },
+          "expected": {
+            "userPassword": "***REDACTED***",
+            "apiToken": "***REDACTED***",
+            "customerEmail": "***REDACTED***"
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-immutability",
+      "category": "behavior",
+      "name": "Should not mutate input data",
+      "note": "The function should return a new object/array, not modify the original",
+      "cases": [
+        {
+          "description": "original object should remain unchanged",
+          "test_type": "mutation_check",
+          "input": {"email": "test@example.com", "id": 1},
+          "expected": {"email": "***REDACTED***", "id": 1},
+          "assertion": "input object should not be modified"
+        },
+        {
+          "description": "original nested object should remain unchanged",
+          "test_type": "mutation_check",
+          "input": {
+            "user": {"email": "test@example.com"}
+          },
+          "expected": {
+            "user": {"email": "***REDACTED***"}
+          },
+          "assertion": "nested objects should not be modified"
+        }
+      ]
+    }
+  ],
+  "performance_considerations": [
+    {
+      "name": "Large object handling",
+      "description": "Should efficiently handle objects with many keys"
+    },
+    {
+      "name": "Deep nesting",
+      "description": "Should handle deeply nested structures without stack overflow"
+    },
+    {
+      "name": "Large arrays",
+      "description": "Should process arrays with many items efficiently"
+    }
+  ],
+  "security_considerations": [
+    {
+      "name": "Complete coverage",
+      "description": "All sensitive patterns must be covered to prevent data leaks"
+    },
+    {
+      "name": "Pattern bypass",
+      "description": "Ensure patterns cannot be bypassed with creative naming"
+    }
+  ]
+}
