@@ -45,7 +45,20 @@ Preferred communication style: Simple, everyday language.
   - Preload hints for critical CSS/JS assets
   - Lazy loading for images
   - Reduced font payload
-- **Studio Page Engine Selector**: Suno (primary when configured), Stable Audio, Replicate
+- **ACE-Step 1.5 Integration**: Added commercial-grade music generation with vocals via Replicate
+  - Full songs with vocals, up to 4 minutes duration
+  - Style tags-based prompting (genre, instruments, BPM, mood, vocalist type)
+  - Optional custom lyrics with section markers ([Verse], [Chorus], [Bridge])
+  - 50+ language support, commercial-grade quality
+  - New service: `server/services/aceStep.ts`
+  - New routes: `/api/ace-step/generate`, `/api/ace-step/status/:predictionId`, `/api/ace-step/config`
+  - AI Suggest button for music tags generation
+- **Style Reference Upload**: Upload reference audio to guide music generation style
+  - MusicGen melody conditioning via Replicate
+  - Accepts MP3, WAV, OGG, FLAC, AAC files (up to 10MB)
+  - New route: `/api/audio/generate-with-reference` (multipart form upload via multer)
+  - Available from the Studio Audio tab for any engine
+- **Studio Page Engine Selector**: Suno (primary when configured), ACE-Step 1.5, Stable Audio, Replicate
 
 ### January 2026
 - Added Search & Filtering to Dashboard and Explore pages (search, genre filter, mood filter, sorting)
@@ -133,7 +146,7 @@ Preferred communication style: Simple, everyday language.
 - **Gemini API**: Used for comprehensive song concepts, accessed via Replit AI Integrations
   - Environment variables: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
 
-- **Replicate API**: Used for short audio/music generation (MusicGen model, 5-30s)
+- **Replicate API**: Used for short audio/music generation (MusicGen model, 5-30s) and ACE-Step 1.5 (full songs with vocals, up to 4 min)
   - Environment variable: `REPLICATE_API_KEY`
 
 - **Stable Audio (fal.ai)**: Used for extended duration music generation (up to 3 minutes)
@@ -181,6 +194,14 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/bark/generate` - Generate singing vocals from lyrics
 - `POST /api/bark/generate/start` - Start async singing generation
 - `GET /api/bark/status` - Check if Bark (Replicate) is configured
+
+#### ACE-Step 1.5 Routes (Full Songs with Vocals via Replicate)
+- `GET /api/ace-step/config` - Get ACE-Step configuration (duration options, features)
+- `POST /api/ace-step/generate` - Start async song generation (returns predictionId)
+- `GET /api/ace-step/status/:predictionId` - Check generation status
+
+#### Style Reference Route
+- `POST /api/audio/generate-with-reference` - Upload reference audio + prompt for style-conditioned generation (multipart form, MusicGen melody)
 
 #### Suno Routes (Professional Music with Vocals via DefAPI)
 - `GET /api/suno/status` - Check if Suno is configured, get provider/styles/models/pollingConfig

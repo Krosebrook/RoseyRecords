@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface AiSuggestButtonProps {
-  field: "audio-prompt" | "song-title" | "lyrics" | "topic";
+  field: "audio-prompt" | "song-title" | "lyrics" | "topic" | "music-tags";
   context?: string;
   onSuggestion: (text: string) => void;
   disabled?: boolean;

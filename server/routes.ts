@@ -22,6 +22,7 @@ import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
 import * as sunoService from "./services/suno";
+import * as aceStepService from "./services/aceStep";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -336,7 +337,7 @@ export async function registerRoutes(
   // ==========================================
 
   const aiSuggestSchema = z.object({
-    field: z.enum(["audio-prompt", "song-title", "lyrics", "topic"]),
+    field: z.enum(["audio-prompt", "song-title", "lyrics", "topic", "music-tags"]),
     context: z.string().max(500).optional(),
   });
 
@@ -351,8 +352,9 @@ export async function registerRoutes(
       const prompts: Record<string, string> = {
         "audio-prompt": "Generate a creative, detailed music description prompt for an AI music generator. Include genre, mood, instruments, tempo, and atmosphere. Keep it to 1-2 sentences. Be vivid and specific.",
         "song-title": `Suggest a catchy, creative song title${context ? ` that fits this theme: "${context}"` : ""}. Return only the title, no quotes or explanation.`,
-        "lyrics": `Write creative, original song lyrics (2 verses and a chorus)${context ? ` about: "${context}"` : " about an evocative, interesting topic"}. Format with clear sections (Verse 1, Chorus, Verse 2). Make them emotional and catchy.`,
+        "lyrics": `Write creative, original song lyrics (2 verses and a chorus)${context ? ` about: "${context}"` : " about an evocative, interesting topic"}. Format with clear sections using [Verse], [Chorus], [Bridge] markers. Make them emotional and catchy.`,
         "topic": "Suggest a creative, interesting topic or theme for a song. Be specific and evocative. Return only the topic in 1-2 sentences, no quotes.",
+        "music-tags": `Generate comma-separated music style tags for an AI music generator${context ? ` based on: "${context}"` : ""}. Include genre, sub-genre, instruments, BPM, mood, vocalist type (male/female), and production style. Example: "indie pop, acoustic guitar, piano, female vocalist, 110 BPM, dreamy, lo-fi production". Return only the tags, no explanation.`,
       };
 
       const systemPrompt = prompts[field] || "Generate a creative suggestion for a music-related text input. Keep it concise.";
@@ -1046,6 +1048,112 @@ Also suggest a fitting title for the song.`;
     } catch (err) {
       console.error("Error fetching Suno user info:", err);
       const message = err instanceof Error ? err.message : "Failed to fetch user info";
+      res.status(500).json({ message });
+    }
+  });
+
+  // ==========================================
+  // ACE-STEP 1.5 ROUTES (Full Songs with Vocals)
+  // ==========================================
+
+  app.get("/api/ace-step/config", isAuthenticated, async (_req, res) => {
+    try {
+      res.json(aceStepService.getConfig());
+    } catch (err) {
+      console.error("Error getting ACE-Step config:", err);
+      res.status(500).json({ message: "Failed to get config" });
+    }
+  });
+
+  app.post("/api/ace-step/generate", isAuthenticated, async (req: any, res) => {
+    try {
+      const { tags, lyrics, duration, seed } = req.body;
+
+      if (!tags || typeof tags !== "string" || tags.trim().length === 0) {
+        return res.status(400).json({ message: "Style tags are required" });
+      }
+
+      const predictionId = await aceStepService.startGeneration({
+        tags: tags.trim(),
+        lyrics: lyrics?.trim() || undefined,
+        duration: duration || 60,
+        seed: seed !== undefined ? seed : undefined,
+      });
+
+      res.json({ predictionId, status: "processing" });
+    } catch (err) {
+      console.error("Error starting ACE-Step generation:", err);
+      if (err instanceof Error && err.message.includes("REPLICATE_API_KEY")) {
+        return res.status(503).json({ message: "ACE-Step is not configured (missing REPLICATE_API_KEY)" });
+      }
+      res.status(500).json({ message: "Failed to start generation" });
+    }
+  });
+
+  app.get("/api/ace-step/status/:predictionId", isAuthenticated, async (req, res) => {
+    try {
+      const predictionId = Array.isArray(req.params.predictionId)
+        ? req.params.predictionId[0]
+        : req.params.predictionId;
+
+      if (!predictionId) {
+        return res.status(400).json({ message: "Prediction ID is required" });
+      }
+
+      const status = await aceStepService.checkStatus(predictionId);
+      res.json(status);
+    } catch (err) {
+      console.error("Error checking ACE-Step status:", err);
+      res.status(500).json({ message: "Failed to check status" });
+    }
+  });
+
+  // ==========================================
+  // STYLE REFERENCE UPLOAD ROUTE
+  // ==========================================
+
+  const multer = (await import("multer")).default;
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const allowed = ["audio/mpeg", "audio/wav", "audio/mp3", "audio/x-wav", "audio/ogg", "audio/flac", "audio/mp4", "audio/aac"];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only audio files are allowed (MP3, WAV, OGG, FLAC, AAC)"));
+      }
+    },
+  });
+
+  app.post("/api/audio/generate-with-reference", isAuthenticated, upload.single("referenceAudio"), async (req: any, res) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      const { prompt, duration } = req.body;
+      if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      const base64 = file.buffer.toString("base64");
+      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+
+      const predictionId = await replicateService.startMusicWithReference(
+        dataUrl,
+        prompt.trim(),
+        duration ? parseInt(duration) : 15
+      );
+
+      res.json({ predictionId, status: "processing" });
+    } catch (err) {
+      console.error("Error generating with reference:", err);
+      if (err instanceof Error && err.message.includes("REPLICATE_API_KEY")) {
+        return res.status(503).json({ message: "Audio generation is not configured" });
+      }
+      const message = err instanceof Error ? err.message : "Failed to generate with reference";
       res.status(500).json({ message });
     }
   });

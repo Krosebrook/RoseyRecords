@@ -283,6 +283,59 @@ export async function startSingingVocals(params: SingingVocalsParams): Promise<s
   return prediction.id;
 }
 
+export async function generateMusicWithReference(
+  referenceAudioUrl: string,
+  prompt: string,
+  duration?: number
+): Promise<MusicGenerationResult> {
+  const replicate = getReplicate();
+  const normalizedDuration = normalizeDuration(duration);
+
+  const output = await replicate.run(
+    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    {
+      input: {
+        prompt,
+        input_audio: referenceAudioUrl,
+        duration: normalizedDuration,
+        model_version: "stereo-melody-large",
+        output_format: "mp3",
+        normalization_strategy: "peak"
+      }
+    }
+  );
+
+  const audioUrl = extractAudioUrl(output);
+  if (!audioUrl) {
+    throw new Error("No audio URL received from generation");
+  }
+
+  return { audioUrl, duration: normalizedDuration };
+}
+
+export async function startMusicWithReference(
+  referenceAudioUrl: string,
+  prompt: string,
+  duration?: number
+): Promise<string> {
+  const replicate = getReplicate();
+  const normalizedDuration = normalizeDuration(duration);
+
+  const prediction = await replicate.predictions.create({
+    version: "b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    input: {
+      prompt,
+      input_audio: referenceAudioUrl,
+      duration: normalizedDuration,
+      model_version: "stereo-melody-large",
+      output_format: "mp3",
+      normalization_strategy: "peak"
+    }
+  });
+
+  return prediction.id;
+}
+
 /** Available Bark voice presets for singing generation (0-5 male, 6-9 female) */
 export const BARK_VOICE_PRESETS = [
   { id: "v2/en_speaker_0", name: "Speaker 0 (Male)", gender: "male" },

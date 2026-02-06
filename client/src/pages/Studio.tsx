@@ -52,7 +52,7 @@ const DURATION_OPTIONS = [
 ];
 
 type GenerationMode = "sample" | "full";
-type GenerationEngine = "replicate" | "stable" | "suno";
+type GenerationEngine = "replicate" | "stable" | "suno" | "acestep";
 
 interface SunoConfig {
   configured: boolean;
@@ -149,6 +149,21 @@ export default function Studio() {
   const [sunoModel, setSunoModel] = useState("chirp-crow");
   const [sunoInstrumental, setSunoInstrumental] = useState(false);
   const [sunoTaskId, setSunoTaskId] = useState<string | null>(null);
+
+  const [aceStepConfig, setAceStepConfig] = useState<{
+    configured: boolean;
+    maxDuration: number;
+    durationOptions: { value: number; label: string }[];
+  } | null>(null);
+  const [aceStepLyrics, setAceStepLyrics] = useState("");
+  const [aceStepTags, setAceStepTags] = useState("");
+  const [aceStepDuration, setAceStepDuration] = useState("60");
+  const aceStepPollRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
+  const [referenceFileName, setReferenceFileName] = useState("");
+  const referenceInputRef = useRef<HTMLInputElement | null>(null);
+  const referencePollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -661,9 +676,30 @@ export default function Studio() {
   const sunoPollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    const checkAceStep = async () => {
+      try {
+        const res = await fetch("/api/ace-step/config", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setAceStepConfig(data);
+        }
+      } catch {
+        setAceStepConfig({ configured: false, maxDuration: 240, durationOptions: [] });
+      }
+    };
+    checkAceStep();
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (sunoPollTimeoutRef.current) {
         clearTimeout(sunoPollTimeoutRef.current);
+      }
+      if (aceStepPollRef.current) {
+        clearTimeout(aceStepPollRef.current);
+      }
+      if (referencePollRef.current) {
+        clearTimeout(referencePollRef.current);
       }
     };
   }, []);
@@ -808,6 +844,195 @@ export default function Studio() {
       }
     };
     
+    poll();
+  };
+
+  const handleAceStepGenerate = async () => {
+    const tags = aceStepTags || `${selectedGenre}, ${selectedMood}, ${audioPrompt}`;
+    if (!tags.trim()) {
+      toast({ variant: "destructive", title: "Error", description: "Please add style tags or describe your music" });
+      return;
+    }
+
+    setGenerationMode("full");
+    setIsGeneratingAudio(true);
+    setGenerationProgress(0);
+    setFullTrackUrl(null);
+    setSavedToLibrary(false);
+
+    if (aceStepPollRef.current) {
+      clearTimeout(aceStepPollRef.current);
+    }
+
+    setGenerationProgress(5);
+
+    try {
+      const response = await apiRequest("POST", "/api/ace-step/generate", {
+        tags: tags.trim(),
+        lyrics: aceStepLyrics.trim() || undefined,
+        duration: parseInt(aceStepDuration) || 60,
+      });
+
+      const data = await response.json();
+
+      if (data.predictionId) {
+        setGenerationProgress(10);
+        pollAceStepStatus(data.predictionId);
+      } else {
+        throw new Error("No prediction ID received");
+      }
+    } catch (err) {
+      console.error("ACE-Step generation error:", err);
+      setIsGeneratingAudio(false);
+      setGenerationProgress(0);
+      const errorMsg = err instanceof Error ? err.message : "Could not generate with ACE-Step";
+      toast({ variant: "destructive", title: "Generation Failed", description: errorMsg });
+    }
+  };
+
+  const pollAceStepStatus = (predictionId: string) => {
+    const startTime = Date.now();
+    const maxWait = 180000;
+    let currentDelay = 2000;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/ace-step/status/${predictionId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to check status");
+
+        const data = await res.json();
+
+        if (data.status === "succeeded" && data.output) {
+          setGenerationProgress(100);
+          setFullTrackUrl(data.output);
+          setCurrentAudioUrl(data.output);
+          setIsGeneratingAudio(false);
+          toast({ title: "Track Ready!", description: "Your ACE-Step song is complete" });
+          return;
+        }
+
+        if (data.status === "failed") {
+          throw new Error(data.error || "Generation failed");
+        }
+
+        if (data.status === "canceled") {
+          throw new Error("Generation was canceled");
+        }
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= maxWait) {
+          throw new Error("Generation timed out");
+        }
+
+        const fraction = Math.min(elapsed / maxWait, 0.9);
+        setGenerationProgress(10 + Math.round(85 * fraction));
+
+        aceStepPollRef.current = setTimeout(poll, currentDelay);
+        currentDelay = Math.min(currentDelay * 1.3, 5000);
+      } catch (err) {
+        setIsGeneratingAudio(false);
+        setGenerationProgress(0);
+        toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Generation failed" });
+      }
+    };
+
+    poll();
+  };
+
+  const handleReferenceGenerate = async () => {
+    if (!referenceFile) {
+      toast({ variant: "destructive", title: "Error", description: "Please upload a reference audio file" });
+      return;
+    }
+    if (!audioPrompt) {
+      toast({ variant: "destructive", title: "Error", description: "Please describe the music style you want" });
+      return;
+    }
+
+    setGenerationMode("sample");
+    setIsGeneratingAudio(true);
+    setGenerationProgress(0);
+    setSampleUrl(null);
+    setSavedToLibrary(false);
+
+    setGenerationProgress(5);
+
+    try {
+      const formData = new FormData();
+      formData.append("referenceAudio", referenceFile);
+      formData.append("prompt", audioPrompt);
+      formData.append("duration", "15");
+
+      const response = await fetch("/api/audio/generate-with-reference", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate");
+      }
+
+      const data = await response.json();
+
+      if (data.predictionId) {
+        setGenerationProgress(20);
+        pollReferenceStatus(data.predictionId);
+      } else {
+        throw new Error("No prediction ID received");
+      }
+    } catch (err) {
+      console.error("Reference generation error:", err);
+      setIsGeneratingAudio(false);
+      setGenerationProgress(0);
+      const errorMsg = err instanceof Error ? err.message : "Could not generate with reference";
+      toast({ variant: "destructive", title: "Generation Failed", description: errorMsg });
+    }
+  };
+
+  const pollReferenceStatus = (predictionId: string) => {
+    const startTime = Date.now();
+    const maxWait = 120000;
+    let currentDelay = 2000;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/audio/status/${predictionId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to check status");
+
+        const data = await res.json();
+
+        if (data.status === "succeeded" && data.output) {
+          setGenerationProgress(100);
+          setSampleUrl(data.output);
+          setCurrentAudioUrl(data.output);
+          setIsGeneratingAudio(false);
+          toast({ title: "Reference Track Ready!", description: "Your style-matched music is complete" });
+          return;
+        }
+
+        if (data.status === "failed") {
+          throw new Error(data.error || "Generation failed");
+        }
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= maxWait) {
+          throw new Error("Generation timed out");
+        }
+
+        const fraction = Math.min(elapsed / maxWait, 0.9);
+        setGenerationProgress(10 + Math.round(85 * fraction));
+
+        referencePollRef.current = setTimeout(poll, currentDelay);
+        currentDelay = Math.min(currentDelay * 1.3, 5000);
+      } catch (err) {
+        setIsGeneratingAudio(false);
+        setGenerationProgress(0);
+        toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Generation failed" });
+      }
+    };
+
     poll();
   };
 
@@ -1053,6 +1278,9 @@ export default function Studio() {
                           <SelectItem value="suno" disabled={!sunoConfig?.configured}>
                             Suno {sunoConfig?.configured ? "(Studio Quality)" : "(Not Configured)"}
                           </SelectItem>
+                          <SelectItem value="acestep" disabled={!aceStepConfig?.configured}>
+                            ACE-Step 1.5 {aceStepConfig?.configured ? "(Full Songs)" : "(Not Configured)"}
+                          </SelectItem>
                           <SelectItem value="stable">Stable Audio (Instrumental)</SelectItem>
                           <SelectItem value="replicate">Replicate (Short Clips)</SelectItem>
                         </SelectContent>
@@ -1163,6 +1391,135 @@ export default function Studio() {
                     </div>
                   )}
 
+                  {generationEngine === "acestep" && (
+                    <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Sparkles className="w-4 h-4" />
+                        ACE-Step 1.5 - Full Songs with Vocals
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="acestep-tags">Style Tags</Label>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            id="acestep-tags"
+                            value={aceStepTags}
+                            onChange={(e) => setAceStepTags(e.target.value)}
+                            placeholder="e.g. pop, female vocalist, piano, 120 BPM, uplifting"
+                            data-testid="input-acestep-tags"
+                            className="flex-1"
+                          />
+                          <AiSuggestButton
+                            field="music-tags"
+                            context={audioPrompt || selectedGenre}
+                            onSuggestion={setAceStepTags}
+                            disabled={isGeneratingAudio}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Comma-separated: genre, instruments, BPM, mood, vocalist type
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="acestep-lyrics">Lyrics (optional)</Label>
+                        <div className="flex items-start gap-1">
+                          <Textarea
+                            id="acestep-lyrics"
+                            value={aceStepLyrics}
+                            onChange={(e) => setAceStepLyrics(e.target.value)}
+                            placeholder={"[Verse]\nYour lyrics here...\n\n[Chorus]\nChorus lyrics..."}
+                            rows={5}
+                            data-testid="input-acestep-lyrics"
+                            className="flex-1 text-sm"
+                          />
+                          <AiSuggestButton
+                            field="lyrics"
+                            context={aceStepTags || audioPrompt || selectedGenre}
+                            onSuggestion={setAceStepLyrics}
+                            disabled={isGeneratingAudio}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Use [Verse], [Chorus], [Bridge] section markers. Leave empty for instrumental.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Duration</Label>
+                        <Select value={aceStepDuration} onValueChange={setAceStepDuration}>
+                          <SelectTrigger data-testid="select-acestep-duration">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(aceStepConfig?.durationOptions || [
+                              { value: 30, label: "30s" },
+                              { value: 60, label: "1 min" },
+                              { value: 90, label: "1.5 min" },
+                              { value: 120, label: "2 min" },
+                              { value: 180, label: "3 min" },
+                              { value: 240, label: "4 min" },
+                            ]).map(opt => (
+                              <SelectItem key={opt.value} value={opt.value.toString()}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 p-4 rounded-lg border border-dashed border-muted-foreground/30">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Music className="w-4 h-4" />
+                      Style Reference (optional)
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Upload a reference audio clip to guide the style of your generated music (MusicGen melody conditioning, up to 30s)
+                    </p>
+                    <input
+                      ref={referenceInputRef}
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      data-testid="input-reference-file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setReferenceFile(file);
+                          setReferenceFileName(file.name);
+                        }
+                      }}
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => referenceInputRef.current?.click()}
+                        disabled={isGeneratingAudio}
+                        data-testid="button-upload-reference"
+                      >
+                        {referenceFileName ? "Change File" : "Upload Audio"}
+                      </Button>
+                      {referenceFileName && (
+                        <span className="text-xs text-muted-foreground truncate max-w-[180px]" data-testid="text-reference-filename">
+                          {referenceFileName}
+                        </span>
+                      )}
+                      {referenceFile && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleReferenceGenerate}
+                          disabled={isGeneratingAudio || !audioPrompt}
+                          data-testid="button-generate-reference"
+                        >
+                          <Wand2 className="w-3 h-3 mr-1" />
+                          Generate from Reference
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
                   {isGeneratingAudio && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -1177,6 +1534,18 @@ export default function Studio() {
                                   : generationProgress < 100
                                     ? "Finalizing..."
                                     : "Complete!"
+                            : generationEngine === "acestep"
+                            ? generationProgress < 10
+                              ? "Submitting to ACE-Step..."
+                              : generationProgress < 30
+                                ? "Composing music..."
+                                : generationProgress < 60
+                                  ? "Rendering audio..."
+                                  : generationProgress < 90
+                                    ? "Processing vocals..."
+                                    : generationProgress < 100
+                                      ? "Finalizing..."
+                                      : "Complete!"
                             : "Generating..."}
                         </span>
                         <span className="text-muted-foreground">{Math.round(generationProgress)}%</span>
@@ -1186,7 +1555,7 @@ export default function Studio() {
                   )}
 
                   <div className="flex gap-2">
-                    {generationEngine !== "suno" && (
+                    {generationEngine !== "suno" && generationEngine !== "acestep" && (
                       <Button
                         onClick={handleGenerateSample}
                         disabled={isGeneratingAudio || !audioPrompt}
@@ -1203,8 +1572,16 @@ export default function Studio() {
                       </Button>
                     )}
                     <Button
-                      onClick={generationEngine === "suno" ? () => handleSunoGenerate() : handleGenerateFullTrack}
-                      disabled={isGeneratingAudio || !audioPrompt || (generationEngine === "suno" && !sunoConfig?.configured)}
+                      onClick={
+                        generationEngine === "suno" ? () => handleSunoGenerate()
+                        : generationEngine === "acestep" ? handleAceStepGenerate
+                        : handleGenerateFullTrack
+                      }
+                      disabled={
+                        isGeneratingAudio || !audioPrompt
+                        || (generationEngine === "suno" && !sunoConfig?.configured)
+                        || (generationEngine === "acestep" && !aceStepConfig?.configured)
+                      }
                       className="flex-1"
                       data-testid="button-generate-full"
                     >
@@ -1212,10 +1589,14 @@ export default function Studio() {
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : generationEngine === "suno" ? (
                         <Music className="w-4 h-4 mr-2" />
+                      ) : generationEngine === "acestep" ? (
+                        <Sparkles className="w-4 h-4 mr-2" />
                       ) : (
                         <Clock className="w-4 h-4 mr-2" />
                       )}
-                      {generationEngine === "suno" ? "Generate with Suno" : "Full Track"}
+                      {generationEngine === "suno" ? "Generate with Suno"
+                        : generationEngine === "acestep" ? "Generate with ACE-Step"
+                        : "Full Track"}
                     </Button>
                   </div>
                 </CardContent>
