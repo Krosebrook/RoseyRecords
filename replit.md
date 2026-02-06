@@ -13,12 +13,23 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### February 2026
+- **AI Suggest Buttons**: Sparkle buttons on all text inputs (audio prompt, song title, lyrics, topic) that generate creative suggestions via OpenAI gpt-4o-mini
+  - New endpoint: `POST /api/generate/ai-suggest` with Zod validation
+  - Reusable `AiSuggestButton` component with tooltip and loading state
+- **Model Names Fixed**: Updated all AI model references to current working versions
+  - Suno: chirp-crow (v5), chirp-bluejay (v4.5+), chirp-auk (v4.5), chirp-v4, chirp-v3-5, chirp-v3-0
+  - Replicate MusicGen: Updated to hash b05b1dff with stereo-melody-large variant
+  - Stable Audio: Upgraded to 2.5 endpoints (fal-ai/stable-audio-25/text-to-audio)
+- **Suno Default Engine**: Auto-selects Suno as default engine when configured, with chirp-crow (v5) as preferred model
+- **Vocals Tab Revamp**: Suno-based vocal generation as primary option, Bark AI as optional fallback
+  - handleSunoGenerate accepts overrides for direct parameter passing
+  - Progress tracking during vocal generation
 - **Save to Library**: Generated songs now save directly to user's library from Studio page
 - **Admin Unlimited Credits**: Set `ADMIN_USER_IDS` env var with comma-separated user IDs for unlimited access
 - **Suno AI Integration**: Added professional music generation with realistic vocals
-  - Full songs with singing (up to 4+ minutes)
+  - Full songs with singing (up to 8 minutes with chirp-crow)
   - Multiple music styles (Pop, Rock, Hip Hop, Electronic, etc.)
-  - Model selection (v3, v3.5, v4, v5)
+  - Model selection: chirp-v3-0, chirp-v3-5, chirp-v4, chirp-auk, chirp-bluejay, chirp-crow
   - Optional custom lyrics or AI-generated
   - Instrumental-only mode
   - Environment variable: `DEFAPI_API_KEY` (recommended)
@@ -34,7 +45,7 @@ Preferred communication style: Simple, everyday language.
   - Preload hints for critical CSS/JS assets
   - Lazy loading for images
   - Reduced font payload
-- **Studio Page Engine Selector**: Choose between Stable Audio, Replicate, or Suno
+- **Studio Page Engine Selector**: Suno (primary when configured), Stable Audio, Replicate
 
 ### January 2026
 - Added Search & Filtering to Dashboard and Explore pages (search, genre filter, mood filter, sorting)

@@ -107,11 +107,10 @@ export async function generateSample(params: StableAudioParams): Promise<StableA
   
   const fullPrompt = buildStableAudioPrompt(params);
   
-  const result = await fal.subscribe("fal-ai/stable-audio", {
+  const result = await fal.subscribe("fal-ai/stable-audio-25/text-to-audio", {
     input: {
       prompt: fullPrompt,
-      seconds_total: SAMPLE_DURATION,
-      steps: 100
+      seconds_total: SAMPLE_DURATION
     }
   });
   
@@ -133,13 +132,12 @@ export async function generateFullTrack(params: StableAudioParams): Promise<Stab
   }
   
   const fullPrompt = buildStableAudioPrompt(params);
-  const duration = Math.min(Math.max(params.duration || 60, 30), 47);
+  const duration = Math.min(Math.max(params.duration || 60, 30), MAX_DURATION);
   
-  const result = await fal.subscribe("fal-ai/stable-audio", {
+  const result = await fal.subscribe("fal-ai/stable-audio-25/text-to-audio", {
     input: {
       prompt: fullPrompt,
-      seconds_total: duration,
-      steps: 100
+      seconds_total: duration
     }
   });
   

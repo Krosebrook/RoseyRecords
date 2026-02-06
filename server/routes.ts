@@ -332,6 +332,50 @@ export async function registerRoutes(
   });
 
   // ==========================================
+  // AI SUGGEST (text assist for inputs)
+  // ==========================================
+
+  const aiSuggestSchema = z.object({
+    field: z.enum(["audio-prompt", "song-title", "lyrics", "topic"]),
+    context: z.string().max(500).optional(),
+  });
+
+  app.post("/api/generate/ai-suggest", isAuthenticated, async (req: any, res) => {
+    try {
+      const parsed = aiSuggestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid request: field must be one of audio-prompt, song-title, lyrics, topic" });
+      }
+      const { field, context } = parsed.data;
+
+      const prompts: Record<string, string> = {
+        "audio-prompt": "Generate a creative, detailed music description prompt for an AI music generator. Include genre, mood, instruments, tempo, and atmosphere. Keep it to 1-2 sentences. Be vivid and specific.",
+        "song-title": `Suggest a catchy, creative song title${context ? ` that fits this theme: "${context}"` : ""}. Return only the title, no quotes or explanation.`,
+        "lyrics": `Write creative, original song lyrics (2 verses and a chorus)${context ? ` about: "${context}"` : " about an evocative, interesting topic"}. Format with clear sections (Verse 1, Chorus, Verse 2). Make them emotional and catchy.`,
+        "topic": "Suggest a creative, interesting topic or theme for a song. Be specific and evocative. Return only the topic in 1-2 sentences, no quotes.",
+      };
+
+      const systemPrompt = prompts[field] || "Generate a creative suggestion for a music-related text input. Keep it concise.";
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: context ? `Context: ${context}\n\nGenerate a suggestion.` : "Generate a suggestion." },
+        ],
+        max_tokens: 500,
+        temperature: 0.9,
+      });
+
+      const suggestion = completion.choices[0]?.message?.content?.trim() || "";
+      res.json({ suggestion });
+    } catch (error: any) {
+      console.error("AI suggest error:", error);
+      res.status(500).json({ message: "Failed to generate suggestion" });
+    }
+  });
+
+  // ==========================================
   // GENERATION ROUTES
   // ==========================================
 

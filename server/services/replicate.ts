@@ -66,12 +66,12 @@ export async function generateMusic(params: MusicGenerationParams): Promise<Musi
   const duration = normalizeDuration(params.duration);
   
   const output = await replicate.run(
-    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
+    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
     {
       input: {
         prompt: fullPrompt,
         duration,
-        model_version: "stereo-large",
+        model_version: "stereo-melody-large",
         output_format: "mp3",
         normalization_strategy: "peak"
       }
@@ -103,13 +103,13 @@ export async function generateMusicFromMelody(
   const normalizedDuration = normalizeDuration(duration);
   
   const output = await replicate.run(
-    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
+    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
     {
       input: {
         prompt,
         input_audio: inputAudioUrl,
         duration: normalizedDuration,
-        model_version: "stereo-large",
+        model_version: "stereo-melody-large",
         output_format: "mp3",
         continuation: true
       }
@@ -172,12 +172,12 @@ export async function generateSoundEffect(prompt: string, duration?: number): Pr
   const normalizedDuration = Math.min(Math.max(duration || 5, 3), 15);
   
   const output = await replicate.run(
-    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
+    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
     {
       input: {
         prompt: `sound effect: ${prompt}`,
         duration: normalizedDuration,
-        model_version: "stereo-melody",
+        model_version: "stereo-melody-large",
         output_format: "mp3"
       }
     }
@@ -206,11 +206,11 @@ export async function startMusicGeneration(params: MusicGenerationParams): Promi
   const duration = normalizeDuration(params.duration);
   
   const prediction = await replicate.predictions.create({
-    version: "671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
+    version: "b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
     input: {
       prompt: fullPrompt,
       duration,
-      model_version: "stereo-large",
+      model_version: "stereo-melody-large",
       output_format: "mp3",
       normalization_strategy: "peak"
     }
