@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
+import { AiSuggestButton } from "@/components/AiSuggestButton";
 
 type AIEngine = "openai" | "gemini";
 
@@ -211,13 +212,20 @@ export default function Generate() {
                     Random idea
                   </button>
                 </div>
-                <textarea 
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="e.g. A love song about meeting someone at a coffee shop on a rainy day..."
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-muted-foreground/50 resize-none h-24"
-                  data-testid="input-topic"
-                />
+                <div className="flex items-start gap-1">
+                  <textarea 
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="e.g. A love song about meeting someone at a coffee shop on a rainy day..."
+                    className="flex-1 px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-muted-foreground/50 resize-none h-24"
+                    data-testid="input-topic"
+                  />
+                  <AiSuggestButton
+                    field="topic"
+                    onSuggestion={setTopic}
+                    disabled={isGeneratingLocal}
+                  />
+                </div>
               </div>
 
               {/* Genre Selection */}

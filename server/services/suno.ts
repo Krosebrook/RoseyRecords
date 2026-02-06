@@ -156,7 +156,7 @@ class DefAPIProvider implements MusicProvider {
     const hasCustomLyrics = !!params.lyrics?.trim();
     
     const body: Record<string, unknown> = {
-      mv: params.model || "chirp-v4-5",
+      mv: params.model || "chirp-crow",
       custom_mode: hasCustomLyrics,
       make_instrumental: params.instrumental ?? false,
       prompt: params.prompt.slice(0, 2000),
@@ -475,18 +475,23 @@ export const SUNO_STYLES = [
 ] as const;
 
 export const SUNO_MODELS = [
-  { id: "chirp-v3", name: "v3 (Legacy)", description: "Original model" },
-  { id: "chirp-v3.5", name: "v3.5", description: "Improved vocals" },
-  { id: "chirp-v4", name: "v4", description: "Best quality for most uses" },
+  { id: "chirp-v3-0", name: "v3 (Legacy)", description: "Original model" },
+  { id: "chirp-v3-5", name: "v3.5", description: "Improved vocals" },
+  { id: "chirp-v4", name: "v4", description: "Solid quality" },
   {
-    id: "chirp-v4-5",
-    name: "v4.5 (Recommended)",
-    description: "DefAPI default, studio quality",
+    id: "chirp-auk",
+    name: "v4.5",
+    description: "Enhanced vocal quality, 4 min tracks",
   },
   {
-    id: "chirp-v5",
+    id: "chirp-bluejay",
+    name: "v4.5+ (Recommended)",
+    description: "Rich sound, advanced creative control",
+  },
+  {
+    id: "chirp-crow",
     name: "v5 (Latest)",
-    description: "Studio-quality, up to 4 min tracks",
+    description: "Studio-quality, best vocals, up to 8 min",
   },
 ] as const;
 

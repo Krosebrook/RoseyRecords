@@ -19,6 +19,7 @@ import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, STUDIO_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { useCreateSong } from "@/hooks/use-songs";
+import { AiSuggestButton } from "@/components/AiSuggestButton";
 
 interface ChordData {
   root: string;
@@ -145,7 +146,7 @@ export default function Studio() {
   const [sunoLyrics, setSunoLyrics] = useState("");
   const [sunoTitle, setSunoTitle] = useState("");
   const [sunoStyle, setSunoStyle] = useState("Pop");
-  const [sunoModel, setSunoModel] = useState("chirp-v4-5");
+  const [sunoModel, setSunoModel] = useState("chirp-crow");
   const [sunoInstrumental, setSunoInstrumental] = useState(false);
   const [sunoTaskId, setSunoTaskId] = useState<string | null>(null);
 
@@ -610,6 +611,8 @@ export default function Studio() {
     }
   };
 
+  const sunoInitializedRef = useRef(false);
+
   // Suno AI functions (professional music with vocals)
   useEffect(() => {
     const checkSuno = async () => {
@@ -620,6 +623,16 @@ export default function Studio() {
           setSunoConfig(data);
           if (data.styles?.length > 0) {
             setSunoStyle(data.styles[0]);
+          }
+          if (data.configured && !sunoInitializedRef.current) {
+            sunoInitializedRef.current = true;
+            setGenerationEngine("suno");
+            const crowModel = data.models?.find((m: { id: string }) => m.id === "chirp-crow");
+            if (crowModel) {
+              setSunoModel(crowModel.id);
+            } else if (data.models?.length > 0) {
+              setSunoModel(data.models[data.models.length - 1].id);
+            }
           }
         }
       } catch {
@@ -655,8 +668,12 @@ export default function Studio() {
     };
   }, []);
 
-  const handleSunoGenerate = async () => {
-    if (!audioPrompt) {
+  const handleSunoGenerate = async (overrides?: { prompt?: string; lyrics?: string; instrumental?: boolean }) => {
+    const prompt = overrides?.prompt || audioPrompt;
+    const lyrics = overrides?.lyrics ?? sunoLyrics;
+    const instrumental = overrides?.instrumental ?? sunoInstrumental;
+    
+    if (!prompt) {
       toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
       return;
     }
@@ -685,11 +702,11 @@ export default function Studio() {
     
     try {
       const response = await apiRequest("POST", "/api/suno/generate", {
-        prompt: audioPrompt,
-        lyrics: sunoLyrics || undefined,
+        prompt,
+        lyrics: lyrics || undefined,
         title: sunoTitle || undefined,
         style: sunoStyle,
-        instrumental: sunoInstrumental,
+        instrumental,
         model: sunoModel
       });
       
@@ -936,13 +953,21 @@ export default function Studio() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="audio-prompt">Describe your music</Label>
-                    <Input
-                      id="audio-prompt"
-                      value={audioPrompt}
-                      onChange={(e) => setAudioPrompt(e.target.value)}
-                      placeholder="e.g. Upbeat electronic track with synth arpeggios and driving bass"
-                      data-testid="input-audio-prompt"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Input
+                        id="audio-prompt"
+                        value={audioPrompt}
+                        onChange={(e) => setAudioPrompt(e.target.value)}
+                        placeholder="e.g. Upbeat electronic track with synth arpeggios and driving bass"
+                        data-testid="input-audio-prompt"
+                        className="flex-1"
+                      />
+                      <AiSuggestButton
+                        field="audio-prompt"
+                        onSuggestion={setAudioPrompt}
+                        disabled={isGeneratingAudio}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1025,11 +1050,11 @@ export default function Studio() {
                           <SelectValue placeholder="Select engine" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="stable">Stable Audio (Instrumental)</SelectItem>
-                          <SelectItem value="replicate">Replicate (Short)</SelectItem>
                           <SelectItem value="suno" disabled={!sunoConfig?.configured}>
-                            Suno {sunoConfig?.configured ? "(Pro Vocals)" : "(Not Configured)"}
+                            Suno {sunoConfig?.configured ? "(Studio Quality)" : "(Not Configured)"}
                           </SelectItem>
+                          <SelectItem value="stable">Stable Audio (Instrumental)</SelectItem>
+                          <SelectItem value="replicate">Replicate (Short Clips)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1084,25 +1109,42 @@ export default function Studio() {
 
                       <div className="space-y-2">
                         <Label htmlFor="suno-title">Song Title (optional)</Label>
-                        <Input
-                          id="suno-title"
-                          value={sunoTitle}
-                          onChange={(e) => setSunoTitle(e.target.value)}
-                          placeholder="e.g. Midnight Dreams"
-                          data-testid="input-suno-title"
-                        />
+                        <div className="flex items-center gap-1">
+                          <Input
+                            id="suno-title"
+                            value={sunoTitle}
+                            onChange={(e) => setSunoTitle(e.target.value)}
+                            placeholder="e.g. Midnight Dreams"
+                            data-testid="input-suno-title"
+                            className="flex-1"
+                          />
+                          <AiSuggestButton
+                            field="song-title"
+                            context={audioPrompt || sunoStyle}
+                            onSuggestion={setSunoTitle}
+                            disabled={isGeneratingAudio}
+                          />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="suno-lyrics">Lyrics (optional)</Label>
-                        <Textarea
-                          id="suno-lyrics"
-                          value={sunoLyrics}
-                          onChange={(e) => setSunoLyrics(e.target.value)}
-                          placeholder="Enter lyrics or leave blank for AI-generated lyrics..."
-                          className="min-h-[80px]"
-                          data-testid="input-suno-lyrics"
-                        />
+                        <div className="flex items-start gap-1">
+                          <Textarea
+                            id="suno-lyrics"
+                            value={sunoLyrics}
+                            onChange={(e) => setSunoLyrics(e.target.value)}
+                            placeholder="Enter lyrics or leave blank for AI-generated lyrics..."
+                            className="min-h-[80px] flex-1"
+                            data-testid="input-suno-lyrics"
+                          />
+                          <AiSuggestButton
+                            field="lyrics"
+                            context={audioPrompt || sunoTitle || sunoStyle}
+                            onSuggestion={setSunoLyrics}
+                            disabled={isGeneratingAudio}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -1161,7 +1203,7 @@ export default function Studio() {
                       </Button>
                     )}
                     <Button
-                      onClick={generationEngine === "suno" ? handleSunoGenerate : handleGenerateFullTrack}
+                      onClick={generationEngine === "suno" ? () => handleSunoGenerate() : handleGenerateFullTrack}
                       disabled={isGeneratingAudio || !audioPrompt || (generationEngine === "suno" && !sunoConfig?.configured)}
                       className="flex-1"
                       data-testid="button-generate-full"
@@ -1376,20 +1418,149 @@ export default function Studio() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {!barkConfigured ? (
-                    <div className="text-center py-8 text-muted-foreground" data-testid="vocals-not-configured">
-                      <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="font-medium text-foreground/80">Bark AI Vocals Unavailable</p>
-                      <p className="text-sm mt-2 max-w-xs mx-auto">
-                        The Replicate API key needed for Bark singing vocals is not set up yet.
-                      </p>
-                      {sunoConfig?.configured && (
-                        <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10 max-w-xs mx-auto">
-                          <p className="text-xs text-foreground/70">
-                            For professional vocals with singing, try the <strong>Suno</strong> engine on the Audio tab — it generates complete songs with realistic vocals built in.
-                          </p>
+                  {sunoConfig?.configured ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="vocals-text">Lyrics to sing</Label>
+                        <Textarea
+                          id="vocals-text"
+                          value={vocalsText}
+                          onChange={(e) => setVocalsText(e.target.value)}
+                          placeholder="Enter the lyrics you want the AI to sing..."
+                          className="min-h-[120px] resize-none"
+                          data-testid="input-vocals-text"
+                        />
+                        <p className="text-xs text-muted-foreground">{vocalsText.length}/2000 characters</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Music Style</Label>
+                          <Select value={sunoStyle} onValueChange={setSunoStyle}>
+                            <SelectTrigger data-testid="select-vocal-style">
+                              <SelectValue placeholder="Select style" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(sunoConfig?.styles || []).map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Model</Label>
+                          <Select value={sunoModel} onValueChange={setSunoModel}>
+                            <SelectTrigger data-testid="select-vocal-model">
+                              <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(sunoConfig?.models || []).map(m => (
+                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          if (!vocalsText.trim()) {
+                            toast({ variant: "destructive", title: "Error", description: "Enter lyrics for the vocals" });
+                            return;
+                          }
+                          setGenerationEngine("suno");
+                          handleSunoGenerate({
+                            prompt: vocalsText.trim().substring(0, 200),
+                            lyrics: vocalsText,
+                            instrumental: false
+                          });
+                        }}
+                        disabled={isGeneratingAudio || !vocalsText.trim()}
+                        className="w-full"
+                        data-testid="button-generate-vocals"
+                      >
+                        {isGeneratingAudio ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating Song with Vocals...
+                          </>
+                        ) : (
+                          <>
+                            <Music className="w-4 h-4 mr-2" />
+                            Generate Song with Vocals
+                          </>
+                        )}
+                      </Button>
+
+                      {isGeneratingAudio && generationEngine === "suno" && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {generationProgress < 10
+                                ? "Submitting..."
+                                : generationProgress < 40
+                                  ? "Composing vocals..."
+                                  : generationProgress < 70
+                                    ? "Generating audio..."
+                                    : generationProgress < 100
+                                      ? "Finalizing..."
+                                      : "Complete!"}
+                            </span>
+                            <span className="text-muted-foreground">{Math.round(generationProgress)}%</span>
+                          </div>
+                          <Progress value={generationProgress} className="h-2" />
                         </div>
                       )}
+
+                      {barkConfigured && (
+                        <div className="border-t pt-4 mt-2">
+                          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                            <Mic className="w-3 h-3" />
+                            Or use Bark AI for vocal-only generation (experimental)
+                          </p>
+                          <div className="space-y-3">
+                            <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                              <SelectTrigger data-testid="select-voice">
+                                <SelectValue placeholder="Select a voice" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {barkVoices.map(v => (
+                                  <SelectItem key={v.id} value={v.id}>
+                                    {v.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={handleGenerateVocals}
+                              disabled={isGeneratingVocals || !vocalsText.trim()}
+                              variant="outline"
+                              className="w-full"
+                              data-testid="button-generate-bark-vocals"
+                            >
+                              {isGeneratingVocals ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Generating with Bark...
+                                </>
+                              ) : (
+                                <>
+                                  <Mic className="w-4 h-4 mr-2" />
+                                  Generate with Bark (Vocals Only)
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : !barkConfigured ? (
+                    <div className="text-center py-8 text-muted-foreground" data-testid="vocals-not-configured">
+                      <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="font-medium text-foreground/80">Vocal Generation Unavailable</p>
+                      <p className="text-sm mt-2 max-w-xs mx-auto">
+                        Add DEFAPI_API_KEY to enable studio-quality vocal generation with Suno.
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -1482,16 +1653,22 @@ export default function Studio() {
                   <CardDescription>Listen to your generated vocals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {vocalsUrl ? (
+                  {(vocalsUrl || (fullTrackUrl && generationEngine === "suno")) ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-4 p-4 bg-secondary/20 rounded-lg">
                         <Button
                           size="icon"
                           variant="outline"
-                          onClick={toggleVocalsPlayback}
+                          onClick={() => {
+                            const url = vocalsUrl || fullTrackUrl;
+                            if (url) {
+                              setCurrentAudioUrl(url);
+                              handlePlayPause();
+                            }
+                          }}
                           data-testid="button-play-vocals"
                         >
-                          {isPlayingVocals ? (
+                          {isPlaying ? (
                             <Pause className="w-5 h-5" />
                           ) : (
                             <Play className="w-5 h-5" />
@@ -1499,7 +1676,9 @@ export default function Studio() {
                         </Button>
                         <div className="flex-1">
                           <p className="font-medium">Generated Vocals</p>
-                          <p className="text-sm text-muted-foreground">AI-generated singing</p>
+                          <p className="text-sm text-muted-foreground">
+                            {vocalsUrl ? "Bark AI singing" : "Suno studio-quality vocals"}
+                          </p>
                         </div>
                         <Button
                           size="icon"
@@ -1507,7 +1686,7 @@ export default function Studio() {
                           asChild
                           data-testid="button-download-vocals"
                         >
-                          <a href={vocalsUrl} download="vocals.mp3">
+                          <a href={vocalsUrl || fullTrackUrl || ""} download="vocals.mp3">
                             <Download className="w-4 h-4" />
                           </a>
                         </Button>
