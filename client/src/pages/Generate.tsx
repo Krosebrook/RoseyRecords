@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
@@ -202,7 +203,7 @@ export default function Generate() {
               {/* Topic Input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Topic / Theme</label>
+                  <label className="text-sm font-medium" htmlFor="topic-input">Topic / Theme</label>
                   <button 
                     onClick={handleRandomPrompt}
                     className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
@@ -324,19 +325,12 @@ export default function Generate() {
                   {isPublic ? <Globe className="w-4 h-4 text-primary" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
                   <span className="text-sm font-medium">{isPublic ? "Public" : "Private"}</span>
                 </div>
-                <button
-                  onClick={() => setIsPublic(!isPublic)}
-                  className={cn(
-                    "w-12 h-6 rounded-full transition-all relative",
-                    isPublic ? "bg-primary" : "bg-muted"
-                  )}
+                <Switch
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                  aria-label="Toggle public visibility"
                   data-testid="toggle-visibility"
-                >
-                  <span className={cn(
-                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
-                    isPublic ? "right-1" : "left-1"
-                  )} />
-                </button>
+                />
               </div>
             </div>
 
