@@ -13,6 +13,7 @@ export default function Visualizer() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
   const animationRef = useRef<number>(0);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -50,7 +51,13 @@ export default function Visualizer() {
     if (!ctx) return;
 
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+
+    // Bolt Optimization: Reuse the Uint8Array to avoid garbage collection pressure in the render loop
+    if (!dataArrayRef.current || dataArrayRef.current.length !== bufferLength) {
+      dataArrayRef.current = new Uint8Array(bufferLength);
+    }
+    const dataArray = dataArrayRef.current;
+
     analyser.getByteFrequencyData(dataArray);
 
     const width = canvas.width;
