@@ -4,7 +4,7 @@
 
 HarmoniQ is an AI-powered music and lyrics generation platform that allows users to create studio-quality lyrics and songs without musical experience. The application features a dark "Music Studio" aesthetic with a synthwave theme, providing tools for generating lyrics from text prompts, exploring public songs, and managing a personal music library.
 
-The platform supports multiple AI engines (OpenAI for fast lyrics, Gemini for full song concepts), integrates with Replicate for audio generation, Suno for professional studio-quality vocals, and uses Replit Auth for user authentication.
+The platform supports multiple AI engines (OpenAI for fast lyrics, Gemini for full song concepts), integrates with Replicate for audio generation (MusicGen short clips + ACE-Step 1.5 full songs with vocals), Stable Audio for instrumentals, Suno for professional studio-quality vocals, and uses Replit Auth for user authentication.
 
 ## User Preferences
 
@@ -118,8 +118,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **Dual AI Lyrics Generation**: Choose between OpenAI (fast) or Gemini (comprehensive song concepts)
-- **Audio Generation**: AI-powered instrumental music creation via Replicate
+- **Multi-Engine Audio Generation**: Suno (studio vocals), ACE-Step 1.5 (commercial-grade full songs), Stable Audio (instrumentals up to 3 min), Replicate MusicGen (short clips 5-30s)
+- **Style Reference Upload**: Upload reference audio for melody-conditioned generation via MusicGen
 - **Music Theory Tools**: Chord progression generator, scale finder, production tips
+- **AI Suggest**: Smart suggestion buttons across all text inputs for creative prompts, tags, lyrics, and titles
 - **User Library**: Personal song management with CRUD operations
 - **Public Explore**: Browse and like publicly shared songs
 - **Playlist Management**: Create and manage song playlists
