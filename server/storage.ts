@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
@@ -129,12 +129,12 @@ export class DatabaseStorage implements IStorage {
     const songIds = likes.map(l => l.songId).filter(id => typeof id === 'number' && !isNaN(id));
     if (songIds.length === 0) return [];
     
-    const likedSongs: Song[] = [];
-    for (const id of songIds) {
-      const song = await this.getSong(id);
-      if (song) likedSongs.push(song);
-    }
-    return likedSongs;
+    const songsResult = await db.select()
+      .from(songs)
+      .where(inArray(songs.id, songIds));
+
+    const songMap = new Map(songsResult.map(s => [s.id, s]));
+    return songIds.map(id => songMap.get(id)).filter((s): s is Song => !!s);
   }
 
   // === Playlists ===
@@ -158,11 +158,18 @@ export class DatabaseStorage implements IStorage {
       .from(playlistSongs)
       .where(eq(playlistSongs.playlistId, id));
 
-    const songsList: Song[] = [];
-    for (const row of playlistSongRows) {
-      const song = await this.getSong(row.songId);
-      if (song) songsList.push(song);
+    const songIds = playlistSongRows.map(r => r.songId).filter(id => typeof id === 'number' && !isNaN(id));
+
+    if (songIds.length === 0) {
+      return { ...playlist, songs: [] };
     }
+
+    const songsResult = await db.select()
+      .from(songs)
+      .where(inArray(songs.id, songIds));
+
+    const songMap = new Map(songsResult.map(s => [s.id, s]));
+    const songsList = songIds.map(id => songMap.get(id)).filter((s): s is Song => !!s);
 
     return { ...playlist, songs: songsList };
   }
