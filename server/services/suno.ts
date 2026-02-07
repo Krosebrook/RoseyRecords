@@ -156,7 +156,7 @@ class DefAPIProvider implements MusicProvider {
     const hasCustomLyrics = !!params.lyrics?.trim();
     
     const body: Record<string, unknown> = {
-      mv: params.model || "chirp-crow",
+      mv: params.model || "chirp-bluejay",
       custom_mode: hasCustomLyrics,
       make_instrumental: params.instrumental ?? false,
       prompt: params.prompt.slice(0, 2000),
@@ -485,13 +485,8 @@ export const SUNO_MODELS = [
   },
   {
     id: "chirp-bluejay",
-    name: "v4.5+ (Recommended)",
-    description: "Rich sound, advanced creative control",
-  },
-  {
-    id: "chirp-crow",
-    name: "v5 (Latest)",
-    description: "Studio-quality, best vocals, up to 8 min",
+    name: "v4.5+ (Latest)",
+    description: "Rich sound, best vocals, up to 8 min",
   },
 ] as const;
 

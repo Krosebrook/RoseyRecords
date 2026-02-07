@@ -17,19 +17,19 @@ Preferred communication style: Simple, everyday language.
   - New endpoint: `POST /api/generate/ai-suggest` with Zod validation
   - Reusable `AiSuggestButton` component with tooltip and loading state
 - **Model Names Fixed**: Updated all AI model references to current working versions
-  - Suno: chirp-crow (v5), chirp-bluejay (v4.5+), chirp-auk (v4.5), chirp-v4, chirp-v3-5, chirp-v3-0
+  - Suno: chirp-bluejay (v4.5+), chirp-auk (v4.5), chirp-v4, chirp-v3-5, chirp-v3-0
   - Replicate MusicGen: Updated to hash b05b1dff with stereo-melody-large variant
   - Stable Audio: Upgraded to 2.5 endpoints (fal-ai/stable-audio-25/text-to-audio)
-- **Suno Default Engine**: Auto-selects Suno as default engine when configured, with chirp-crow (v5) as preferred model
+- **Suno Default Engine**: Auto-selects Suno as default engine when configured, with chirp-bluejay (v4.5+) as preferred model
 - **Vocals Tab Revamp**: Suno-based vocal generation as primary option, Bark AI as optional fallback
   - handleSunoGenerate accepts overrides for direct parameter passing
   - Progress tracking during vocal generation
 - **Save to Library**: Generated songs now save directly to user's library from Studio page
 - **Admin Unlimited Credits**: Set `ADMIN_USER_IDS` env var with comma-separated user IDs for unlimited access
 - **Suno AI Integration**: Added professional music generation with realistic vocals
-  - Full songs with singing (up to 8 minutes with chirp-crow)
+  - Full songs with singing (up to 8 minutes with chirp-bluejay)
   - Multiple music styles (Pop, Rock, Hip Hop, Electronic, etc.)
-  - Model selection: chirp-v3-0, chirp-v3-5, chirp-v4, chirp-auk, chirp-bluejay, chirp-crow
+  - Model selection: chirp-v3-0, chirp-v3-5, chirp-v4, chirp-auk, chirp-bluejay
   - Optional custom lyrics or AI-generated
   - Instrumental-only mode
   - Environment variable: `DEFAPI_API_KEY` (recommended)
@@ -159,7 +159,7 @@ Preferred communication style: Simple, everyday language.
   - Primary environment variable: `DEFAPI_API_KEY` (recommended)
   - Alternative providers: `KIE_API_KEY` (Kie.ai), `SUNO_API_KEY` (SunoAPI.org)
   - Set `SUNO_PROVIDER` to explicitly choose: "defapi", "kie", or "sunoorg"
-  - Supports multiple models: v3, v3.5, v4, v4.5 (DefAPI default), v5 (studio quality)
+  - Supports multiple models: v3, v3.5, v4, v4.5, v4.5+ (chirp-bluejay, recommended)
   - Features: Custom lyrics, instrumental-only mode, multiple styles, credit balance tracking
   - Polling: Exponential backoff (1.5s to 6s), max 2 minute wait
 

@@ -146,7 +146,7 @@ export default function Studio() {
   const [sunoLyrics, setSunoLyrics] = useState("");
   const [sunoTitle, setSunoTitle] = useState("");
   const [sunoStyle, setSunoStyle] = useState("Pop");
-  const [sunoModel, setSunoModel] = useState("chirp-crow");
+  const [sunoModel, setSunoModel] = useState("chirp-bluejay");
   const [sunoInstrumental, setSunoInstrumental] = useState(false);
   const [sunoTaskId, setSunoTaskId] = useState<string | null>(null);
 
@@ -642,9 +642,9 @@ export default function Studio() {
           if (data.configured && !sunoInitializedRef.current) {
             sunoInitializedRef.current = true;
             setGenerationEngine("suno");
-            const crowModel = data.models?.find((m: { id: string }) => m.id === "chirp-crow");
-            if (crowModel) {
-              setSunoModel(crowModel.id);
+            const bestModel = data.models?.find((m: { id: string }) => m.id === "chirp-bluejay");
+            if (bestModel) {
+              setSunoModel(bestModel.id);
             } else if (data.models?.length > 0) {
               setSunoModel(data.models[data.models.length - 1].id);
             }
