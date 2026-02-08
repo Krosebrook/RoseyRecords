@@ -7,6 +7,7 @@ import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { aiRateLimiter } from "./middleware";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -76,6 +77,14 @@ export async function registerRoutes(
   // 1. Setup Auth (Must be first)
   await setupAuth(app);
   registerAuthRoutes(app);
+
+  // Sentinel: Add rate limiting to AI endpoints
+  app.use("/api/generate", aiRateLimiter.middleware);
+  app.use("/api/audio", aiRateLimiter.middleware);
+  app.use("/api/stable-audio", aiRateLimiter.middleware);
+  app.use("/api/bark", aiRateLimiter.middleware);
+  app.use("/api/suno", aiRateLimiter.middleware);
+  app.use("/api/ace-step", aiRateLimiter.middleware);
 
   // 2. Setup Integrations
   registerChatRoutes(app);
