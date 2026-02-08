@@ -7,8 +7,15 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import type { Song } from "@shared/schema";
+import { memo, useCallback } from "react";
 
-function PlaylistSongRow({ song, playlistId, onRemove }: { song: Song; playlistId: number; onRemove: () => void }) {
+interface PlaylistSongRowProps {
+  song: Song;
+  playlistId: number;
+  onRemove: (id: number) => void;
+}
+
+const PlaylistSongRow = memo(function PlaylistSongRow({ song, playlistId, onRemove }: PlaylistSongRowProps) {
   return (
     <div className="flex items-center gap-4 p-4 glass-panel rounded-xl group" data-testid={`row-song-${song.id}`}>
       <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
@@ -39,7 +46,7 @@ function PlaylistSongRow({ song, playlistId, onRemove }: { song: Song; playlistI
         <Button
           size="icon"
           variant="ghost"
-          onClick={onRemove}
+          onClick={() => onRemove(song.id)}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
           data-testid={`button-remove-${song.id}`}
         >
@@ -48,7 +55,7 @@ function PlaylistSongRow({ song, playlistId, onRemove }: { song: Song; playlistI
       </div>
     </div>
   );
-}
+});
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
@@ -58,11 +65,11 @@ export default function PlaylistDetails() {
   
   usePageTitle(playlist?.name || "Playlist");
 
-  const handleRemove = (songId: number) => {
+  const handleRemove = useCallback((songId: number) => {
     if (confirm("Remove this song from the playlist?")) {
       removeSong({ playlistId, songId });
     }
-  };
+  }, [playlistId, removeSong]);
 
   if (isLoading) {
     return (
@@ -133,7 +140,7 @@ export default function PlaylistDetails() {
                 key={song.id} 
                 song={song} 
                 playlistId={playlistId}
-                onRemove={() => handleRemove(song.id)} 
+                onRemove={handleRemove}
               />
             ))}
           </motion.div>

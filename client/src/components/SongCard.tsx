@@ -4,12 +4,13 @@ import { type Song } from "@shared/schema";
 import { format } from "date-fns";
 import { useDeleteSong } from "@/hooks/use-songs";
 import { Button } from "@/components/ui/button";
+import { memo } from "react";
 
 interface SongCardProps {
   song: Song;
 }
 
-export function SongCard({ song }: SongCardProps) {
+export const SongCard = memo(function SongCard({ song }: SongCardProps) {
   const { mutate: deleteSong, isPending } = useDeleteSong();
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -93,4 +94,4 @@ export function SongCard({ song }: SongCardProps) {
       </div>
     </div>
   );
-}
+});

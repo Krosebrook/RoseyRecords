@@ -16,14 +16,14 @@ import { cn } from "@/lib/utils";
 import type { Song } from "@shared/schema";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 
 interface PublicSongCardProps {
   song: Song;
   isLiked: boolean;
 }
 
-function PublicSongCard({ song, isLiked }: PublicSongCardProps) {
+const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSongCardProps) {
   const { mutate: toggleLike, isPending } = useLikeSong();
 
   const handleLike = (e: React.MouseEvent) => {
@@ -95,7 +95,7 @@ function PublicSongCard({ song, isLiked }: PublicSongCardProps) {
       </div>
     </Link>
   );
-}
+});
 
 export default function Explore() {
   usePageTitle("Explore");

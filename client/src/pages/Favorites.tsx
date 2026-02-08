@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Song } from "@shared/schema";
+import { memo } from "react";
 
 function useLikedSongs() {
   return useQuery({
@@ -58,7 +59,7 @@ function useUnlikeSong() {
   });
 }
 
-function FavoriteSongCard({ song }: { song: Song }) {
+const FavoriteSongCard = memo(function FavoriteSongCard({ song }: { song: Song }) {
   const { mutate: unlikeSong, isPending } = useUnlikeSong();
 
   const handleUnlike = (e: React.MouseEvent) => {
@@ -126,7 +127,7 @@ function FavoriteSongCard({ song }: { song: Song }) {
       </div>
     </Link>
   );
-}
+});
 
 export default function Favorites() {
   usePageTitle("Favorites");
