@@ -21,8 +21,17 @@ export function SongCard({ song }: SongCardProps) {
   };
 
   return (
-    <Link href={`/songs/${song.id}`} className="block group" data-testid={`card-song-${song.id}`}>
-      <div className="glass-panel rounded-2xl p-6 h-full transition-all duration-300 hover:scale-[1.02] hover:border-primary/30 relative overflow-hidden">
+    <div className="relative group block h-full" data-testid={`card-song-${song.id}`}>
+      {/* Main card link overlay */}
+      <Link
+        href={`/songs/${song.id}`}
+        className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl"
+        aria-label={`View song ${song.title}`}
+      >
+        <span className="sr-only">View song {song.title}</span>
+      </Link>
+
+      <div className="glass-panel rounded-2xl p-6 h-full transition-all duration-300 group-hover:scale-[1.02] group-hover:border-primary/30 relative overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
         
         <div className="relative z-10 flex flex-col h-full">
@@ -31,7 +40,7 @@ export function SongCard({ song }: SongCardProps) {
               <Music className="w-6 h-6" />
             </div>
             
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 relative z-20 pointer-events-auto">
               {song.isPublic ? (
                 <span className="p-2 text-primary" title="Public">
                   <Globe className="w-4 h-4" />
@@ -48,6 +57,7 @@ export function SongCard({ song }: SongCardProps) {
                 disabled={isPending}
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
                 data-testid={`button-delete-${song.id}`}
+                aria-label="Delete song"
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
@@ -81,6 +91,6 @@ export function SongCard({ song }: SongCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
