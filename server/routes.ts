@@ -929,7 +929,7 @@ Also suggest a fitting title for the song.`;
         title: title?.trim(),
         style,
         instrumental: instrumental ?? false,
-        model: model || "chirp-v4"
+        model: model || "chirp-bluejay"
       });
       
       const result = await sunoService.startSunoGeneration(validatedParams);
@@ -964,7 +964,7 @@ Also suggest a fitting title for the song.`;
         title: title?.trim(),
         style,
         instrumental: instrumental ?? false,
-        model: model || "chirp-v4"
+        model: model || "chirp-bluejay"
       });
       
       const result = await sunoService.startSunoGeneration(validatedParams);

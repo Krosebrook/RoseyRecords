@@ -136,6 +136,17 @@ async function fetchWithRetry(
   throw lastError || new Error("Request failed after retries");
 }
 
+const DEFAPI_MODEL_MAP: Record<string, string> = {
+  "chirp-crow": "chirp-crow",
+  "chirp-bluejay": "chirp-v4-5-plus",
+  "chirp-auk": "chirp-v4-5",
+  "chirp-v4": "chirp-v4",
+  "chirp-v3-5": "chirp-v3-5",
+  "chirp-v3-0": "chirp-v3-0",
+  "chirp-v4-5-plus": "chirp-v4-5-plus",
+  "chirp-v4-5": "chirp-v4-5",
+};
+
 /** DefAPI Provider (Production - Recommended) */
 class DefAPIProvider implements MusicProvider {
   private baseUrl: string;
@@ -154,19 +165,30 @@ class DefAPIProvider implements MusicProvider {
     }
 
     const hasCustomLyrics = !!params.lyrics?.trim();
+    const rawModel = params.model || "chirp-bluejay";
+    const mappedModel = DEFAPI_MODEL_MAP[rawModel] || rawModel;
     
     const body: Record<string, unknown> = {
-      mv: params.model || "chirp-bluejay",
-      custom_mode: hasCustomLyrics,
+      mv: mappedModel,
       make_instrumental: params.instrumental ?? false,
-      prompt: params.prompt.slice(0, 2000),
-      tags: params.tags || params.style || "",
-      title: params.title?.slice(0, 100) || "",
     };
-    
+
     if (hasCustomLyrics) {
-      body.lyrics = params.lyrics!.slice(0, 5000);
+      body.custom_mode = true;
+      body.prompt = params.lyrics!.slice(0, 5000);
+      body.tags = params.tags || params.style || "";
+      body.title = params.title?.slice(0, 100) || params.prompt.slice(0, 100);
+    } else {
+      body.custom_mode = false;
+      const descParts: string[] = [];
+      if (params.tags || params.style) {
+        descParts.push(params.tags || params.style || "");
+      }
+      descParts.push(params.prompt);
+      body.gpt_description_prompt = descParts.join(", ").slice(0, 400);
     }
+
+    console.log("[DefAPI] Request body:", JSON.stringify(body));
 
     const res = await fetchWithRetry(`${this.baseUrl}/api/suno/generate`, {
       method: "POST",
@@ -287,12 +309,20 @@ function mapDefAPIStatus(status: string): SunoStatusResult["status"] {
   }
 }
 
+const GENERIC_MODEL_MAP: Record<string, string> = {
+  "chirp-crow": "chirp-v4",
+  "chirp-bluejay": "chirp-v4",
+  "chirp-auk": "chirp-v4",
+};
+
 /** Kie.ai Provider (Alternative Managed) */
 class KieProvider implements MusicProvider {
   private baseUrl = process.env.KIE_BASE_URL || "https://api.kie.ai";
   private apiKey = process.env.KIE_API_KEY || "";
 
   async generate(params: SunoGenerationParams): Promise<SunoGenerationResult> {
+    const rawModel = params.model || "chirp-v4";
+    const model = GENERIC_MODEL_MAP[rawModel] || rawModel;
     const res = await fetchWithRetry(`${this.baseUrl}/api/v1/generate`, {
       method: "POST",
       headers: {
@@ -301,7 +331,7 @@ class KieProvider implements MusicProvider {
       },
       body: JSON.stringify({
         prompt: params.prompt,
-        model: params.model || "chirp-v4",
+        model,
         make_instrumental: params.instrumental ?? false,
       }),
     });
@@ -339,7 +369,7 @@ class SunoOrgProvider implements MusicProvider {
     const body: any = {
       prompt: params.prompt,
       make_instrumental: params.instrumental ?? false,
-      model: params.model || "chirp-v4",
+      model: GENERIC_MODEL_MAP[params.model || "chirp-v4"] || params.model || "chirp-v4",
       wait_audio: false,
     };
     if (params.lyrics) body.lyrics = params.lyrics;
@@ -485,8 +515,13 @@ export const SUNO_MODELS = [
   },
   {
     id: "chirp-bluejay",
-    name: "v4.5+ (Latest)",
+    name: "v4.5+",
     description: "Rich sound, best vocals, up to 8 min",
+  },
+  {
+    id: "chirp-crow",
+    name: "v5 (Latest)",
+    description: "Studio-grade audio, most authentic vocals",
   },
 ] as const;
 
