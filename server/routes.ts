@@ -86,6 +86,11 @@ export async function registerRoutes(
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
 
+  // Sentinel: Protect integration routes (chat & image)
+  // These routes were previously unprotected, allowing unauthenticated access to AI resources
+  app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware);
+  app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware);
+
   // 2. Setup Integrations
   registerChatRoutes(app);
   registerImageRoutes(app);
