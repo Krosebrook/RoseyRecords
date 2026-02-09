@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
@@ -47,11 +47,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicSongs(): Promise<Song[]> {
-    return await db.select()
+    // Exclude large/unused fields to optimize payload size
+    // Using destructuring to exclude specific fields while keeping others for forward compatibility
+    const {
+      description,
+      creationMode,
+      hasVocal,
+      vocalGender,
+      recordingType,
+      lyrics: _lyrics, // Exclude original lyrics column to override with truncated version
+      ...rest
+    } = getTableColumns(songs);
+
+    const result = await db.select({
+      ...rest,
+      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+    })
       .from(songs)
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
       .limit(50);
+    return result as unknown as Song[];
   }
 
   async getSong(id: number): Promise<Song | undefined> {
