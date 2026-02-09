@@ -5,6 +5,17 @@ import { format } from "date-fns";
 import { useDeleteSong } from "@/hooks/use-songs";
 import { Button } from "@/components/ui/button";
 import { memo } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SongCardProps {
   song: Song;
@@ -12,14 +23,6 @@ interface SongCardProps {
 
 export const SongCard = memo(function SongCard({ song }: SongCardProps) {
   const { mutate: deleteSong, isPending } = useDeleteSong();
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (confirm("Are you sure you want to delete this song?")) {
-      deleteSong(song.id);
-    }
-  };
 
   return (
     <div className="relative group block h-full" data-testid={`card-song-${song.id}`}>
@@ -51,17 +54,39 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
                   <Lock className="w-4 h-4" />
                 </span>
               )}
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={isPending}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                data-testid={`button-delete-${song.id}`}
-                aria-label="Delete song"
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={isPending}
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    data-testid={`button-delete-${song.id}`}
+                    aria-label="Delete song"
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Song</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{song.title}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteSong(song.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
           
