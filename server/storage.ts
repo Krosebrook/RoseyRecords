@@ -93,14 +93,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementPlayCount(id: number): Promise<number> {
-    const song = await this.getSong(id);
-    if (!song) return 0;
+    // Optimized: Atomic increment using SQL + RETURNING to avoid race conditions and extra round trip
+    const [updatedSong] = await db.update(songs)
+      .set({ playCount: sql`COALESCE(${songs.playCount}, 0) + 1` })
+      .where(eq(songs.id, id))
+      .returning({ playCount: songs.playCount });
     
-    const newCount = (song.playCount || 0) + 1;
-    await db.update(songs)
-      .set({ playCount: newCount })
-      .where(eq(songs.id, id));
-    return newCount;
+    return updatedSong?.playCount || 0;
   }
 
   // === Likes ===
