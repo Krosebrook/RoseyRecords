@@ -54,11 +54,13 @@ export function AiSuggestButton({ field, context, onSuggestion, disabled, classN
           disabled={disabled || isLoading}
           className={className}
           data-testid={`button-ai-suggest-${field}`}
+          aria-label={`Generate ${field.replace(/-/g, ' ')} suggestion`}
+          aria-busy={isLoading}
         >
           {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" aria-hidden="true" />
           )}
         </Button>
       </TooltipTrigger>
