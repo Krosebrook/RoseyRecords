@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 interface RateLimitStore {
   [key: string]: {
@@ -67,4 +67,12 @@ export const aiRateLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000,
   max: 50,
   message: "Too many AI generation requests. Please try again later."
+});
+
+// 15 minutes window, 100 requests per user/IP for database write endpoints
+// This prevents abuse of storage and protects against DoS
+export const writeRateLimiter = new RateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many write requests. Please try again later."
 });
