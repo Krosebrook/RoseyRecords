@@ -49,7 +49,7 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: Infinity,
       retry: (failureCount, error) => {
-        // Don't retry on 4xx client errors (except network errors)
+        // Don't retry on 4xx client errors
         if (error instanceof Error && error.message.match(/^4\d\d:/)) {
           return false;
         }
