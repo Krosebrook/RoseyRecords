@@ -7,7 +7,7 @@ import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
-import { aiRateLimiter } from "./middleware";
+import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -133,7 +133,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs
-  app.post(api.songs.create.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.songs.create.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     try {
       const input = api.songs.create.input.parse(req.body);
       
@@ -154,7 +154,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/songs/:id
-  app.delete(api.songs.delete.path, isAuthenticated, async (req: any, res) => {
+  app.delete(api.songs.delete.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     const songId = parseNumericId(req.params.id, res);
     if (songId === null) return;
     
@@ -174,7 +174,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs/:id/like
-  app.post(api.songs.like.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.songs.like.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     const songId = parseNumericId(req.params.id, res);
     if (songId === null) return;
     
@@ -251,7 +251,7 @@ export async function registerRoutes(
   });
 
   // POST /api/playlists
-  app.post(api.playlists.create.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.playlists.create.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     try {
       const input = api.playlists.create.input.parse(req.body);
       
@@ -272,7 +272,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/playlists/:id
-  app.delete(api.playlists.delete.path, isAuthenticated, async (req: any, res) => {
+  app.delete(api.playlists.delete.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     const playlistId = parseNumericId(req.params.id, res);
     if (playlistId === null) return;
     
@@ -292,7 +292,7 @@ export async function registerRoutes(
   });
 
   // POST /api/playlists/:id/songs
-  app.post(api.playlists.addSong.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.playlists.addSong.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     try {
       const playlistId = parseNumericId(req.params.id, res);
       if (playlistId === null) return;
@@ -324,7 +324,7 @@ export async function registerRoutes(
   });
 
   // DELETE /api/playlists/:id/songs/:songId
-  app.delete(api.playlists.removeSong.path, isAuthenticated, async (req: any, res) => {
+  app.delete(api.playlists.removeSong.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
     const playlistId = parseNumericId(req.params.id, res);
     if (playlistId === null) return;
     
