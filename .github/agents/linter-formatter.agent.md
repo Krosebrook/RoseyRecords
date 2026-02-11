@@ -323,11 +323,19 @@ ctx.lineWidth = 1;
 // ✅ GOOD: JSDoc for exported functions
 /**
  * Sanitizes an object by redacting sensitive fields
- * @param obj - Object to sanitize
+ * @param data - Object to sanitize
  * @returns New object with sensitive fields replaced
+ * 
+ * Note: This utility function uses `any` type as a rare exception
+ * because it must handle arbitrary object structures. Most code
+ * should avoid `any` types.
  */
-export function sanitizeLog(obj: any): any {
-  // Implementation
+export function sanitizeLog(data: any): any {
+  // Implementation from server/utils.ts
+  if (!data || typeof data !== "object") {
+    return data;
+  }
+  // ... recursive sanitization logic
 }
 ```
 
