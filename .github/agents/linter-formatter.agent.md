@@ -176,6 +176,11 @@ async function fetchSong(id: number): Promise<Song | null> {
 async function fetchSong(id: any): Promise<any> {  // FORBIDDEN
   // ...
 }
+
+// NOTE: Two rare exceptions exist in the codebase:
+// 1. sanitizeLog(data: any): any - Must handle arbitrary objects
+// 2. Express route handlers (req: any) - Due to Passport.js type augmentation
+// These are accepted exceptions. All other code must avoid `any`.
 ```
 
 ### Function Return Types
@@ -355,6 +360,8 @@ const total = a + b;  // Add a and b  (obvious)
 ### Try-Catch Pattern
 ```typescript
 // ✅ GOOD: Proper error handling
+// Note: Express route handlers use `req: any` due to Passport.js augmentation
+// This is an accepted exception in the codebase
 app.post("/api/songs", isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
@@ -366,7 +373,7 @@ app.post("/api/songs", isAuthenticated, async (req: any, res) => {
   }
 });
 
-// ❌ BAD: Unhandled promises
+// ❌ BAD: Unhandled promises (example of what to avoid)
 app.post("/api/songs", isAuthenticated, async (req: any, res) => {
   const song = await storage.createSong(req.body);  // Crash if it fails!
   res.json(song);
