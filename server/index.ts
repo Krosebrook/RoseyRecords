@@ -14,7 +14,8 @@ app.use((req, res, next) => {
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   
   // Only set HSTS in production over HTTPS to avoid operational issues
-  if (process.env.NODE_ENV === "production" && req.secure) {
+  const isSecure = req.secure || req.protocol === "https";
+  if (process.env.NODE_ENV === "production" && isSecure) {
     // Omit includeSubDomains to avoid issues with subdomains not under HTTPS control
     res.setHeader("Strict-Transport-Security", "max-age=31536000");
   }
