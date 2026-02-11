@@ -14,7 +14,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type AIEngine = "openai" | "gemini";
 
@@ -166,42 +166,39 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   AI Engine
                 </label>
-                <ToggleGroup
-                  type="single"
+                <RadioGroup
                   value={aiEngine}
-                  onValueChange={(value) => {
-                    if (value) setAiEngine(value as AIEngine);
-                  }}
+                  onValueChange={(value) => setAiEngine(value as AIEngine)}
                   className="flex gap-2 p-1 bg-muted/50 rounded-xl"
                   aria-label="AI Engine Selection"
                 >
-                  <ToggleGroupItem
-                    value="openai"
+                  <label
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
                       aiEngine === "openai"
                         ? "bg-primary text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     data-testid="button-engine-openai"
                   >
+                    <RadioGroupItem value="openai" className="sr-only" />
                     <Zap className="w-3.5 h-3.5" />
                     OpenAI
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="gemini"
+                  </label>
+                  <label
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
                       aiEngine === "gemini"
                         ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     data-testid="button-engine-gemini"
                   >
+                    <RadioGroupItem value="gemini" className="sr-only" />
                     <Sparkles className="w-3.5 h-3.5" />
                     Gemini
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                  </label>
+                </RadioGroup>
                 <p className="text-[10px] text-muted-foreground">
                   {aiEngine === "gemini" 
                     ? "Full song concept with BPM, key, and production tips" 
