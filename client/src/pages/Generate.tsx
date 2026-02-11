@@ -14,6 +14,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type AIEngine = "openai" | "gemini";
 
@@ -165,16 +166,17 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   AI Engine
                 </label>
-                <div
+                <ToggleGroup
+                  type="single"
+                  value={aiEngine}
+                  onValueChange={(value) => {
+                    if (value) setAiEngine(value as AIEngine);
+                  }}
                   className="flex gap-2 p-1 bg-muted/50 rounded-xl"
-                  role="radiogroup"
                   aria-label="AI Engine Selection"
                 >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={aiEngine === "openai"}
-                    onClick={() => setAiEngine("openai")}
+                  <ToggleGroupItem
+                    value="openai"
                     className={cn(
                       "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
                       aiEngine === "openai"
@@ -185,12 +187,9 @@ export default function Generate() {
                   >
                     <Zap className="w-3.5 h-3.5" />
                     OpenAI
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={aiEngine === "gemini"}
-                    onClick={() => setAiEngine("gemini")}
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="gemini"
                     className={cn(
                       "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
                       aiEngine === "gemini"
@@ -201,8 +200,8 @@ export default function Generate() {
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Gemini
-                  </button>
-                </div>
+                  </ToggleGroupItem>
+                </ToggleGroup>
                 <p className="text-[10px] text-muted-foreground">
                   {aiEngine === "gemini" 
                     ? "Full song concept with BPM, key, and production tips" 
