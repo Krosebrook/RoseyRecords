@@ -135,21 +135,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLikedSongs(userId: string): Promise<Song[]> {
-    const likes = await db.select({ songId: songLikes.songId })
-      .from(songLikes)
-      .where(eq(songLikes.userId, userId));
-    
-    if (likes.length === 0) return [];
-    
-    const songIds = likes.map(l => l.songId).filter(id => typeof id === 'number' && !isNaN(id));
-    if (songIds.length === 0) return [];
-    
-    const songsResult = await db.select()
+    // Optimized: Single query with innerJoin and proper ordering by liked time
+    return await db.select(getTableColumns(songs))
       .from(songs)
-      .where(inArray(songs.id, songIds));
-
-    const songMap = new Map(songsResult.map(s => [s.id, s]));
-    return songIds.map(id => songMap.get(id)).filter((s): s is Song => !!s);
+      .innerJoin(songLikes, eq(songs.id, songLikes.songId))
+      .where(eq(songLikes.userId, userId))
+      .orderBy(desc(songLikes.createdAt));
   }
 
   // === Playlists ===
