@@ -15,6 +15,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 
 type AIEngine = "openai" | "gemini";
 
@@ -166,18 +167,16 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   AI Engine
                 </label>
-                <div
+                <RadioGroupPrimitive.Root
+                  value={aiEngine}
+                  onValueChange={(value) => setAiEngine(value as AIEngine)}
                   className="flex gap-2 p-1 bg-muted/50 rounded-xl"
-                  role="radiogroup"
                   aria-label="AI Engine Selection"
                 >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={aiEngine === "openai"}
-                    onClick={() => setAiEngine("openai")}
+                  <RadioGroupPrimitive.Item
+                    value="openai"
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       aiEngine === "openai"
                         ? "bg-primary text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
@@ -186,14 +185,11 @@ export default function Generate() {
                   >
                     <Zap className="w-3.5 h-3.5" />
                     OpenAI
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={aiEngine === "gemini"}
-                    onClick={() => setAiEngine("gemini")}
+                  </RadioGroupPrimitive.Item>
+                  <RadioGroupPrimitive.Item
+                    value="gemini"
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       aiEngine === "gemini"
                         ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
@@ -202,8 +198,8 @@ export default function Generate() {
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Gemini
-                  </button>
-                </div>
+                  </RadioGroupPrimitive.Item>
+                </RadioGroupPrimitive.Root>
                 <p className="text-[10px] text-muted-foreground">
                   {aiEngine === "gemini" 
                     ? "Full song concept with BPM, key, and production tips" 
@@ -267,10 +263,10 @@ export default function Generate() {
 
               {/* Mood Selection */}
               <div className="space-y-2 relative">
-                <Label htmlFor="mood-select">Mood</Label>
+                <Label htmlFor="mood" className="text-sm font-medium">Mood</Label>
                 <Select value={mood} onValueChange={setMood}>
                   <SelectTrigger
-                    id="mood-select"
+                    id="mood"
                     className="w-full h-12 px-4 rounded-xl bg-background border border-border hover:border-primary/50 transition-all text-left"
                     data-testid="button-mood-select"
                   >
