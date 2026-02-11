@@ -11,3 +11,13 @@ steps:
   
   - name: Type check
     run: npm run check
+  
+  - name: Build application
+    run: npm run build
+  
+  # Note: Database tests require DATABASE_URL environment variable
+  # To run database tests, set DATABASE_URL in GitHub secrets:
+  # DATABASE_URL: postgresql://user:pass@host/db
+  
+  # Note: Tests are run with: npx tsx <file>.test.ts
+  # Example: npx tsx server/utils.test.ts
