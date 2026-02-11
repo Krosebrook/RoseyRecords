@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
@@ -265,9 +266,10 @@ export default function Generate() {
 
               {/* Mood Selection */}
               <div className="space-y-2 relative">
-                <label className="text-sm font-medium">Mood</label>
+                <Label htmlFor="mood" className="text-sm font-medium">Mood</Label>
                 <Select value={mood} onValueChange={setMood}>
                   <SelectTrigger
+                    id="mood"
                     className="w-full h-12 px-4 rounded-xl bg-background border border-border hover:border-primary/50 transition-all text-left"
                     data-testid="button-mood-select"
                   >
