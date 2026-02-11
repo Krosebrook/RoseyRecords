@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useChatGeneration } from "@/hooks/use-chat-generation";
 import { useCreateSong } from "@/hooks/use-songs";
-import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, ChevronDown, Check, Sparkles, Zap, Music, Lightbulb, HelpCircle } from "lucide-react";
+import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type AIEngine = "openai" | "gemini";
 
@@ -29,8 +30,6 @@ export default function Generate() {
   const [mood, setMood] = useState<string>("Happy");
   const [generatedContent, setGeneratedContent] = useState("");
   const [isPublic, setIsPublic] = useState(false);
-  const [showGenreDropdown, setShowGenreDropdown] = useState(false);
-  const [showMoodDropdown, setShowMoodDropdown] = useState(false);
   
   const [aiEngine, setAiEngine] = useState<AIEngine>("openai");
   const [isGeneratingLocal, setIsGeneratingLocal] = useState(false);
@@ -153,6 +152,7 @@ export default function Generate() {
                 onClick={handleShowTour}
                 className="text-muted-foreground hover:text-foreground h-8 w-8"
                 data-testid="button-generate-tour"
+                aria-label="Show help tour"
               >
                 <HelpCircle className="w-4 h-4" />
               </Button>
@@ -165,8 +165,15 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   AI Engine
                 </label>
-                <div className="flex gap-2 p-1 bg-muted/50 rounded-xl">
+                <div
+                  className="flex gap-2 p-1 bg-muted/50 rounded-xl"
+                  role="radiogroup"
+                  aria-label="AI Engine Selection"
+                >
                   <button
+                    type="button"
+                    role="radio"
+                    aria-checked={aiEngine === "openai"}
                     onClick={() => setAiEngine("openai")}
                     className={cn(
                       "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
@@ -180,6 +187,9 @@ export default function Generate() {
                     OpenAI
                   </button>
                   <button
+                    type="button"
+                    role="radio"
+                    aria-checked={aiEngine === "gemini"}
                     onClick={() => setAiEngine("gemini")}
                     className={cn(
                       "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
@@ -232,91 +242,49 @@ export default function Generate() {
               {/* Genre Selection */}
               <div className="space-y-2 relative">
                 <label className="text-sm font-medium">Genre</label>
-                <button
-                  onClick={() => { setShowGenreDropdown(!showGenreDropdown); setShowMoodDropdown(false); }}
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border hover:border-primary/50 transition-all flex items-center justify-between text-left"
-                  data-testid="button-genre-select"
-                >
-                  <span className={genre ? "text-foreground" : "text-muted-foreground"}>
-                    {genre || "Select genre"}
-                  </span>
-                  <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", showGenreDropdown && "rotate-180")} />
-                </button>
-                
-                <AnimatePresence>
-                  {showGenreDropdown && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
-                    >
-                      <div className="grid grid-cols-2 gap-1">
-                        {GENRES.map(g => (
-                          <button
-                            key={g}
-                            onClick={() => { setGenre(g); setShowGenreDropdown(false); }}
-                            className={cn(
-                              "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
-                              genre === g 
-                                ? "bg-primary text-white" 
-                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                            )}
-                            data-testid={`option-genre-${g.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            {genre === g && <Check className="w-3 h-3" />}
-                            {g}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <Select value={genre} onValueChange={setGenre}>
+                  <SelectTrigger
+                    className="w-full h-12 px-4 rounded-xl bg-background border border-border hover:border-primary/50 transition-all text-left"
+                    data-testid="button-genre-select"
+                  >
+                    <SelectValue placeholder="Select genre" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {GENRES.map(g => (
+                      <SelectItem
+                        key={g}
+                        value={g}
+                        data-testid={`option-genre-${g.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Mood Selection */}
               <div className="space-y-2 relative">
                 <label className="text-sm font-medium">Mood</label>
-                <button
-                  onClick={() => { setShowMoodDropdown(!showMoodDropdown); setShowGenreDropdown(false); }}
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border hover:border-primary/50 transition-all flex items-center justify-between text-left"
-                  data-testid="button-mood-select"
-                >
-                  <span className={mood ? "text-foreground" : "text-muted-foreground"}>
-                    {mood || "Select mood"}
-                  </span>
-                  <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", showMoodDropdown && "rotate-180")} />
-                </button>
-                
-                <AnimatePresence>
-                  {showMoodDropdown && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute z-50 w-full mt-1 p-2 rounded-xl bg-card border border-border shadow-xl max-h-64 overflow-y-auto custom-scrollbar"
-                    >
-                      <div className="grid grid-cols-2 gap-1">
-                        {MOODS.map(m => (
-                          <button
-                            key={m}
-                            onClick={() => { setMood(m); setShowMoodDropdown(false); }}
-                            className={cn(
-                              "px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center gap-2",
-                              mood === m 
-                                ? "bg-primary text-white" 
-                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                            )}
-                            data-testid={`option-mood-${m.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            {mood === m && <Check className="w-3 h-3" />}
-                            {m}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <Select value={mood} onValueChange={setMood}>
+                  <SelectTrigger
+                    className="w-full h-12 px-4 rounded-xl bg-background border border-border hover:border-primary/50 transition-all text-left"
+                    data-testid="button-mood-select"
+                  >
+                    <SelectValue placeholder="Select mood" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {MOODS.map(m => (
+                      <SelectItem
+                        key={m}
+                        value={m}
+                        data-testid={`option-mood-${m.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Visibility Toggle */}
