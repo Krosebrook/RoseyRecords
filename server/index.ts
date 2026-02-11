@@ -12,7 +12,7 @@ app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000"); // Removed includeSubDomains to prevent issues on subdomains not controlled by the app
   // Note: X-Frame-Options is omitted to allow Replit iframe previews
   next();
 });
