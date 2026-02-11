@@ -14,7 +14,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 
 type AIEngine = "openai" | "gemini";
 
@@ -166,39 +166,39 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   AI Engine
                 </label>
-                <RadioGroup
+                <RadioGroupPrimitive.Root
                   value={aiEngine}
                   onValueChange={(value) => setAiEngine(value as AIEngine)}
                   className="flex gap-2 p-1 bg-muted/50 rounded-xl"
                   aria-label="AI Engine Selection"
                 >
-                  <label
+                  <RadioGroupPrimitive.Item
+                    value="openai"
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       aiEngine === "openai"
                         ? "bg-primary text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     data-testid="button-engine-openai"
                   >
-                    <RadioGroupItem value="openai" className="sr-only" />
                     <Zap className="w-3.5 h-3.5" />
                     OpenAI
-                  </label>
-                  <label
+                  </RadioGroupPrimitive.Item>
+                  <RadioGroupPrimitive.Item
+                    value="gemini"
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+                      "flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       aiEngine === "gemini"
                         ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     data-testid="button-engine-gemini"
                   >
-                    <RadioGroupItem value="gemini" className="sr-only" />
                     <Sparkles className="w-3.5 h-3.5" />
                     Gemini
-                  </label>
-                </RadioGroup>
+                  </RadioGroupPrimitive.Item>
+                </RadioGroupPrimitive.Root>
                 <p className="text-[10px] text-muted-foreground">
                   {aiEngine === "gemini" 
                     ? "Full song concept with BPM, key, and production tips" 
