@@ -238,9 +238,10 @@ export default function Generate() {
 
               {/* Genre Selection */}
               <div className="space-y-2 relative">
-                <label className="text-sm font-medium">Genre</label>
+                <Label htmlFor="genre-select">Genre</Label>
                 <Select value={genre} onValueChange={setGenre}>
                   <SelectTrigger
+                    id="genre-select"
                     className="w-full h-12 px-4 rounded-xl bg-background border border-border hover:border-primary/50 transition-all text-left"
                     data-testid="button-genre-select"
                   >
