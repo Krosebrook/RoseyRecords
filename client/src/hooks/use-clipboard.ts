@@ -1,7 +1,9 @@
 import { useCallback } from "react";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function useClipboard() {
+  const { toast } = useToast();
+  
   const copyToClipboard = useCallback(async (text: string, successMessage = "Copied to clipboard.") => {
     if (!text) return;
 
@@ -24,7 +26,7 @@ export function useClipboard() {
     } catch (err) {
       toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
     }
-  }, []);
+  }, [toast]);
 
   return { copyToClipboard };
 }
