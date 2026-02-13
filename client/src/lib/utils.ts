@@ -24,12 +24,15 @@ export async function copyToClipboard(
       textArea.value = text;
       document.body.appendChild(textArea);
       textArea.select();
-      const successful = document.execCommand("copy");
-      document.body.removeChild(textArea);
-      if (!successful) {
-        throw new Error("Fallback copy failed");
+      try {
+        const successful = document.execCommand("copy");
+        if (!successful) {
+          throw new Error("Fallback copy failed");
+        }
+        toast({ title: "Copied!", description: successMessage });
+      } finally {
+        document.body.removeChild(textArea);
       }
-      toast({ title: "Copied!", description: successMessage });
     }
   } catch (err) {
     toast({
