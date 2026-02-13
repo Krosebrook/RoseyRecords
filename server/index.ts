@@ -7,12 +7,20 @@ import { sanitizeLog } from "./utils";
 const app = express();
 const httpServer = createServer(app);
 
+// Configure trust proxy before security headers to ensure req.secure works correctly
+app.set("trust proxy", 1);
+
 // Sentinel: Add security headers
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  
+  // Only set HSTS in production and over HTTPS to avoid breaking local development
+  if (process.env.NODE_ENV === "production" && req.secure) {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  }
+  
   // Note: X-Frame-Options is omitted to allow Replit iframe previews
   next();
 });
