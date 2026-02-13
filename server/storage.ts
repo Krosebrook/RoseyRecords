@@ -153,7 +153,9 @@ export class DatabaseStorage implements IStorage {
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt));
+      .orderBy(
+        sql`coalesce(${songLikes.createdAt}, ${songs.createdAt}) DESC NULLS LAST`,
+      );
 
     return result as unknown as Song[];
   }
