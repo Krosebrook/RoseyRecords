@@ -63,6 +63,10 @@ export class DatabaseStorage implements IStorage {
     // Using destructuring to exclude specific fields while keeping others for forward compatibility
     const {
       description,
+      creationMode,
+      hasVocal,
+      vocalGender,
+      recordingType,
       lyrics: _lyrics,
       ...rest
     } = getTableColumns(songs);
