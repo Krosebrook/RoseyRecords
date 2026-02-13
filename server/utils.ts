@@ -66,9 +66,25 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
   // FLAC: fLaC (66 4C 61 43)
   if (header.startsWith("664c6143")) return true;
 
-  // M4A/AAC: ftyp (66 74 79 70) usually at offset 4
-  // header.slice(8, 16) corresponds to bytes 4-7
-  if (header.slice(8, 16) === "66747970") return true;
+  // M4A/AAC: ftyp (66 74 79 70) at offset 4, followed by M4A brand (4D 34 41 20)
+  // header.slice(8, 16) corresponds to bytes 4-7 (ftyp)
+  // Need to check bytes 8-11 for major brand, which requires reading more
+  if (header.slice(8, 16) === "66747970") {
+    // Check if we have enough bytes for the major brand (need at least 12 bytes)
+    if (buffer.length >= 12) {
+      const majorBrand = buffer.subarray(8, 12).toString("hex");
+      // Accept M4A (4D 34 41 20), M4B (4D 34 42 20), M4P (4D 34 50 20)
+      // Reject generic MP4 brands like isom, mp41, mp42
+      if (
+        majorBrand === "4d344120" || // M4A (with space)
+        majorBrand === "4d344220" || // M4B (audiobook)
+        majorBrand === "4d345020"    // M4P (protected)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   // ADTS AAC: FFF1 or FFF9
   if (header.startsWith("fff1") || header.startsWith("fff9")) return true;
