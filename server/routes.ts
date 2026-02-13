@@ -8,7 +8,7 @@ import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integra
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
-import { verifyAudioFileSignature } from "./utils";
+import { detectAudioMimeType } from "./utils";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -1148,8 +1148,9 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
-      // Verify file signature
-      if (!verifyAudioFileSignature(file.buffer)) {
+      // Verify file signature and get detected MIME type
+      const detectedMimeType = detectAudioMimeType(file.buffer);
+      if (!detectedMimeType) {
         return res.status(400).json({ message: "Invalid file content. Please upload a valid audio file." });
       }
 
@@ -1159,7 +1160,8 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      // Use detected MIME type instead of trusting client
+      const dataUrl = `data:${detectedMimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,
