@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { copyToClipboard } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,25 +48,6 @@ export default function SongDetails() {
           setLocation("/dashboard");
         }
       });
-    }
-  };
-
-  const copyToClipboard = async (text: string, successMessage: string) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        toast({ title: "Copied!", description: successMessage });
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        toast({ title: "Copied!", description: successMessage });
-      }
-    } catch (err) {
-      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
     }
   };
 
