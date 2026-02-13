@@ -87,22 +87,22 @@ const audioTestCases = [
   },
   {
     name: "Valid M4A/AAC (ftyp with M4A brand)",
-    input: Buffer.from("00000018667479704d34412000000000", "hex"), // ....ftypM4A ....
+    input: Buffer.from("00000010667479704d34412000000000", "hex"), // ....ftypM4A ....
     expected: true,
   },
   {
     name: "Valid M4B audiobook (ftyp with M4B brand)",
-    input: Buffer.from("00000018667479704d34422000000000", "hex"), // ....ftypM4B ....
+    input: Buffer.from("00000010667479704d34422000000000", "hex"), // ....ftypM4B ....
     expected: true,
   },
   {
     name: "Valid M4P protected audio (ftyp with M4P brand)",
-    input: Buffer.from("00000018667479704d34502000000000", "hex"), // ....ftypM4P ....
+    input: Buffer.from("00000010667479704d34502000000000", "hex"), // ....ftypM4P ....
     expected: true,
   },
   {
     name: "Invalid: Generic MP4 (ftyp with isom brand)",
-    input: Buffer.from("000000186674797069736f6d00000000", "hex"), // ....ftypisom....
+    input: Buffer.from("000000106674797069736f6d00000000", "hex"), // ....ftypisom....
     expected: false,
   },
   {
