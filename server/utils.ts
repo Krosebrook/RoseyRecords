@@ -46,6 +46,11 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
 
   const header = buffer.subarray(0, 12).toString("hex");
 
+  // M4A brand constants (major_brand values in ftyp box)
+  const M4A_BRAND = "4d344120"; // M4A (with space)
+  const M4B_BRAND = "4d344220"; // M4B (audiobook)
+  const M4P_BRAND = "4d345020"; // M4P (protected)
+
   // MP3: ID3 (49 44 33) or Sync frame (FF FB, FF F3, FF F2)
   if (
     header.startsWith("494433") ||
@@ -73,12 +78,12 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
     // Check if we have enough bytes for the major brand (need at least 12 bytes)
     if (buffer.length >= 12) {
       const majorBrand = buffer.subarray(8, 12).toString("hex");
-      // Accept M4A (4D 34 41 20), M4B (4D 34 42 20), M4P (4D 34 50 20)
+      // Accept M4A, M4B, M4P brands
       // Reject generic MP4 brands like isom, mp41, mp42
       if (
-        majorBrand === "4d344120" || // M4A (with space)
-        majorBrand === "4d344220" || // M4B (audiobook)
-        majorBrand === "4d345020"    // M4P (protected)
+        majorBrand === M4A_BRAND ||
+        majorBrand === M4B_BRAND ||
+        majorBrand === M4P_BRAND
       ) {
         return true;
       }
