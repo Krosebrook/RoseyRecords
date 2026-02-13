@@ -101,8 +101,6 @@ export function detectAudioMimeType(buffer: Buffer): string | null {
     const validBrands = [
       "4d344120", // "M4A "
       "4d344220", // "M4B "
-      "6d703432", // "mp42"
-      "69736f6d", // "isom"
     ];
     if (validBrands.some((b) => brand.startsWith(b))) {
       return "audio/mp4";
