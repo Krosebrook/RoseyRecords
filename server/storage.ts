@@ -12,6 +12,37 @@ import {
 } from "@shared/schema";
 import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
 
+/**
+ * Returns a select shape for song list views with optimized payload size.
+ * Excludes specified large/unused fields and truncates lyrics to 500 characters.
+ * 
+ * @param excludeFields - Array of field names to exclude (in addition to lyrics truncation)
+ * @returns Select shape object for use in Drizzle queries
+ */
+function getListViewSelectShape(excludeFields: string[] = []) {
+  const allColumns = getTableColumns(songs);
+  const { lyrics: _lyrics, ...rest } = allColumns;
+  
+  // Build the excluded fields object
+  const excluded = excludeFields.reduce((acc, field) => {
+    acc[field] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
+  
+  // Filter out excluded fields from rest
+  const filteredColumns = Object.entries(rest).reduce((acc, [key, value]) => {
+    if (!excluded[key]) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as typeof rest);
+  
+  return {
+    ...filteredColumns,
+    lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+  };
+}
+
 export interface IStorage {
   // Song CRUD
   getSongs(userId: string): Promise<Song[]>;
@@ -50,22 +81,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicSongs(): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    // Using destructuring to exclude specific fields while keeping others for forward compatibility
-    const {
-      description,
-      creationMode,
-      hasVocal,
-      vocalGender,
-      recordingType,
-      lyrics: _lyrics, // Exclude original lyrics column to override with truncated version
-      ...rest
-    } = getTableColumns(songs);
+    const selectShape = getListViewSelectShape([
+      'description',
+      'creationMode',
+      'hasVocal',
+      'vocalGender',
+      'recordingType',
+    ]);
 
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db.select(selectShape)
       .from(songs)
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
@@ -138,18 +162,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLikedSongs(userId: string): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    const {
-      description,
-      lyrics: _lyrics,
-      ...rest
-    } = getTableColumns(songs);
+    const selectShape = getListViewSelectShape(['description']);
 
-    // Optimized: Single query with innerJoin and proper ordering by liked time
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db.select(selectShape)
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
