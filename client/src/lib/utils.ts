@@ -19,6 +19,8 @@ export async function copyToClipboard(text: string, successMessage = "Copied to 
       await navigator.clipboard.writeText(text);
       toast({ title: "Copied!", description: successMessage });
     } else {
+      // Fallback for older browsers using deprecated execCommand
+      // This is intentionally used for legacy browser support
       const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
