@@ -40,10 +40,22 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // === Songs ===
   async getSongs(userId: string): Promise<Song[]> {
-    return await db.select()
+    // Exclude large/unused fields to optimize payload size
+    const {
+      description,
+      lyrics: _lyrics,
+      ...rest
+    } = getTableColumns(songs);
+
+    const result = await db.select({
+      ...rest,
+      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+    })
       .from(songs)
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
+
+    return result as unknown as Song[];
   }
 
   async getPublicSongs(): Promise<Song[]> {
@@ -135,12 +147,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLikedSongs(userId: string): Promise<Song[]> {
+    // Exclude large/unused fields to optimize payload size
+    const {
+      description,
+      lyrics: _lyrics,
+      ...rest
+    } = getTableColumns(songs);
+
     // Optimized: Single query with innerJoin and proper ordering by liked time
-    return await db.select(getTableColumns(songs))
+    const result = await db.select({
+      ...rest,
+      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+    })
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt).nullsLast());
+      .orderBy(desc(songLikes.createdAt));
+
+    return result as unknown as Song[];
   }
 
   // === Playlists ===
