@@ -114,8 +114,11 @@ export default function Generate() {
         textArea.value = textToCopy;
         document.body.appendChild(textArea);
         textArea.select();
-        document.execCommand("copy");
+        const successful = document.execCommand("copy");
         document.body.removeChild(textArea);
+        if (!successful) {
+          throw new Error("Fallback copy failed");
+        }
         toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
       }
     } catch (err) {
