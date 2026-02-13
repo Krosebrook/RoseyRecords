@@ -19,7 +19,7 @@ import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
  * @param excludeFields - Array of field names to exclude (in addition to lyrics truncation)
  * @returns Select shape object for use in Drizzle queries
  */
-function getListViewSelectShape(excludeFields: string[] = []) {
+function getListViewSelectShape(excludeFields: (keyof typeof songs.$inferSelect)[] = []) {
   const allColumns = getTableColumns(songs);
   const { lyrics: _lyrics, ...rest } = allColumns;
   
@@ -35,7 +35,7 @@ function getListViewSelectShape(excludeFields: string[] = []) {
       acc[key] = value;
     }
     return acc;
-  }, {} as typeof rest);
+  }, {} as Record<string, unknown>);
   
   return {
     ...filteredColumns,
