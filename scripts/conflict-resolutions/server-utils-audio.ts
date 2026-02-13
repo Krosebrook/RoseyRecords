@@ -35,16 +35,14 @@ export function detectAudioMimeType(buffer: Buffer): string | null {
   
   // M4A/MP4 - CHECK MAJOR BRAND (tighter validation from PR #38)
   if (header.slice(8, 16) === "66747970") { // ftyp
-    if (buffer.length >= 12) {
-      const majorBrand = buffer.subarray(8, 12).toString("hex");
-      
-      // Only accept audio-specific brands
-      if (majorBrand === M4A_BRAND || majorBrand === M4B_BRAND || majorBrand === M4P_BRAND) {
-        return "audio/mp4";
-      }
-      // Reject generic MP4 brands (isom, mp41, mp42)
-      return null;
+    const majorBrand = buffer.subarray(8, 12).toString("hex");
+    
+    // Only accept audio-specific brands
+    if (majorBrand === M4A_BRAND || majorBrand === M4B_BRAND || majorBrand === M4P_BRAND) {
+      return "audio/mp4";
     }
+    // Reject generic MP4 brands (isom, mp41, mp42)
+    return null;
   }
   
   // ADTS AAC
