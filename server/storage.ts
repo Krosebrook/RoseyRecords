@@ -40,37 +40,37 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // === Songs ===
   async getSongs(userId: string): Promise<Song[]> {
-    const result = await db
-      .select()
+    const result = await db.select(this.getSongListSelection())
       .from(songs)
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
 
-    return result;
+    return result as unknown as Song[];
   }
 
   async getPublicSongs(): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    // Using destructuring to exclude specific fields while keeping others for forward compatibility
-    const {
-      description,
-      creationMode,
-      hasVocal,
-      vocalGender,
-      recordingType,
-      lyrics: _lyrics, // Exclude original lyrics column to override with truncated version
-      ...rest
-    } = getTableColumns(songs);
-
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db.select(this.getSongListSelection())
       .from(songs)
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
       .limit(50);
     return result as unknown as Song[];
+  }
+
+  // Helper to standardize list view columns across all list endpoints
+  private getSongListSelection() {
+    // Exclude large/unused fields to optimize payload size
+    // Using destructuring to exclude specific fields while keeping others for forward compatibility
+    const {
+      description,
+      lyrics: _lyrics,
+      ...rest
+    } = getTableColumns(songs);
+
+    return {
+      ...rest,
+      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+    };
   }
 
   async getSong(id: number): Promise<Song | undefined> {
@@ -138,24 +138,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLikedSongs(userId: string): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    const {
-      description,
-      lyrics: _lyrics,
-      ...rest
-    } = getTableColumns(songs);
-
     // Optimized: Single query with innerJoin and proper ordering by liked time
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db.select(this.getSongListSelection())
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(
-        sql`coalesce(${songLikes.createdAt}, ${songs.createdAt}) DESC NULLS LAST`,
-      );
+      .orderBy(desc(songLikes.createdAt));
 
     return result as unknown as Song[];
   }
