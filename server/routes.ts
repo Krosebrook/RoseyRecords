@@ -8,6 +8,7 @@ import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integra
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { verifyAudioFileSignature } from "./utils";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -1145,6 +1146,11 @@ Also suggest a fitting title for the song.`;
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      // Verify file signature
+      if (!verifyAudioFileSignature(file.buffer)) {
+        return res.status(400).json({ message: "Invalid file content. Please upload a valid audio file." });
       }
 
       const { prompt, duration } = req.body;
