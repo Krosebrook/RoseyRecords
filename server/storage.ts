@@ -40,22 +40,13 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // === Songs ===
   async getSongs(userId: string): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    const {
-      description,
-      lyrics: _lyrics,
-      ...rest
-    } = getTableColumns(songs);
-
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db
+      .select()
       .from(songs)
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
 
-    return result as unknown as Song[];
+    return result;
   }
 
   async getPublicSongs(): Promise<Song[]> {
