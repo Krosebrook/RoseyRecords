@@ -5,7 +5,7 @@
 
 // Security headers middleware
 app.use((req, res, next) => {
-  // HSTS - only in production over HTTPS
+  // HTTP Strict Transport Security (HSTS) - only in production over HTTPS
   if (process.env.NODE_ENV === "production" && req.secure) {
     res.setHeader(
       "Strict-Transport-Security",
