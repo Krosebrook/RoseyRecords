@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +25,7 @@ export default function Generate() {
   const { generateLyrics, getRandomPrompt, isGenerating, currentLyrics, setCurrentLyrics } = useChatGeneration();
   const { mutate: saveSong, isPending: isSaving } = useCreateSong();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
   const [showOnboarding, setShowOnboarding] = useState(false);
   
   const [topic, setTopic] = useState("");
@@ -102,28 +104,7 @@ export default function Generate() {
   };
 
   const handleCopy = async () => {
-    const textToCopy = generatedContent;
-    if (!textToCopy) return;
-
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(textToCopy);
-        toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = textToCopy;
-        document.body.appendChild(textArea);
-        textArea.select();
-        const successful = document.execCommand("copy");
-        document.body.removeChild(textArea);
-        if (!successful) {
-          throw new Error("Fallback copy failed");
-        }
-        toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
-      }
-    } catch (err) {
-      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
-    }
+    await copyToClipboard(generatedContent, "Lyrics copied to clipboard.");
   };
 
   const handleSave = () => {
