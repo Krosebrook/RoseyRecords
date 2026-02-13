@@ -18,7 +18,6 @@ export async function copyToClipboard(
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(text);
-      toast({ title: "Copied!", description: successMessage });
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = text;
@@ -29,11 +28,11 @@ export async function copyToClipboard(
         if (!successful) {
           throw new Error("Fallback copy failed");
         }
-        toast({ title: "Copied!", description: successMessage });
       } finally {
         document.body.removeChild(textArea);
       }
     }
+    toast({ title: "Copied!", description: successMessage });
   } catch (err) {
     toast({
       title: "Failed to copy",
