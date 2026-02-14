@@ -102,9 +102,32 @@ export default function Generate() {
   };
 
   const handleCopy = async () => {
-    const textToCopy = generatedContent;
+    const textToCopy = currentLyrics || generatedContent;
     if (!textToCopy) return;
-    await copyToClipboard(textToCopy, "Lyrics copied to clipboard.");
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+        toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
+        } else {
+          throw new Error("Copy command failed");
+        }
+      }
+    } catch (err) {
+      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
+    }
   };
 
   const handleSave = () => {
