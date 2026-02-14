@@ -12,6 +12,34 @@ import {
 } from "@shared/schema";
 import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
 
+/**
+ * Returns a select shape for song list views with optimized payload size.
+ * Excludes specified large/unused fields and truncates lyrics to 500 characters.
+ * 
+ * @param excludeFields - Array of field names to exclude (in addition to lyrics truncation)
+ * @returns Select shape object for use in Drizzle queries
+ */
+function getListViewSelectShape(excludeFields: (keyof typeof songs.$inferSelect)[] = []) {
+  const allColumns = getTableColumns(songs);
+  const { lyrics: _lyrics, ...rest } = allColumns;
+  
+  // Use Set for O(1) lookup when filtering
+  const excludedSet = new Set(excludeFields);
+  
+  // Filter out excluded fields while preserving Drizzle column types
+  const filteredColumns = Object.keys(rest).reduce((acc, key) => {
+    if (!excludedSet.has(key as keyof typeof rest)) {
+      acc[key] = rest[key as keyof typeof rest];
+    }
+    return acc;
+  }, {} as Partial<typeof rest>);
+  
+  return {
+    ...filteredColumns,
+    lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+  };
+}
+
 export interface IStorage {
   // Song CRUD
   getSongs(userId: string): Promise<Song[]>;
