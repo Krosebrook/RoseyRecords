@@ -5,6 +5,7 @@ import {
   playlistSongs,
   songLikes,
   type Song,
+  type SongListItem,
   type InsertSong,
   type UpdateSongRequest,
   type Playlist,
@@ -14,8 +15,8 @@ import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
-  getSongs(userId: string): Promise<Song[]>;
-  getPublicSongs(): Promise<Song[]>;
+  getSongs(userId: string): Promise<SongListItem[]>;
+  getPublicSongs(): Promise<SongListItem[]>;
   getSong(id: number): Promise<Song | undefined>;
   createSong(song: InsertSong): Promise<Song>;
   updateSong(id: number, updates: UpdateSongRequest): Promise<Song>;
@@ -25,8 +26,7 @@ export interface IStorage {
   // Likes
   toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }>;
   isLiked(userId: string, songId: number): Promise<boolean>;
-  getLikedSongs(userId: string): Promise<Song[]>;
-  getLikedSongIds(userId: string): Promise<number[]>;
+  getLikedSongs(userId: string): Promise<SongListItem[]>;
   
   // Playlist CRUD
   getPlaylists(userId: string): Promise<Playlist[]>;
@@ -40,22 +40,22 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // === Songs ===
-  async getSongs(userId: string): Promise<Song[]> {
+  async getSongs(userId: string): Promise<SongListItem[]> {
     const result = await db.select(this.getSongListSelection())
       .from(songs)
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
 
-    return result as unknown as Song[];
+    return result as SongListItem[];
   }
 
-  async getPublicSongs(): Promise<Song[]> {
+  async getPublicSongs(): Promise<SongListItem[]> {
     const result = await db.select(this.getSongListSelection())
       .from(songs)
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
       .limit(50);
-    return result as unknown as Song[];
+    return result as SongListItem[];
   }
 
   // Helper to standardize list view columns across all list endpoints
@@ -64,10 +64,6 @@ export class DatabaseStorage implements IStorage {
     // Using destructuring to exclude specific fields while keeping others for forward compatibility
     const {
       description,
-      creationMode,
-      hasVocal,
-      vocalGender,
-      recordingType,
       lyrics: _lyrics,
       ...rest
     } = getTableColumns(songs);
@@ -142,7 +138,7 @@ export class DatabaseStorage implements IStorage {
     return !!like;
   }
 
-  async getLikedSongs(userId: string): Promise<Song[]> {
+  async getLikedSongs(userId: string): Promise<SongListItem[]> {
     // Optimized: Single query with innerJoin and proper ordering by liked time
     const result = await db.select(this.getSongListSelection())
       .from(songs)
@@ -150,17 +146,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songLikes.userId, userId))
       .orderBy(desc(songLikes.createdAt));
 
-    return result as unknown as Song[];
-  }
-
-  async getLikedSongIds(userId: string): Promise<number[]> {
-    // Optimized: Only select songId from songLikes table without joining songs
-    const result = await db.select({ songId: songLikes.songId })
-      .from(songLikes)
-      .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt));
-
-    return result.map(r => r.songId);
+    return result as SongListItem[];
   }
 
   // === Playlists ===

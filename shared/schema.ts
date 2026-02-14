@@ -136,6 +136,7 @@ export const insertPlaylistSchema = createInsertSchema(playlists).omit({
 
 // === EXPLICIT API CONTRACT TYPES ===
 export type Song = typeof songs.$inferSelect;
+export type SongListItem = Omit<Song, "description">;
 export type InsertSong = z.infer<typeof insertSongSchema>;
 export type Playlist = typeof playlists.$inferSelect;
 export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;

@@ -208,8 +208,9 @@ export async function registerRoutes(
   // GET /api/songs/liked-ids - Get user's liked song IDs
   app.get('/api/songs/liked-ids', isAuthenticated, async (req: any, res) => {
     const userId = req.user.claims.sub;
-    const likedIds = await storage.getLikedSongIds(userId);
-    res.json({ likedIds });
+    const likedSongs = await storage.getLikedSongs(userId);
+    const ids = likedSongs.map(s => s.id);
+    res.json({ likedIds: ids });
   });
 
   // GET /api/songs/liked - Get user's liked songs with full details
