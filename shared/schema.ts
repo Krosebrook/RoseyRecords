@@ -163,5 +163,5 @@ export type PlaylistResponse = Playlist & { songs?: Song[] };
 
 // List view type - optimized for payload size
 // Excludes: description, creationMode, hasVocal, vocalGender, recordingType
-// Truncates: lyrics (to 500 chars)
+// Note: lyrics field is truncated to 500 chars at the database query level
 export type SongListItem = Omit<Song, 'description' | 'creationMode' | 'hasVocal' | 'vocalGender' | 'recordingType'>;
