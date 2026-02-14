@@ -4,8 +4,10 @@ import { useSong, useDeleteSong } from "@/hooks/use-songs";
 import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock, Copy, Link2, Twitter, Facebook } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { copyToClipboard } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +24,7 @@ export default function SongDetails() {
   const { data: song, isLoading, error } = useSong(id);
   const { mutate: deleteSong, isPending: isDeleting } = useDeleteSong();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
 
   if (isLoading) return (
     <Layout>
@@ -47,25 +50,6 @@ export default function SongDetails() {
           setLocation("/dashboard");
         }
       });
-    }
-  };
-
-  const copyToClipboard = async (text: string, successMessage: string) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        toast({ title: "Copied!", description: successMessage });
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        toast({ title: "Copied!", description: successMessage });
-      }
-    } catch (err) {
-      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
     }
   };
 
