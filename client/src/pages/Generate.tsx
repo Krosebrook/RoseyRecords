@@ -5,7 +5,7 @@ import { useCreateSong } from "@/hooks/use-songs";
 import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
-import { cn } from "@/lib/utils";
+import { cn, copyToClipboard } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { apiRequest } from "@/lib/queryClient";
@@ -104,7 +104,32 @@ export default function Generate() {
   };
 
   const handleCopy = async () => {
-    await copyToClipboard(generatedContent, "Lyrics copied to clipboard.");
+    const textToCopy = currentLyrics || generatedContent;
+    if (!textToCopy) return;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+        toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          toast({ title: "Copied!", description: "Lyrics copied to clipboard." });
+        } else {
+          throw new Error("Copy command failed");
+        }
+      }
+    } catch (err) {
+      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
+    }
   };
 
   const handleSave = () => {

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { copyToClipboard } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
