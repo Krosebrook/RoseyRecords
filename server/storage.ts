@@ -23,19 +23,16 @@ function getListViewSelectShape(excludeFields: (keyof typeof songs.$inferSelect)
   const allColumns = getTableColumns(songs);
   const { lyrics: _lyrics, ...rest } = allColumns;
   
-  // Build the excluded fields object
-  const excluded = excludeFields.reduce((acc, field) => {
-    acc[field] = true;
-    return acc;
-  }, {} as Record<string, boolean>);
+  // Use Set for O(1) lookup when filtering
+  const excludedSet = new Set(excludeFields);
   
-  // Filter out excluded fields from rest
-  const filteredColumns = Object.entries(rest).reduce((acc, [key, value]) => {
-    if (!excluded[key]) {
-      acc[key] = value;
+  // Filter out excluded fields while preserving Drizzle column types
+  const filteredColumns = Object.keys(rest).reduce((acc, key) => {
+    if (!excludedSet.has(key as keyof typeof songs.$inferSelect)) {
+      acc[key] = rest[key as keyof typeof rest];
     }
     return acc;
-  }, {} as Record<string, unknown>);
+  }, {} as Partial<typeof rest>);
   
   return {
     ...filteredColumns,
