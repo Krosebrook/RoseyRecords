@@ -13,13 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { Song } from "@shared/schema";
+import type { SongListItem } from "@shared/schema";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo, memo } from "react";
 
 interface PublicSongCardProps {
-  song: Song;
+  song: SongListItem;
   isLiked: boolean;
 }
 
