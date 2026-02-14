@@ -1148,7 +1148,7 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
-      // Sentinel: Verify file signature (magic bytes)
+      // Verify file signature (magic bytes)
       if (!verifyAudioFileSignature(file.buffer)) {
         return res.status(400).json({ message: "Invalid file signature. Please upload a valid audio file." });
       }
