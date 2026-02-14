@@ -46,7 +46,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songs.userId, userId))
       .orderBy(desc(songs.createdAt));
 
-    return result;
+    return result as SongListItem[];
   }
 
   async getPublicSongs(): Promise<SongListItem[]> {
@@ -55,7 +55,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
       .limit(50);
-    return result;
+    return result as SongListItem[];
   }
 
   // Helper to standardize list view columns across all list endpoints
@@ -64,10 +64,6 @@ export class DatabaseStorage implements IStorage {
     // Using destructuring to exclude specific fields while keeping others for forward compatibility
     const {
       description,
-      creationMode,
-      hasVocal,
-      vocalGender,
-      recordingType,
       lyrics: _lyrics,
       ...rest
     } = getTableColumns(songs);
@@ -150,7 +146,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songLikes.userId, userId))
       .orderBy(desc(songLikes.createdAt));
 
-    return result;
+    return result as SongListItem[];
   }
 
   // === Playlists ===
