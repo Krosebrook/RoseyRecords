@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertSongSchema, insertPlaylistSchema, generateLyricsSchema, songs, playlists } from './schema';
+import { insertSongSchema, insertPlaylistSchema, generateLyricsSchema, songs, playlists, type SongListItem } from './schema';
 
 // ============================================
 // SHARED ERROR SCHEMAS
@@ -29,7 +29,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/songs',
       responses: {
-        200: z.array(z.custom<typeof songs.$inferSelect>()),
+        200: z.array(z.custom<SongListItem>()),
         401: errorSchemas.unauthorized,
       },
     },
@@ -37,7 +37,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/songs/public',
       responses: {
-        200: z.array(z.custom<typeof songs.$inferSelect>()),
+        200: z.array(z.custom<SongListItem>()),
       },
     },
     get: {
