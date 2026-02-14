@@ -42,7 +42,7 @@ export function sanitizeLog(data: any): any {
 }
 
 /**
- * Sentinel 🛡️: Validates audio file signatures to prevent malicious uploads.
+ * Validates audio file signatures to prevent malicious uploads.
  * Checks for MP3, WAV, OGG, FLAC, and AAC/M4A magic bytes.
  */
 export function verifyAudioFileSignature(buffer: Buffer): boolean {
@@ -50,11 +50,20 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
 
   const header = buffer.subarray(0, 12);
 
-  // MP3: ID3v2 (49 44 33) or Sync Frame (FF FB / FF F3 / FF F2)
+  // MP3: ID3v2 (49 44 33) or sync frame:
+  //   - MPEG-1 Layer III:   FF FB / FF FA
+  //   - MPEG-2 Layer III:   FF F3 / FF F2
+  //   - MPEG-2.5 Layer III: FF E3 / FF E2
   // Note: Sync frame usually starts at byte 0 for raw streams, but ID3 tag is common.
   if (
     (header[0] === 0x49 && header[1] === 0x44 && header[2] === 0x33) ||
-    (header[0] === 0xff && (header[1] === 0xfb || header[1] === 0xf3 || header[1] === 0xf2))
+    (header[0] === 0xff &&
+      (header[1] === 0xfb ||
+        header[1] === 0xfa ||
+        header[1] === 0xf3 ||
+        header[1] === 0xf2 ||
+        header[1] === 0xe3 ||
+        header[1] === 0xe2))
   ) {
     return true;
   }
@@ -83,14 +92,19 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
     return true;
   }
 
-  // AAC/M4A: ftyp (66 74 79 70) usually at offset 4
+  // AAC/M4A: ISO BMFF with ftyp (66 74 79 70) at offset 4 and audio-specific major brand
   if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
-    return true;
+    const majorBrand = header.toString("ascii", 8, 12);
+    const allowedM4ABrands = new Set(["M4A ", "M4B ", "M4P "]);
+    if (allowedM4ABrands.has(majorBrand)) {
+      return true;
+    }
   }
 
   // AAC ADTS: FF F1 (MPEG-4) or FF F9 (MPEG-2)
-  // Sync word is 12 bits of 1s (0xFFF)
-  if (header[0] === 0xff && (header[1] & 0xf0) === 0xf0) {
+  // Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
+  // We check for the common header patterns to avoid overlap with MP3 sync frames.
+  if (header[0] === 0xff && (header[1] === 0xf1 || header[1] === 0xf9)) {
     return true;
   }
 

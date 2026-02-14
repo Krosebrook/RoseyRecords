@@ -9,7 +9,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
-import { verifyAudioFileSignature } from "./utils";
+import { verifyAudioFileSignature, sanitizeLog } from "./utils";
 
 // Helper to validate numeric IDs from route params
 function parseNumericId(value: string, res: Response): number | null {
@@ -1148,8 +1148,14 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
-      // Sentinel: Verify file signature (magic bytes)
+      // Verify file signature (magic bytes)
       if (!verifyAudioFileSignature(file.buffer)) {
+        console.error("File signature validation failed:", sanitizeLog({
+          userId: req.user.claims.sub,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          originalName: file.originalname
+        }));
         return res.status(400).json({ message: "Invalid file signature. Please upload a valid audio file." });
       }
 
