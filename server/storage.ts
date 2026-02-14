@@ -28,7 +28,7 @@ function getListViewSelectShape(excludeFields: (keyof typeof songs.$inferSelect)
   
   // Filter out excluded fields while preserving Drizzle column types
   const filteredColumns = Object.keys(rest).reduce((acc, key) => {
-    if (!excludedSet.has(key as keyof typeof songs.$inferSelect)) {
+    if (!excludedSet.has(key as keyof typeof rest)) {
       acc[key] = rest[key as keyof typeof rest];
     }
     return acc;
