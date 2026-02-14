@@ -5,7 +5,7 @@ import { useCreateSong } from "@/hooks/use-songs";
 import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
-import { cn } from "@/lib/utils";
+import { cn, copyToClipboard } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
