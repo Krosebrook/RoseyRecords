@@ -160,3 +160,8 @@ export type GenerateLyricsRequest = z.infer<typeof generateLyricsSchema>;
 export type SongResponse = Song;
 export type SongsListResponse = Song[];
 export type PlaylistResponse = Playlist & { songs?: Song[] };
+
+// List view type - optimized for payload size
+// Excludes: description, creationMode, hasVocal, vocalGender, recordingType
+// Truncates: lyrics (to 500 chars)
+export type SongListItem = Omit<Song, 'description' | 'creationMode' | 'hasVocal' | 'vocalGender' | 'recordingType'>;
