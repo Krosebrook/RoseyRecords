@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +25,7 @@ export default function Generate() {
   const { generateLyrics, getRandomPrompt, isGenerating, currentLyrics, setCurrentLyrics } = useChatGeneration();
   const { mutate: saveSong, isPending: isSaving } = useCreateSong();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
   const [showOnboarding, setShowOnboarding] = useState(false);
   
   const [topic, setTopic] = useState("");

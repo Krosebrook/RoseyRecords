@@ -4,6 +4,7 @@ import { useSong, useDeleteSong } from "@/hooks/use-songs";
 import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock, Copy, Link2, Twitter, Facebook } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { copyToClipboard } from "@/lib/utils";
@@ -23,6 +24,7 @@ export default function SongDetails() {
   const { data: song, isLoading, error } = useSong(id);
   const { mutate: deleteSong, isPending: isDeleting } = useDeleteSong();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
 
   if (isLoading) return (
     <Layout>
