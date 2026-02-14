@@ -1154,7 +1154,7 @@ Also suggest a fitting title for the song.`;
           userId: req.user.claims.sub,
           fileSize: file.size,
           mimeType: file.mimetype,
-          originalName: file.originalname?.replace(/[\r\n]/g, '') // Prevent log injection
+          originalName: file.originalname
         }));
         return res.status(400).json({ message: "Invalid file signature. Please upload a valid audio file." });
       }

@@ -40,6 +40,11 @@ const sanitizationTestCases = [
     input: { val: null, other: undefined },
     expected: { val: null, other: undefined },
   },
+  {
+    name: "Prevent log injection with newlines",
+    input: { filename: "test\ninjection\r\nattack.txt" },
+    expected: { filename: "testinjectionattack.txt" },
+  },
 ];
 
 let failed = false;

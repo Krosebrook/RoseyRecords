@@ -32,6 +32,9 @@ export function sanitizeLog(data: any): any {
     // Check if key matches any sensitive pattern
     if (SENSITIVE_PATTERNS.some((pattern) => pattern.test(key))) {
       sanitized[key] = "***REDACTED***";
+    } else if (typeof sanitized[key] === "string") {
+      // Prevent log injection by removing newlines from strings
+      sanitized[key] = sanitized[key].replace(/[\r\n]/g, '');
     } else if (typeof sanitized[key] === "object" && sanitized[key] !== null) {
       // Recursively sanitize objects
       sanitized[key] = sanitizeLog(sanitized[key]);
