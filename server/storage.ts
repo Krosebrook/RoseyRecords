@@ -26,6 +26,7 @@ export interface IStorage {
   toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }>;
   isLiked(userId: string, songId: number): Promise<boolean>;
   getLikedSongs(userId: string): Promise<Song[]>;
+  getLikedSongIds(userId: string): Promise<number[]>;
   
   // Playlist CRUD
   getPlaylists(userId: string): Promise<Playlist[]>;
@@ -150,6 +151,16 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(songLikes.createdAt));
 
     return result as unknown as Song[];
+  }
+
+  async getLikedSongIds(userId: string): Promise<number[]> {
+    // Optimized: Only select songId from songLikes table without joining songs
+    const result = await db.select({ songId: songLikes.songId })
+      .from(songLikes)
+      .where(eq(songLikes.userId, userId))
+      .orderBy(desc(songLikes.createdAt));
+
+    return result.map(r => r.songId);
   }
 
   // === Playlists ===
