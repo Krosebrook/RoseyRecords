@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useChatGeneration } from "@/hooks/use-chat-generation";
 import { useCreateSong } from "@/hooks/use-songs";
-import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle } from "lucide-react";
+import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,32 @@ export default function Generate() {
   const { toast } = useToast();
   const [showOnboarding, setShowOnboarding] = useState(false);
   
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!generatedContent) return;
+    const text = generatedContent;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        setIsCopied(true);
+        toast({ title: "Copied!", description: "Lyrics copied to clipboard" });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        setIsCopied(true);
+        toast({ title: "Copied!", description: "Lyrics copied to clipboard" });
+      }
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      toast({ variant: "destructive", title: "Failed to copy", description: "Please try again." });
+    }
+  };
+
   const [topic, setTopic] = useState("");
   const [generatedTitle, setGeneratedTitle] = useState("");
   const [genre, setGenre] = useState<string>("Pop");
@@ -358,14 +384,27 @@ export default function Generate() {
               </div>
 
               {generatedContent && (
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  data-testid="button-save"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                  Save to Library
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopy}
+                    className="flex-shrink-0"
+                    title="Copy to clipboard"
+                    aria-label="Copy lyrics to clipboard"
+                    data-testid="button-copy-lyrics"
+                  >
+                    {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    data-testid="button-save"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save to Library
+                  </Button>
+                </div>
               )}
             </div>
 
