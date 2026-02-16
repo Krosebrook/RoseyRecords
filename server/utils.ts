@@ -53,63 +53,49 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
 
   const header = buffer.subarray(0, 12);
 
-  // MP3: ID3v2 (49 44 33) or sync frame:
-  //   - MPEG-1 Layer III:   FF FB / FF FA
-  //   - MPEG-2 Layer III:   FF F3 / FF F2
-  //   - MPEG-2.5 Layer III: FF E3 / FF E2
-  // Note: Sync frame usually starts at byte 0 for raw streams, but ID3 tag is common.
-  if (
-    (header[0] === 0x49 && header[1] === 0x44 && header[2] === 0x33) ||
-    (header[0] === 0xff &&
-      (header[1] === 0xfb ||
-        header[1] === 0xfa ||
-        header[1] === 0xf3 ||
-        header[1] === 0xf2 ||
-        header[1] === 0xe3 ||
-        header[1] === 0xe2))
-  ) {
-    return true;
-  }
+  // Magic bytes constants
+  const SIGNATURES = {
+    ID3: Buffer.from([0x49, 0x44, 0x33]),
+    RIFF: Buffer.from([0x52, 0x49, 0x46, 0x46]),
+    WAVE: Buffer.from([0x57, 0x41, 0x56, 0x45]),
+    OGG: Buffer.from([0x4F, 0x67, 0x67, 0x53]),
+    FLAC: Buffer.from([0x66, 0x4C, 0x61, 0x43]),
+    FTYP: Buffer.from([0x66, 0x74, 0x79, 0x70]),
+  };
 
-  // WAV: RIFF (52 49 46 46) ... WAVE (57 41 56 45)
-  if (
-    header[0] === 0x52 &&
-    header[1] === 0x49 &&
-    header[2] === 0x46 &&
-    header[3] === 0x46 &&
-    header[8] === 0x57 &&
-    header[9] === 0x41 &&
-    header[10] === 0x56 &&
-    header[11] === 0x45
-  ) {
-    return true;
-  }
+  // MP3: ID3v2 tag or Sync Frame.
+  // Sync frame: FF Fx (MPEG-1 Layer III: FF FB/FA, MPEG-2 Layer III: FF F3/F2, MPEG-2.5 Layer III: FF E3/E2)
+  // We explicitly check for Layer III to avoid false positives like UTF-16 LE BOM (FF FE) which looks like MPEG-1 Layer I.
+  const isMp3 =
+    header.subarray(0, 3).equals(SIGNATURES.ID3) ||
+    (header[0] === 0xff && (
+      header[1] === 0xfb || header[1] === 0xfa || // MPEG-1 Layer III
+      header[1] === 0xf3 || header[1] === 0xf2 || // MPEG-2 Layer III
+      header[1] === 0xe3 || header[1] === 0xe2    // MPEG-2.5 Layer III
+    ));
 
-  // OGG: OggS (4F 67 67 53)
-  if (header[0] === 0x4f && header[1] === 0x67 && header[2] === 0x67 && header[3] === 0x53) {
-    return true;
-  }
+  // WAV: RIFF header with WAVE format
+  const isWav =
+    header.subarray(0, 4).equals(SIGNATURES.RIFF) &&
+    header.subarray(8, 12).equals(SIGNATURES.WAVE);
 
-  // FLAC: fLaC (66 4C 61 43)
-  if (header[0] === 0x66 && header[1] === 0x4c && header[2] === 0x61 && header[3] === 0x43) {
-    return true;
-  }
+  // OGG: OggS capture pattern
+  const isOgg = header.subarray(0, 4).equals(SIGNATURES.OGG);
 
-  // AAC/M4A: ISO BMFF with ftyp (66 74 79 70) at offset 4 and audio-specific major brand
-  if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
-    const majorBrand = header.toString("ascii", 8, 12);
-    const allowedM4ABrands = new Set(["M4A ", "M4B ", "M4P "]);
-    if (allowedM4ABrands.has(majorBrand)) {
-      return true;
-    }
-  }
+  // FLAC: fLaC marker
+  const isFlac = header.subarray(0, 4).equals(SIGNATURES.FLAC);
 
-  // AAC ADTS: FF F1 (MPEG-4) or FF F9 (MPEG-2)
-  // Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
-  // We check for the common header patterns to avoid overlap with MP3 sync frames.
-  if (header[0] === 0xff && (header[1] === 0xf1 || header[1] === 0xf9)) {
-    return true;
-  }
+  // M4A/MP4: ftyp box at offset 4 AND valid audio brand
+  // Brands: M4A, M4B, M4P
+  const isM4a =
+    header.subarray(4, 8).equals(SIGNATURES.FTYP) &&
+    (header.subarray(8, 12).equals(Buffer.from("M4A ")) ||
+     header.subarray(8, 12).equals(Buffer.from("M4B ")) ||
+     header.subarray(8, 12).equals(Buffer.from("M4P ")));
 
-  return false;
+  // AAC ADTS: Sync word (12 bits of 1s)
+  // header[0] == 0xFF, header[1] & 0xF6 == 0xF0 (MPEG-4: F1, MPEG-2: F9, valid protection/layer bits)
+  const isAacAdts = header[0] === 0xff && (header[1] & 0xf6) === 0xf0;
+
+  return isMp3 || isWav || isOgg || isFlac || isM4a || isAacAdts;
 }
