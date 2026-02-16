@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useChatGeneration } from "@/hooks/use-chat-generation";
 import { useCreateSong } from "@/hooks/use-songs";
-import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle } from "lucide-react";
+import { Wand2, Save, Mic, Disc, Loader2, Shuffle, Globe, Lock, Sparkles, Zap, Lightbulb, HelpCircle, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GENRES, MOODS } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 
 type AIEngine = "openai" | "gemini";
@@ -41,6 +42,43 @@ export default function Generate() {
     key?: string;
     energy?: string;
   } | null>(null);
+
+  const [hasCopied, setHasCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const textToCopy = currentLyrics || generatedContent;
+    if (!textToCopy) return;
+
+    // Fallback for older browsers
+    if (!navigator.clipboard) {
+       const textArea = document.createElement("textarea");
+       textArea.value = textToCopy;
+       document.body.appendChild(textArea);
+       textArea.focus();
+       textArea.select();
+       try {
+         document.execCommand('copy');
+         setHasCopied(true);
+         setTimeout(() => setHasCopied(false), 2000);
+         toast({ description: "Lyrics copied to clipboard" });
+       } catch (err) {
+         console.error('Unable to copy to clipboard', err);
+       }
+       document.body.removeChild(textArea);
+       return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setHasCopied(true);
+      setTimeout(() => setHasCopied(false), 2000);
+      toast({
+        description: "Lyrics copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!topic) return;
@@ -358,14 +396,32 @@ export default function Generate() {
               </div>
 
               {generatedContent && (
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  data-testid="button-save"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                  Save to Library
-                </Button>
+                <div className="flex gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCopy}
+                        aria-label="Copy lyrics"
+                      >
+                        {hasCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{hasCopied ? "Copied!" : "Copy to clipboard"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    data-testid="button-save"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save to Library
+                  </Button>
+                </div>
               )}
             </div>
 
