@@ -93,9 +93,9 @@ export function verifyAudioFileSignature(buffer: Buffer): boolean {
      header.subarray(8, 12).equals(Buffer.from("M4B ")) ||
      header.subarray(8, 12).equals(Buffer.from("M4P ")));
 
-  // AAC ADTS: Sync word (12 bits of 1s)
-  // header[0] == 0xFF, header[1] & 0xF6 == 0xF0 (MPEG-4: F1, MPEG-2: F9, valid protection/layer bits)
-  const isAacAdts = header[0] === 0xff && (header[1] & 0xf6) === 0xf0;
+  // AAC ADTS: Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
+  // We check specifically for MPEG-4 (0xF1) and MPEG-2 (0xF9) to avoid overlap with MP3 sync frames
+  const isAacAdts = header[0] === 0xff && (header[1] === 0xf1 || header[1] === 0xf9);
 
   return isMp3 || isWav || isOgg || isFlac || isM4a || isAacAdts;
 }
