@@ -79,7 +79,7 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  // Sentinel: Add rate limiting to AI endpoints
+  // Add rate limiting to AI endpoints
   app.use("/api/generate", aiRateLimiter.middleware);
   app.use("/api/audio", aiRateLimiter.middleware);
   app.use("/api/stable-audio", aiRateLimiter.middleware);
@@ -87,7 +87,7 @@ export async function registerRoutes(
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
 
-  // Sentinel: Protect integration routes (chat & image)
+  // Protect integration routes (chat & image)
   // These routes were previously unprotected, allowing unauthenticated access to AI resources
   app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware);
   app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware);
