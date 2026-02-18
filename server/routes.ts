@@ -2,6 +2,7 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { detectAudioFormat } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
@@ -1145,6 +1146,13 @@ Also suggest a fitting title for the song.`;
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      // Sentinel: Validate file content using magic bytes
+      const detectedFormat = detectAudioFormat(file.buffer);
+      if (!detectedFormat) {
+        console.error(`Invalid file format detected. Mime: ${file.mimetype}`);
+        return res.status(400).json({ message: "Invalid audio file format. Please upload a valid audio file." });
       }
 
       const { prompt, duration } = req.body;
