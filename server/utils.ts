@@ -53,7 +53,11 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   if (buffer.length < 12) return "unknown";
 
   // WAV: RIFF....WAVE
-  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+  // WAV: RIFF....WAVE
+  if (
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x41 && buffer[10] === 0x56 && buffer[11] === 0x45
+  ) {
     return "wav";
   }
   // WebM: EBML header
