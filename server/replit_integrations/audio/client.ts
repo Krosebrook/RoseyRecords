@@ -11,11 +11,11 @@ export const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "unknown";
+export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "flac" | "aac" | "unknown";
 
 /**
  * Detect audio format from buffer magic bytes.
- * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG
+ * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG, FLAC, AAC
  */
 export function detectAudioFormat(buffer: Buffer): AudioFormat {
   if (buffer.length < 12) return "unknown";
@@ -42,6 +42,15 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   // OGG: OggS
   if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) {
     return "ogg";
+  }
+  // FLAC: fLaC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+    return "flac";
+  }
+  // AAC: ADTS header (FFF1 or FFF9 usually)
+  // Sync word is 12 bits of 1s (0xFFF)
+  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) {
+    return "aac";
   }
   return "unknown";
 }
