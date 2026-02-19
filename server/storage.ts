@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, sql, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
@@ -140,7 +140,7 @@ export class DatabaseStorage implements IStorage {
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt).nullsLast());
+      .orderBy(desc(songLikes.createdAt));
   }
 
   // === Playlists ===
@@ -160,22 +160,13 @@ export class DatabaseStorage implements IStorage {
     const playlist = await this.getPlaylist(id);
     if (!playlist) return undefined;
 
-    const playlistSongRows = await db.select({ songId: playlistSongs.songId })
-      .from(playlistSongs)
-      .where(eq(playlistSongs.playlistId, id));
-
-    const songIds = playlistSongRows.map(r => r.songId).filter(id => typeof id === 'number' && !isNaN(id));
-
-    if (songIds.length === 0) {
-      return { ...playlist, songs: [] };
-    }
-
-    const songsResult = await db.select()
+    // Optimized: Single query with innerJoin to fetch songs directly, ordered by added time
+    // Replaces 3 separate queries (playlist -> IDs -> songs) and manual sorting
+    const songsList = await db.select(getTableColumns(songs))
       .from(songs)
-      .where(inArray(songs.id, songIds));
-
-    const songMap = new Map(songsResult.map(s => [s.id, s]));
-    const songsList = songIds.map(id => songMap.get(id)).filter((s): s is Song => !!s);
+      .innerJoin(playlistSongs, eq(songs.id, playlistSongs.songId))
+      .where(eq(playlistSongs.playlistId, id))
+      .orderBy(asc(playlistSongs.addedAt));
 
     return { ...playlist, songs: songsList };
   }
