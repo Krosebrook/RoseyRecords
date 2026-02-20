@@ -29,8 +29,7 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
       {/* Main card link overlay */}
       <Link
         href={`/songs/${song.id}`}
-        className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl"
-        aria-label={`View song ${song.title}`}
+        className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
       >
         <span className="sr-only">View song {song.title}</span>
       </Link>
@@ -46,12 +45,12 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
             
             <div className="flex items-center gap-1 relative z-20 pointer-events-auto">
               {song.isPublic ? (
-                <span className="p-2 text-primary" title="Public">
-                  <Globe className="w-4 h-4" />
+                <span className="p-2 text-primary" role="img" aria-label="Public song">
+                  <Globe className="w-4 h-4" aria-hidden="true" />
                 </span>
               ) : (
-                <span className="p-2 text-muted-foreground" title="Private">
-                  <Lock className="w-4 h-4" />
+                <span className="p-2 text-muted-foreground" role="img" aria-label="Private song">
+                  <Lock className="w-4 h-4" aria-hidden="true" />
                 </span>
               )}
 
@@ -62,9 +61,9 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
                     variant="ghost"
                     onClick={(e) => e.stopPropagation()}
                     disabled={isPending}
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity"
                     data-testid={`button-delete-${song.id}`}
-                    aria-label="Delete song"
+                    aria-label={`Delete song ${song.title}`}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
