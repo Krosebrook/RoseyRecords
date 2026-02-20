@@ -66,7 +66,7 @@ export async function generateMusic(params: MusicGenerationParams): Promise<Musi
   const duration = normalizeDuration(params.duration);
   
   const output = await replicate.run(
-    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
     {
       input: {
         prompt: fullPrompt,
@@ -103,7 +103,7 @@ export async function generateMusicFromMelody(
   const normalizedDuration = normalizeDuration(duration);
   
   const output = await replicate.run(
-    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
     {
       input: {
         prompt,
@@ -172,7 +172,7 @@ export async function generateSoundEffect(prompt: string, duration?: number): Pr
   const normalizedDuration = Math.min(Math.max(duration || 5, 3), 15);
   
   const output = await replicate.run(
-    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
     {
       input: {
         prompt: `sound effect: ${prompt}`,
@@ -292,7 +292,7 @@ export async function generateMusicWithReference(
   const normalizedDuration = normalizeDuration(duration);
 
   const output = await replicate.run(
-    "meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135378dcb87f6373b0d3d341ede46e59e2b38",
+    "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb",
     {
       input: {
         prompt,

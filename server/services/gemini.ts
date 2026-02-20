@@ -30,7 +30,7 @@ export async function generateSongConcept(prompt: string, genre?: string, mood?:
   const moodHint = mood ? `Mood should be ${mood}.` : "";
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `You are an expert music producer and songwriter. Create a detailed song concept based on: "${prompt}". ${genreHint} ${moodHint}
     
     Provide complete, professional song lyrics with proper structure including [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro] sections.
@@ -71,7 +71,7 @@ export async function generateLyricsOnly(prompt: string, genre?: string, mood?: 
   const moodHint = mood ? `with a ${mood} feeling` : "";
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `You are an expert songwriter. Write professional song lyrics ${genreHint} ${moodHint} based on this concept: "${prompt}".
 
     Create complete, emotionally resonant lyrics with proper song structure:
@@ -103,7 +103,7 @@ export async function suggestChordProgression(mood: string, key: string): Promis
   const ai = getAI();
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `Suggest a 4-chord progression in the key of ${key} that feels "${mood}". 
     Use standard note names (C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B) and common chord types (Major, Minor, Major 7th, Minor 7th, Dominant 7th, m7b5).
     Return JSON only.`,
@@ -139,7 +139,7 @@ export async function reharmonizeProgression(currentProgression: ChordProgressio
   const progStr = currentProgression.map(p => `${p.root} ${p.variety}`).join(', ');
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `Re-harmonize the following chord progression in the key of ${key} to make it more sophisticated (use jazz extensions, tritone substitutions, or secondary dominants where appropriate).
     Original: [${progStr}].
     Return exactly 4 chords in JSON format.`,
@@ -174,7 +174,7 @@ export async function lookupScales(notes: string[]): Promise<{ scale: string; re
   const ai = getAI();
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `Identify the most likely musical scales or modes that contain exactly these notes: [${notes.join(', ')}]. 
     Provide up to 3 possible scales with brief reasoning. Return JSON only.`,
     config: {
@@ -207,7 +207,7 @@ export async function getProductionTips(genre: string, mood: string, energy: str
   const ai = getAI();
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `You are a professional music producer. Give ONE concise production tip (max 25 words) for a ${genre} track with ${mood} mood and ${energy} energy.
     Focus on mixing, arrangement, or sound design. Be specific and actionable.`,
     config: {
@@ -226,7 +226,7 @@ export async function analyzeLyrics(lyrics: string): Promise<{
   const ai = getAI();
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `Analyze these song lyrics and provide insights:
     
     ${lyrics}
@@ -256,7 +256,7 @@ export async function generateCoverArtPrompt(title: string, genre: string, mood:
   const ai = getAI();
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     contents: `Create a detailed image generation prompt for album cover art.
     Song: "${title}"
     Genre: ${genre}

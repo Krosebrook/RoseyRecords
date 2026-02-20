@@ -369,7 +369,7 @@ export async function registerRoutes(
       const systemPrompt = prompts[field] || "Generate a creative suggestion for a music-related text input. Keep it concise.";
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5.2",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: context ? `Context: ${context}\n\nGenerate a suggestion.` : "Generate a suggestion." },
@@ -407,7 +407,7 @@ Also suggest a fitting title for the song.`;
       userPrompt += `\n\nRespond in JSON format: { "title": "Song Title", "lyrics": "Full lyrics here" }`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.2",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
