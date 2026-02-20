@@ -11,11 +11,11 @@ export const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "unknown";
+export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "flac" | "unknown";
 
 /**
  * Detect audio format from buffer magic bytes.
- * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG
+ * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG, FLAC
  */
 export function detectAudioFormat(buffer: Buffer): AudioFormat {
   if (buffer.length < 12) return "unknown";
@@ -23,6 +23,10 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   // WAV: RIFF....WAVE
   if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
     return "wav";
+  }
+  // FLAC: fLaC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+    return "flac";
   }
   // WebM: EBML header
   if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
