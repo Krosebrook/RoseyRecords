@@ -104,27 +104,37 @@ export class DatabaseStorage implements IStorage {
 
   // === Likes ===
   async toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }> {
-    const [existingLike] = await db.select()
-      .from(songLikes)
-      .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
-
-    const song = await this.getSong(songId);
-    if (!song) return { liked: false, likeCount: 0 };
-
-    if (existingLike) {
-      // Unlike
-      await db.delete(songLikes)
+    // Optimized: Atomic transaction with SQL updates to prevent race conditions and reduce round trips
+    return await db.transaction(async (tx) => {
+      const [existingLike] = await tx.select()
+        .from(songLikes)
         .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
-      const newCount = Math.max(0, (song.likeCount || 0) - 1);
-      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
-      return { liked: false, likeCount: newCount };
-    } else {
-      // Like
-      await db.insert(songLikes).values({ userId, songId });
-      const newCount = (song.likeCount || 0) + 1;
-      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
-      return { liked: true, likeCount: newCount };
-    }
+
+      if (existingLike) {
+        // Unlike
+        await tx.delete(songLikes)
+          .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
+
+        // Atomic decrement using SQL to ensure consistency
+        const [updatedSong] = await tx.update(songs)
+          .set({ likeCount: sql`GREATEST(COALESCE(${songs.likeCount}, 0) - 1, 0)` })
+          .where(eq(songs.id, songId))
+          .returning({ likeCount: songs.likeCount });
+
+        return { liked: false, likeCount: updatedSong?.likeCount ?? 0 };
+      } else {
+        // Like
+        await tx.insert(songLikes).values({ userId, songId });
+
+        // Atomic increment using SQL to ensure consistency
+        const [updatedSong] = await tx.update(songs)
+          .set({ likeCount: sql`COALESCE(${songs.likeCount}, 0) + 1` })
+          .where(eq(songs.id, songId))
+          .returning({ likeCount: songs.likeCount });
+
+        return { liked: true, likeCount: updatedSong?.likeCount ?? 0 };
+      }
+    });
   }
 
   async isLiked(userId: string, songId: number): Promise<boolean> {
