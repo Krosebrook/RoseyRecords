@@ -16,6 +16,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SongCardProps {
   song: Song;
@@ -45,15 +50,22 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
             </div>
             
             <div className="flex items-center gap-1 relative z-20 pointer-events-auto">
-              {song.isPublic ? (
-                <span className="p-2 text-primary" title="Public">
-                  <Globe className="w-4 h-4" />
-                </span>
-              ) : (
-                <span className="p-2 text-muted-foreground" title="Private">
-                  <Lock className="w-4 h-4" />
-                </span>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`p-2 cursor-help rounded-full hover:bg-muted/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      song.isPublic ? "text-primary" : "text-muted-foreground"
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={song.isPublic ? "Public song" : "Private song"}
+                  >
+                    {song.isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{song.isPublic ? "Public - Visible to everyone" : "Private - Only visible to you"}</p>
+                </TooltipContent>
+              </Tooltip>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
