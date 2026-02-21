@@ -8,6 +8,7 @@ import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integra
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -1147,13 +1148,34 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
+      // Sentinel: Validate audio format using magic bytes
+      const format = detectAudioFormat(file.buffer);
+      if (format === "unknown") {
+        return res.status(400).json({ message: "Invalid or unsupported audio format" });
+      }
+
+      // Map format to mime type
+      const mimeMap: Record<string, string> = {
+        wav: "audio/wav",
+        mp3: "audio/mpeg",
+        webm: "audio/webm",
+        mp4: "audio/mp4",
+        ogg: "audio/ogg",
+      };
+      const mimeType = mimeMap[format];
+
+      // Should not happen if detectAudioFormat only returns the above types + unknown (handled above)
+      if (!mimeType) {
+        return res.status(400).json({ message: "Unsupported audio format detected" });
+      }
+
       const { prompt, duration } = req.body;
       if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
         return res.status(400).json({ message: "Prompt is required" });
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,
