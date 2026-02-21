@@ -26,6 +26,7 @@ export interface IStorage {
   toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }>;
   isLiked(userId: string, songId: number): Promise<boolean>;
   getLikedSongs(userId: string): Promise<Song[]>;
+  getLikedSongIds(userId: string): Promise<number[]>;
   
   // Playlist CRUD
   getPlaylists(userId: string): Promise<Playlist[]>;
@@ -140,7 +141,15 @@ export class DatabaseStorage implements IStorage {
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt).nullsLast());
+      .orderBy(desc(songLikes.createdAt));
+  }
+
+  async getLikedSongIds(userId: string): Promise<number[]> {
+    const result = await db.select({ songId: songLikes.songId })
+      .from(songLikes)
+      .where(eq(songLikes.userId, userId))
+      .orderBy(desc(songLikes.createdAt));
+    return result.map(r => r.songId);
   }
 
   // === Playlists ===
