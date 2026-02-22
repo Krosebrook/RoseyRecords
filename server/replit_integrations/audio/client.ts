@@ -11,11 +11,11 @@ export const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "unknown";
+export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "flac" | "aac" | "unknown";
 
 /**
  * Detect audio format from buffer magic bytes.
- * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG
+ * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG, FLAC, AAC
  */
 export function detectAudioFormat(buffer: Buffer): AudioFormat {
   if (buffer.length < 12) return "unknown";
@@ -27,6 +27,17 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   // WebM: EBML header
   if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
     return "webm";
+  }
+  // FLAC: fLaC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+    return "flac";
+  }
+  // AAC: ADTS header (0xFFF1 or 0xFFF9)
+  // Check if first byte is 0xFF and second byte high nibble is 0xF.
+  // Also check that Layer bits (bits 1,2) are 00 (AAC is always Layer 0 in ADTS).
+  // MP3 Layer 3 has Layer bits 01 (e.g. 0xFB = 1111 1011).
+  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0 && (buffer[1] & 0x06) === 0x00) {
+    return "aac";
   }
   // MP3: ID3 tag or frame sync
   if (
@@ -44,6 +55,19 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
     return "ogg";
   }
   return "unknown";
+}
+
+export function getMimeType(format: AudioFormat): string {
+  switch (format) {
+    case "wav": return "audio/wav";
+    case "mp3": return "audio/mpeg";
+    case "webm": return "audio/webm";
+    case "mp4": return "audio/mp4";
+    case "ogg": return "audio/ogg";
+    case "flac": return "audio/flac";
+    case "aac": return "audio/aac";
+    default: return "application/octet-stream";
+  }
 }
 
 /**
