@@ -6,6 +6,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,8 +38,11 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
   };
 
   return (
-    <Link href={`/songs/${song.id}`} className="block group" data-testid={`card-song-${song.id}`}>
-      <div className="glass-panel rounded-2xl p-5 h-full transition-all duration-300 hover:scale-[1.02] hover:border-primary/30 relative overflow-hidden">
+    <div className="group relative h-full" data-testid={`card-song-${song.id}`}>
+      <Link href={`/songs/${song.id}`} className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary">
+        <span className="sr-only">View {song.title}</span>
+      </Link>
+      <div className="glass-panel rounded-2xl p-5 h-full transition-all duration-300 group-hover:scale-[1.02] group-hover:border-primary/30 relative overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
         
         <div className="relative z-10 flex flex-col h-full">
@@ -43,15 +51,25 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
               <Music className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
             </div>
             
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleLike}
-              disabled={isPending}
-              data-testid={`button-like-${song.id}`}
-            >
-              <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
-            </Button>
+            <div className="pointer-events-auto relative z-20">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleLike}
+                    disabled={isPending}
+                    data-testid={`button-like-${song.id}`}
+                    aria-label={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
+                  >
+                    <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isLiked ? "Unlike" : "Like"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           
           <h3 className="text-lg font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors" data-testid={`text-song-title-${song.id}`}>
@@ -93,7 +111,7 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 });
 
@@ -200,15 +218,23 @@ export default function Explore() {
               </Select>
 
               {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={clearFilters}
-                  className="shrink-0"
-                  data-testid="button-clear-filters"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={clearFilters}
+                      className="shrink-0"
+                      data-testid="button-clear-filters"
+                      aria-label="Clear filters"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Clear filters</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>
