@@ -7,6 +7,7 @@ import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { detectAudioFormat, getMimeType } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
 
@@ -1147,13 +1148,21 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
+      // Sentinel: Validate file content using magic bytes
+      const detectedFormat = detectAudioFormat(file.buffer);
+      if (detectedFormat === "unknown") {
+        return res.status(400).json({ message: "Invalid or unsupported audio file format" });
+      }
+
       const { prompt, duration } = req.body;
       if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
         return res.status(400).json({ message: "Prompt is required" });
       }
 
+      const mimeType = getMimeType(detectedFormat);
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      // Sentinel: Use verified MIME type instead of client-provided file.mimetype
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,
