@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
@@ -38,31 +38,35 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private getSongSummarySelection() {
+    // Explicitly select summary fields to optimize payload size while ensuring critical fields like audioUrl are included
+    return {
+      id: songs.id,
+      userId: songs.userId,
+      title: songs.title,
+      genre: songs.genre,
+      mood: songs.mood,
+      audioUrl: songs.audioUrl,
+      imageUrl: songs.imageUrl,
+      isPublic: songs.isPublic,
+      playCount: songs.playCount,
+      likeCount: songs.likeCount,
+      createdAt: songs.createdAt,
+      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
+    };
+  }
+
   // === Songs ===
   async getSongs(userId: string): Promise<Song[]> {
-    return await db.select()
+    // Optimized: Use summary selection to reduce payload
+    return await db.select(this.getSongSummarySelection())
       .from(songs)
       .where(eq(songs.userId, userId))
-      .orderBy(desc(songs.createdAt));
+      .orderBy(desc(songs.createdAt)) as unknown as Song[];
   }
 
   async getPublicSongs(): Promise<Song[]> {
-    // Exclude large/unused fields to optimize payload size
-    // Using destructuring to exclude specific fields while keeping others for forward compatibility
-    const {
-      description,
-      creationMode,
-      hasVocal,
-      vocalGender,
-      recordingType,
-      lyrics: _lyrics, // Exclude original lyrics column to override with truncated version
-      ...rest
-    } = getTableColumns(songs);
-
-    const result = await db.select({
-      ...rest,
-      lyrics: sql<string>`substring(${songs.lyrics}, 1, 500)`,
-    })
+    const result = await db.select(this.getSongSummarySelection())
       .from(songs)
       .where(eq(songs.isPublic, true))
       .orderBy(desc(songs.playCount))
@@ -135,12 +139,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLikedSongs(userId: string): Promise<Song[]> {
-    // Optimized: Single query with innerJoin and proper ordering by liked time
-    return await db.select(getTableColumns(songs))
+    // Optimized: Single query with innerJoin, proper ordering by liked time, and summary selection
+    return await db.select(this.getSongSummarySelection())
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt).nullsLast());
+      .orderBy(desc(songLikes.createdAt)) as unknown as Song[];
   }
 
   // === Playlists ===
@@ -170,7 +174,7 @@ export class DatabaseStorage implements IStorage {
       return { ...playlist, songs: [] };
     }
 
-    const songsResult = await db.select()
+    const songsResult = await db.select(this.getSongSummarySelection())
       .from(songs)
       .where(inArray(songs.id, songIds));
 
