@@ -13,6 +13,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function SongDetails() {
   usePageTitle("Song Details");
@@ -41,13 +52,11 @@ export default function SongDetails() {
   );
 
   const handleDelete = () => {
-    if (confirm("Are you sure? This cannot be undone.")) {
-      deleteSong(id, {
-        onSuccess: () => {
-          setLocation("/dashboard");
-        }
-      });
-    }
+    deleteSong(id, {
+      onSuccess: () => {
+        setLocation("/dashboard");
+      }
+    });
   };
 
   const copyToClipboard = async (text: string, successMessage: string) => {
@@ -149,6 +158,7 @@ export default function SongDetails() {
                       size="icon"
                       variant="outline"
                       title="Share"
+                      aria-label="Share song"
                       data-testid="button-share"
                     >
                       <Share2 className="w-4 h-4 md:w-5 md:h-5" />
@@ -174,16 +184,33 @@ export default function SongDetails() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  title="Delete Song"
-                  data-testid="button-delete-song"
-                >
-                  <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      disabled={isDeleting}
+                      title="Delete Song"
+                      aria-label="Delete song"
+                      data-testid="button-delete-song"
+                    >
+                      <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the song "{song.title}" and remove it from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
 
