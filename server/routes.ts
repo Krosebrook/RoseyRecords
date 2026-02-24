@@ -9,6 +9,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 
 // Helper to validate numeric IDs from route params
 function parseNumericId(value: string, res: Response): number | null {
@@ -1145,6 +1146,14 @@ Also suggest a fitting title for the song.`;
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      // Sentinel: Validate file content to prevent spoofing
+      const detectedFormat = detectAudioFormat(file.buffer);
+      const allowedFormats = ["wav", "mp3", "webm", "mp4", "ogg", "flac", "aac"];
+
+      if (detectedFormat === "unknown" || !allowedFormats.includes(detectedFormat)) {
+        return res.status(400).json({ message: "Invalid or unsupported audio file content" });
       }
 
       const { prompt, duration } = req.body;
