@@ -24,6 +24,7 @@ import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
 import * as sunoService from "./services/suno";
 import * as aceStepService from "./services/aceStep";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -1145,6 +1146,15 @@ Also suggest a fitting title for the song.`;
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      // Sentinel: Validate file content using magic bytes to prevent spoofing
+      const detectedFormat = detectAudioFormat(file.buffer);
+      const allowedFormats = ["wav", "mp3", "webm", "mp4", "ogg", "flac", "aac"];
+      if (!allowedFormats.includes(detectedFormat)) {
+        return res.status(400).json({
+          message: `Invalid audio file format. Detected: ${detectedFormat}. Allowed: ${allowedFormats.join(", ")}`
+        });
       }
 
       const { prompt, duration } = req.body;
