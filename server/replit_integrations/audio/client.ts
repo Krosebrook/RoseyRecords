@@ -11,11 +11,11 @@ export const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "unknown";
+export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "flac" | "aac" | "unknown";
 
 /**
  * Detect audio format from buffer magic bytes.
- * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG
+ * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG, FLAC, AAC
  */
 export function detectAudioFormat(buffer: Buffer): AudioFormat {
   if (buffer.length < 12) return "unknown";
@@ -34,6 +34,17 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
     (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33)
   ) {
     return "mp3";
+  }
+  // FLAC: fLaC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+    return "flac";
+  }
+  // AAC: ADTS sync word (12 bits = 0xFFF) + Layer=00
+  if (
+    buffer[0] === 0xff &&
+    (buffer[1] === 0xf0 || buffer[1] === 0xf1 || buffer[1] === 0xf8 || buffer[1] === 0xf9)
+  ) {
+    return "aac";
   }
   // MP4/M4A/MOV: ....ftyp (Safari/iOS records in these containers)
   if (buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) {
