@@ -33,8 +33,16 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
   };
 
   return (
-    <Link href={`/songs/${song.id}`} className="block group" data-testid={`card-song-${song.id}`}>
-      <div className="glass-panel rounded-2xl p-5 h-full transition-all duration-300 hover:scale-[1.02] hover:border-primary/30 relative overflow-hidden">
+    <div className="relative group block h-full" data-testid={`card-song-${song.id}`}>
+      <Link
+        href={`/songs/${song.id}`}
+        className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl"
+        aria-label={`View song ${song.title}`}
+      >
+        <span className="sr-only">View song {song.title}</span>
+      </Link>
+
+      <div className="glass-panel rounded-2xl p-5 h-full transition-all duration-300 group-hover:scale-[1.02] group-hover:border-primary/30 relative overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
         
         <div className="relative z-10 flex flex-col h-full">
@@ -43,15 +51,18 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
               <Music className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
             </div>
             
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleLike}
-              disabled={isPending}
-              data-testid={`button-like-${song.id}`}
-            >
-              <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
-            </Button>
+            <div className="relative z-20 pointer-events-auto">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleLike}
+                disabled={isPending}
+                data-testid={`button-like-${song.id}`}
+                aria-label={isLiked ? "Unlike song" : "Like song"}
+              >
+                <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
+              </Button>
+            </div>
           </div>
           
           <h3 className="text-lg font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors" data-testid={`text-song-title-${song.id}`}>
@@ -93,7 +104,7 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 });
 
@@ -159,6 +170,7 @@ export default function Explore() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
                 data-testid="input-search"
+                aria-label="Search songs"
               />
             </div>
             
@@ -206,6 +218,7 @@ export default function Explore() {
                   onClick={clearFilters}
                   className="shrink-0"
                   data-testid="button-clear-filters"
+                  aria-label="Clear filters"
                 >
                   <X className="w-4 h-4" />
                 </Button>
