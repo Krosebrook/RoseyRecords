@@ -47,8 +47,9 @@ const PlaylistSongRow = memo(function PlaylistSongRow({ song, playlistId, onRemo
           size="icon"
           variant="ghost"
           onClick={() => onRemove(song.id)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
           data-testid={`button-remove-${song.id}`}
+          aria-label="Remove song"
         >
           <Trash2 className="w-4 h-4 text-destructive" />
         </Button>

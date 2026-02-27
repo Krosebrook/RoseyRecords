@@ -1,3 +1,3 @@
-## 2026-02-09 - Invisible Focus Trap
-**Learning:** Using `opacity-0 group-hover:opacity-100` on interactive elements (like buttons) creates a severe accessibility issue where keyboard users can focus an element but cannot see it.
-**Action:** Always pair `group-hover:opacity-100` with `focus:opacity-100` (or `focus-visible:opacity-100`) to ensure keyboard navigability.
+## 2026-02-14 - Invisible Focus Traps in List Items
+**Learning:** Elements with `opacity-0 group-hover:opacity-100` create invisible focus traps for keyboard users.
+**Action:** Always add `focus:opacity-100` alongside `group-hover:opacity-100` for interactive elements that appear on hover.
