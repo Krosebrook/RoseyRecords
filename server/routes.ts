@@ -190,7 +190,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs/:id/play
-  app.post(api.songs.incrementPlay.path, async (req, res) => {
+  app.post(api.songs.incrementPlay.path, writeRateLimiter.middleware, async (req, res) => {
     const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const songId = parseNumericId(idParam, res);
     if (songId === null) return;
