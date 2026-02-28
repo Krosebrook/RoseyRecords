@@ -9,3 +9,7 @@
 **Vulnerability:** Integration modules (Chat, Image Generation) defined in `server/replit_integrations/` exported route registration functions that did not enforce authentication. These routes were exposed publicly, allowing unauthenticated users to consume paid AI resources and access chat history.
 **Learning:** When splitting route definitions into multiple modules/files, it is easy to assume that authentication is handled globally or to forget to apply it to the new module.
 **Prevention:** Always verify authentication middleware is applied to *all* API routes, preferably by applying it to the entire router path (e.g., `app.use("/api/integrations", isAuthenticated)`) before registering sub-routes.
+## 2024-03-24 - Missing Rate Limiting on Database Write Endpoints
+**Vulnerability:** The `POST /api/songs/:id/play` endpoint lacked rate limiting middleware (`writeRateLimiter`), allowing for potential play count manipulation (artificial inflation) and minor DoS risks via database write spamming.
+**Learning:** Even utility-like endpoints that modify database state need to be protected. Developers may sometimes assume that simple increment operations are low risk and forget to apply standard rate limiting.
+**Prevention:** Always apply the appropriate rate limiting middleware (`writeRateLimiter` for writes/mutations, `aiRateLimiter` for generation) to all state-modifying or expensive endpoints during route definition.
