@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const { data: songs, isLoading } = useSongs();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [genreFilter, setGenreFilter] = useState<string>("all");
   const [moodFilter, setMoodFilter] = useState<string>("all");
 
@@ -29,16 +31,17 @@ export default function Dashboard() {
     if (!songs) return [];
     
     return songs.filter(song => {
-      const matchesSearch = searchQuery === "" || 
-        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.lyrics.toLowerCase().includes(searchQuery.toLowerCase());
+      // Use the debounced search query to prevent filtering on every keystroke
+      const matchesSearch = debouncedSearchQuery === "" ||
+        song.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        song.lyrics.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       
       const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
       
       return matchesSearch && matchesGenre && matchesMood;
     });
-  }, [songs, searchQuery, genreFilter, moodFilter]);
+  }, [songs, debouncedSearchQuery, genreFilter, moodFilter]);
 
   const hasActiveFilters = searchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
 
