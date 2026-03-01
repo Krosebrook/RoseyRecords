@@ -7,6 +7,17 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+
+// Helper to validate numeric IDs from route params securely
+function parseNumericId(value: string, res: Response): number | null {
+  const id = Number(value);
+  if (isNaN(id) || !Number.isInteger(id) || id < 1) {
+    res.status(400).json({ error: 'Invalid ID parameter' });
+    return null;
+  }
+  return id;
+}
+
 export function registerChatRoutes(app: Express): void {
   // Get all conversations
   app.get("/api/conversations", async (req: Request, res: Response) => {
@@ -22,7 +33,8 @@ export function registerChatRoutes(app: Express): void {
   // Get single conversation with messages
   app.get("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericId(req.params.id as string, res);
+      if (id === null) return;
       const conversation = await chatStorage.getConversation(id);
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
@@ -50,7 +62,8 @@ export function registerChatRoutes(app: Express): void {
   // Delete conversation
   app.delete("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericId(req.params.id as string, res);
+      if (id === null) return;
       await chatStorage.deleteConversation(id);
       res.status(204).send();
     } catch (error) {
@@ -62,7 +75,8 @@ export function registerChatRoutes(app: Express): void {
   // Send message and get AI response (streaming)
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
-      const conversationId = parseInt(req.params.id);
+      const conversationId = parseNumericId(req.params.id as string, res);
+      if (conversationId === null) return;
       const { content } = req.body;
 
       // Save user message
