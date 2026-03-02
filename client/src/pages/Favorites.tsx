@@ -85,6 +85,8 @@ const FavoriteSongCard = memo(function FavoriteSongCard({ song }: { song: Song }
               onClick={handleUnlike}
               disabled={isPending}
               data-testid={`button-unlike-${song.id}`}
+              aria-label="Remove from Favorites"
+              title="Remove from Favorites"
             >
               <Heart className="w-5 h-5 fill-red-500 text-red-500" />
             </Button>

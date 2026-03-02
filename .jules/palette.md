@@ -1,3 +1,3 @@
-## 2026-02-09 - Invisible Focus Trap
-**Learning:** Using `opacity-0 group-hover:opacity-100` on interactive elements (like buttons) creates a severe accessibility issue where keyboard users can focus an element but cannot see it.
-**Action:** Always pair `group-hover:opacity-100` with `focus:opacity-100` (or `focus-visible:opacity-100`) to ensure keyboard navigability.
+## 2024-05-19 - Missing Aria-labels and Titles on Icon-only Buttons
+**Learning:** Across the application's list components (e.g., Favorites, Playlists, Explore), `size="icon"` buttons were consistently missing both `aria-label` and `title` attributes. Without these, the buttons are invisible to screen readers and lack native hover tooltips for sighted users.
+**Action:** Always ensure that icon-only buttons include both `aria-label` (for screen readers) and `title` (for native tooltips) to guarantee full accessibility and a better user experience.

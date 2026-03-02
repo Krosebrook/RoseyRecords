@@ -49,6 +49,8 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
               onClick={handleLike}
               disabled={isPending}
               data-testid={`button-like-${song.id}`}
+              aria-label={isLiked ? "Unlike song" : "Like song"}
+              title={isLiked ? "Unlike song" : "Like song"}
             >
               <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
             </Button>
@@ -206,6 +208,8 @@ export default function Explore() {
                   onClick={clearFilters}
                   className="shrink-0"
                   data-testid="button-clear-filters"
+                  aria-label="Clear filters"
+                  title="Clear filters"
                 >
                   <X className="w-4 h-4" />
                 </Button>

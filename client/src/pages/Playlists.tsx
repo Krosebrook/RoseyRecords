@@ -49,6 +49,8 @@ const PlaylistCard = memo(function PlaylistCard({ playlist, onDelete, isDeleting
               disabled={isDeleting}
               className="opacity-0 group-hover:opacity-100 transition-opacity"
               data-testid={`button-delete-${playlist.id}`}
+              aria-label={`Delete playlist ${playlist.name}`}
+              title={`Delete playlist ${playlist.name}`}
             >
               <Trash2 className="w-4 h-4 text-destructive" />
             </Button>
