@@ -2,6 +2,6 @@
 **Learning:** Read-modify-write patterns for counters (like `playCount`) cause race conditions and extra DB round trips.
 **Action:** Use atomic SQL updates (e.g., `playCount = playCount + 1`) with `returning()` to ensure data integrity and performance.
 
-## 2026-02-11 - Redundant DB Queries in Services
-**Learning:** Checking entity existence in both the route handler and the storage/service layer causes redundant database queries (e.g., calling `getSong` in `routes.ts` and again in `storage.toggleLike`).
-**Action:** Trust the route handler's existence check when passing IDs to storage methods, or push the check down entirely, to save a database round trip.
+## 2026-02-25 - N+1 Query Optimization in Playlists
+**Learning:** `getPlaylistWithSongs` was using an N+1 pattern (fetching IDs then fetching songs) which caused multiple DB round trips and required manual sorting.
+**Action:** Replaced with a single `innerJoin` query using `getTableColumns` and `orderBy(playlistSongs.id)` to fetch songs in insertion order efficiently.

@@ -5,6 +5,9 @@ import { writeFile, unlink, readFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
+import { detectAudioFormat, type AudioFormat } from "../../utils";
+
+export { detectAudioFormat, type AudioFormat };
 
 export const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -46,6 +49,15 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   // OGG: OggS
   if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) {
     return "ogg";
+  }
+  // FLAC: fLaC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+    return "flac";
+  }
+  // AAC: ADTS header (FFF1 or FFF9 usually)
+  // Sync word is 12 bits of 1s (0xFFF)
+  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) {
+    return "aac";
   }
   return "unknown";
 }
@@ -104,7 +116,7 @@ export async function ensureCompatibleFormat(
   const detected = detectAudioFormat(audioBuffer);
   if (detected === "wav") return { buffer: audioBuffer, format: "wav" };
   if (detected === "mp3") return { buffer: audioBuffer, format: "mp3" };
-  // Convert WebM, MP4, OGG, or unknown to WAV
+  // Convert WebM, MP4, OGG, FLAC, AAC or unknown to WAV
   const wavBuffer = await convertToWav(audioBuffer);
   return { buffer: wavBuffer, format: "wav" };
 }

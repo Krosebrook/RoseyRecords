@@ -10,7 +10,9 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { detectAudioFormat } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
+import { verifyAudioFileSignature, sanitizeLog } from "./utils";
 
 // Helper to validate numeric IDs from route params
 function parseNumericId(value: string, res: Response): number | null {
@@ -80,7 +82,7 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  // Sentinel: Add rate limiting to AI endpoints
+  // Add rate limiting to AI endpoints
   app.use("/api/generate", aiRateLimiter.middleware);
   app.use("/api/audio", aiRateLimiter.middleware);
   app.use("/api/stable-audio", aiRateLimiter.middleware);
@@ -88,7 +90,7 @@ export async function registerRoutes(
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
 
-  // Sentinel: Protect integration routes (chat & image)
+  // Protect integration routes (chat & image)
   // These routes were previously unprotected, allowing unauthenticated access to AI resources
   app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware);
   app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware);
@@ -1161,7 +1163,7 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,

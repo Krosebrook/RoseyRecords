@@ -104,35 +104,45 @@ export class DatabaseStorage implements IStorage {
 
   // === Likes ===
   async toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }> {
-    const [existingLike] = await db.select()
-      .from(songLikes)
-      .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
-
-    // Note: server/routes.ts already verifies the song exists before calling toggleLike
-    if (existingLike) {
-      // Unlike
-      await db.delete(songLikes)
+    // Optimized: Atomic transaction with SQL updates to prevent race conditions and reduce round trips
+    return await db.transaction(async (tx) => {
+      const [existingLike] = await tx.select()
+        .from(songLikes)
         .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
 
-      // Optimized: Atomic decrement using SQL + RETURNING
-      const [updatedSong] = await db.update(songs)
-        .set({ likeCount: sql`GREATEST(0, COALESCE(${songs.likeCount}, 0) - 1)` })
-        .where(eq(songs.id, songId))
-        .returning({ likeCount: songs.likeCount });
+      if (existingLike) {
+        // Unlike
+        await tx.delete(songLikes)
+          .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
 
-      return { liked: false, likeCount: updatedSong?.likeCount || 0 };
-    } else {
-      // Like
-      await db.insert(songLikes).values({ userId, songId });
+        // Atomic decrement using SQL to ensure consistency
+        const [updatedSong] = await tx.update(songs)
+          .set({ likeCount: sql`GREATEST(COALESCE(${songs.likeCount}, 0) - 1, 0)` })
+          .where(eq(songs.id, songId))
+          .returning({ likeCount: songs.likeCount });
 
-      // Optimized: Atomic increment using SQL + RETURNING
-      const [updatedSong] = await db.update(songs)
-        .set({ likeCount: sql`COALESCE(${songs.likeCount}, 0) + 1` })
-        .where(eq(songs.id, songId))
-        .returning({ likeCount: songs.likeCount });
+        if (!updatedSong) {
+          throw new Error(`Song ${songId} not found`);
+        }
 
-      return { liked: true, likeCount: updatedSong?.likeCount || 0 };
-    }
+        return { liked: false, likeCount: updatedSong.likeCount ?? 0 };
+      } else {
+        // Like
+        await tx.insert(songLikes).values({ userId, songId });
+
+        // Atomic increment using SQL to ensure consistency
+        const [updatedSong] = await tx.update(songs)
+          .set({ likeCount: sql`COALESCE(${songs.likeCount}, 0) + 1` })
+          .where(eq(songs.id, songId))
+          .returning({ likeCount: songs.likeCount });
+
+        if (!updatedSong) {
+          throw new Error(`Song ${songId} not found`);
+        }
+
+        return { liked: true, likeCount: updatedSong.likeCount ?? 0 };
+      }
+    });
   }
 
   async isLiked(userId: string, songId: number): Promise<boolean> {
@@ -148,7 +158,7 @@ export class DatabaseStorage implements IStorage {
       .from(songs)
       .innerJoin(songLikes, eq(songs.id, songLikes.songId))
       .where(eq(songLikes.userId, userId))
-      .orderBy(desc(songLikes.createdAt).nullsLast());
+      .orderBy(desc(songLikes.createdAt));
   }
 
   // === Playlists ===
@@ -174,7 +184,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(playlistSongs.playlistId, id))
       .orderBy(playlistSongs.addedAt);
 
-    return { ...playlist, songs: songsList };
+    return { ...playlist, songs: songsList as Song[] };
   }
 
   async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
