@@ -10,6 +10,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { detectAudioFormat } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
 import { verifyAudioFileSignature, sanitizeLog } from "./utils";
 
@@ -1162,7 +1163,7 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,
