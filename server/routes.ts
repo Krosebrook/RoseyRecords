@@ -2,12 +2,14 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { detectAudioFormat, sanitizeLog } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
 
 // Helper to validate numeric IDs from route params
@@ -78,7 +80,7 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  // Sentinel: Add rate limiting to AI endpoints
+  // Add rate limiting to AI endpoints
   app.use("/api/generate", aiRateLimiter.middleware);
   app.use("/api/audio", aiRateLimiter.middleware);
   app.use("/api/stable-audio", aiRateLimiter.middleware);
@@ -86,7 +88,7 @@ export async function registerRoutes(
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
 
-  // Sentinel: Protect integration routes (chat & image)
+  // Protect integration routes (chat & image)
   // These routes were previously unprotected, allowing unauthenticated access to AI resources
   app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware);
   app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware);
@@ -190,7 +192,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs/:id/play
-  app.post(api.songs.incrementPlay.path, async (req, res) => {
+  app.post(api.songs.incrementPlay.path, writeRateLimiter.middleware, async (req, res) => {
     const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const songId = parseNumericId(idParam, res);
     if (songId === null) return;
@@ -1146,13 +1148,24 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
+      // Verify file signature (magic bytes) to prevent malicious uploads
+      const detectedFormat = detectAudioFormat(file.buffer);
+      if (detectedFormat === null) {
+        console.warn("File signature validation failed:", sanitizeLog({
+          userId: req.user?.claims?.sub,
+          fileSize: file.size,
+          claimedMimeType: file.mimetype,
+        }));
+        return res.status(400).json({ message: "Invalid or unsupported audio format" });
+      }
+
       const { prompt, duration } = req.body;
       if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
         return res.status(400).json({ message: "Prompt is required" });
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,

@@ -212,8 +212,9 @@ export default function Generate() {
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium" htmlFor="topic-input">Topic / Theme</label>
                   <button 
+                    type="button"
                     onClick={handleRandomPrompt}
-                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
                     data-testid="button-random-prompt"
                   >
                     <Shuffle className="w-3 h-3" />
@@ -222,6 +223,7 @@ export default function Generate() {
                 </div>
                 <div className="flex items-start gap-1">
                   <textarea 
+                    id="topic-input"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g. A love song about meeting someone at a coffee shop on a rainy day..."
