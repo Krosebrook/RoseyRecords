@@ -165,7 +165,7 @@ export class DatabaseStorage implements IStorage {
       .from(songs)
       .innerJoin(playlistSongs, eq(songs.id, playlistSongs.songId))
       .where(eq(playlistSongs.playlistId, id))
-      .orderBy(playlistSongs.id);
+      .orderBy(playlistSongs.addedAt);
 
     return { ...playlist, songs: songsList };
   }
