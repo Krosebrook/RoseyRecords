@@ -108,22 +108,30 @@ export class DatabaseStorage implements IStorage {
       .from(songLikes)
       .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
 
-    const song = await this.getSong(songId);
-    if (!song) return { liked: false, likeCount: 0 };
-
+    // Note: server/routes.ts already verifies the song exists before calling toggleLike
     if (existingLike) {
       // Unlike
       await db.delete(songLikes)
         .where(and(eq(songLikes.userId, userId), eq(songLikes.songId, songId)));
-      const newCount = Math.max(0, (song.likeCount || 0) - 1);
-      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
-      return { liked: false, likeCount: newCount };
+
+      // Optimized: Atomic decrement using SQL + RETURNING
+      const [updatedSong] = await db.update(songs)
+        .set({ likeCount: sql`GREATEST(0, COALESCE(${songs.likeCount}, 0) - 1)` })
+        .where(eq(songs.id, songId))
+        .returning({ likeCount: songs.likeCount });
+
+      return { liked: false, likeCount: updatedSong?.likeCount || 0 };
     } else {
       // Like
       await db.insert(songLikes).values({ userId, songId });
-      const newCount = (song.likeCount || 0) + 1;
-      await db.update(songs).set({ likeCount: newCount }).where(eq(songs.id, songId));
-      return { liked: true, likeCount: newCount };
+
+      // Optimized: Atomic increment using SQL + RETURNING
+      const [updatedSong] = await db.update(songs)
+        .set({ likeCount: sql`COALESCE(${songs.likeCount}, 0) + 1` })
+        .where(eq(songs.id, songId))
+        .returning({ likeCount: songs.likeCount });
+
+      return { liked: true, likeCount: updatedSong?.likeCount || 0 };
     }
   }
 
