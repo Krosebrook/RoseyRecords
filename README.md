@@ -126,6 +126,16 @@ harmoniq/
 - `npm run db:push` - Push schema changes to database
 - `npm run db:studio` - Open Drizzle Studio
 
+## Branch Management
+
+This repository includes automated merge tooling:
+
+- `scripts/merge-manager.sh` - Automated merge orchestration
+- `scripts/pre-merge-check.sh` - Validation before merge
+- `scripts/cleanup-branches.sh` - Post-merge cleanup
+
+See `docs/MERGE_EXECUTION_GUIDE.md` for complete instructions.
+
 ## License
 
 MIT License - See LICENSE file for details.
