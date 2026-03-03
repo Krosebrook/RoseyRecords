@@ -1,10 +1,15 @@
 import { Link } from "wouter";
-import { Music, Calendar, Trash2, Globe, Lock } from "lucide-react";
+import { Music, Calendar, Trash2, Globe, Lock, Loader2 } from "lucide-react";
 import { type Song } from "@shared/schema";
 import { format } from "date-fns";
 import { useDeleteSong } from "@/hooks/use-songs";
 import { Button } from "@/components/ui/button";
 import { memo } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,30 +50,48 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
             </div>
             
             <div className="flex items-center gap-1 relative z-20 pointer-events-auto">
-              {song.isPublic ? (
-                <span className="p-2 text-primary" title="Public">
-                  <Globe className="w-4 h-4" />
-                </span>
-              ) : (
-                <span className="p-2 text-muted-foreground" title="Private">
-                  <Lock className="w-4 h-4" />
-                </span>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {song.isPublic ? (
+                    <span className="p-2 text-primary cursor-default" tabIndex={0} role="img" aria-label="Public song">
+                      <Globe className="w-4 h-4" />
+                    </span>
+                  ) : (
+                    <span className="p-2 text-muted-foreground cursor-default" tabIndex={0} role="img" aria-label="Private song">
+                      <Lock className="w-4 h-4" />
+                    </span>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{song.isPublic ? "Public - visible to everyone" : "Private - only visible to you"}</p>
+                </TooltipContent>
+              </Tooltip>
 
               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={(e) => e.stopPropagation()}
-                    disabled={isPending}
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-                    data-testid={`button-delete-${song.id}`}
-                    aria-label="Delete song"
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </AlertDialogTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isPending}
+                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        data-testid={`button-delete-${song.id}`}
+                        aria-label="Delete song"
+                      >
+                        {isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete song</p>
+                  </TooltipContent>
+                </Tooltip>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Song</AlertDialogTitle>
