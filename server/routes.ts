@@ -8,6 +8,7 @@ import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
 
@@ -1148,11 +1149,10 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
-      // Sentinel: Validate file content using magic bytes
+      // Sentinel: Validate file content using magic bytes to prevent malicious uploads
       const detectedFormat = detectAudioFormat(file.buffer);
-      if (!detectedFormat) {
-        console.error(`Invalid file format detected. Mime: ${file.mimetype}`);
-        return res.status(400).json({ message: "Invalid audio file format. Please upload a valid audio file." });
+      if (detectedFormat === "unknown") {
+        return res.status(400).json({ message: "Invalid or unsupported audio format" });
       }
 
       const { prompt, duration } = req.body;
