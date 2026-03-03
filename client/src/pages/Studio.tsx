@@ -2368,6 +2368,7 @@ export default function Studio() {
                           data-testid={`piano-key-${key.note.replace('#', 'sharp')}`}
                           aria-label={`Note ${key.note}`}
                           aria-pressed={selectedNotes.includes(key.note)}
+                          title={`Note ${key.note}`}
                         >
                           {!key.black && (
                             <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-medium">
