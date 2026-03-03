@@ -121,7 +121,11 @@ export class DatabaseStorage implements IStorage {
           .where(eq(songs.id, songId))
           .returning({ likeCount: songs.likeCount });
 
-        return { liked: false, likeCount: updatedSong?.likeCount ?? 0 };
+        if (!updatedSong) {
+          throw new Error(`Song ${songId} not found`);
+        }
+
+        return { liked: false, likeCount: updatedSong.likeCount ?? 0 };
       } else {
         // Like
         await tx.insert(songLikes).values({ userId, songId });
@@ -132,7 +136,11 @@ export class DatabaseStorage implements IStorage {
           .where(eq(songs.id, songId))
           .returning({ likeCount: songs.likeCount });
 
-        return { liked: true, likeCount: updatedSong?.likeCount ?? 0 };
+        if (!updatedSong) {
+          throw new Error(`Song ${songId} not found`);
+        }
+
+        return { liked: true, likeCount: updatedSong.likeCount ?? 0 };
       }
     });
   }
