@@ -26,6 +26,7 @@ export interface IStorage {
   toggleLike(userId: string, songId: number): Promise<{ liked: boolean; likeCount: number }>;
   isLiked(userId: string, songId: number): Promise<boolean>;
   getLikedSongs(userId: string): Promise<Song[]>;
+  getLikedSongIds(userId: string): Promise<number[]>;
   
   // Playlist CRUD
   getPlaylists(userId: string): Promise<Playlist[]>;
