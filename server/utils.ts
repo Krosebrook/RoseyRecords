@@ -34,6 +34,9 @@ export function sanitizeLog(data: any): any {
     // Check if key matches any sensitive pattern
     if (SENSITIVE_PATTERNS.some((pattern) => pattern.test(key))) {
       sanitized[key] = "***REDACTED***";
+    } else if (typeof sanitized[key] === "string") {
+      // Prevent log injection by removing newlines from strings
+      sanitized[key] = sanitized[key].replace(/[\r\n]/g, '');
     } else if (typeof sanitized[key] === "object" && sanitized[key] !== null) {
       // Recursively sanitize objects
       sanitized[key] = sanitizeLog(sanitized[key]);
@@ -43,51 +46,50 @@ export function sanitizeLog(data: any): any {
   return sanitized;
 }
 
-export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "flac" | "aac" | "unknown";
+export function detectAudioFormat(buffer: Buffer): string | null {
+  if (!buffer || buffer.length < 4) return null;
 
-/**
- * Detect audio format from buffer magic bytes.
- * Supports: WAV, MP3, WebM (Chrome/Firefox), MP4/M4A/MOV (Safari/iOS), OGG, FLAC, AAC
- */
-export function detectAudioFormat(buffer: Buffer): AudioFormat {
-  if (buffer.length < 12) return "unknown";
+  // WAV: RIFF .... WAVE
+  if (buffer.length >= 12 &&
+      buffer.toString('hex', 0, 4) === '52494646' &&
+      buffer.toString('hex', 8, 12) === '57415645') {
+    return 'audio/wav';
+  }
 
-  // WAV: RIFF....WAVE
-  // WAV: RIFF....WAVE
-  if (
-    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
-    buffer[8] === 0x57 && buffer[9] === 0x41 && buffer[10] === 0x56 && buffer[11] === 0x45
-  ) {
-    return "wav";
+  // MP3: ID3
+  if (buffer.toString('hex', 0, 3) === '494433') {
+    return 'audio/mpeg';
   }
-  // WebM: EBML header
-  if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
-    return "webm";
+
+  // AAC: ADTS Header
+  // Sync (12 bits) means first 4 bits of byte 1 are 1.
+  // Layer (bits 1,2 of byte 1) is 00.
+  // Mask 0xF6 (1111 0110) should result in 0xF0 (1111 0000)
+  if (buffer[0] === 0xFF && (buffer[1] & 0xF6) === 0xF0) {
+    return 'audio/aac';
   }
-  // MP3: ID3 tag or frame sync
-  if (
-    (buffer[0] === 0xff && (buffer[1] === 0xfb || buffer[1] === 0xfa || buffer[1] === 0xf3)) ||
-    (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33)
-  ) {
-    return "mp3";
+
+  // MP3: Frame Sync (11 bits) means first 3 bits of byte 1 are 1.
+  // Layer (bits 1,2 of byte 1) is NOT 00.
+  if (buffer[0] === 0xFF && (buffer[1] & 0xE0) === 0xE0 && (buffer[1] & 0x06) !== 0x00) {
+    return 'audio/mpeg';
   }
-  // MP4/M4A/MOV: ....ftyp
-  if (buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) {
-    return "mp4";
-  }
+
   // OGG: OggS
-  if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) {
-    return "ogg";
-  }
-  // FLAC: fLaC
-  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
-    return "flac";
-  }
-  // AAC: ADTS header (FFF1 or FFF9 usually)
-  // Sync word 111111111111 (12 bits)
-  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) {
-    return "aac";
+  if (buffer.toString('utf8', 0, 4) === 'OggS') {
+    return 'audio/ogg';
   }
 
-  return "unknown";
+  // FLAC: fLaC
+  if (buffer.toString('utf8', 0, 4) === 'fLaC') {
+    return 'audio/flac';
+  }
+
+  // M4A/AAC (MP4 container): ftypM4A or ftypmp42 or similar
+  // Looking for 'ftyp' at offset 4
+  if (buffer.length >= 8 && buffer.toString('utf8', 4, 8) === 'ftyp') {
+    return 'audio/mp4'; // Covers m4a, mp4 audio
+  }
+
+  return null;
 }
