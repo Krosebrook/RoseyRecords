@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
+import { eq, desc, and, sql, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
@@ -160,13 +160,11 @@ export class DatabaseStorage implements IStorage {
     const playlist = await this.getPlaylist(id);
     if (!playlist) return undefined;
 
-    // Optimized: Single query using innerJoin to fetch songs directly in insertion order (by playlistSongs.id)
-    // This replaces the previous N+1 pattern of fetching IDs then fetching songs
     const songsList = await db.select(getTableColumns(songs))
       .from(songs)
       .innerJoin(playlistSongs, eq(songs.id, playlistSongs.songId))
       .where(eq(playlistSongs.playlistId, id))
-      .orderBy(playlistSongs.id);
+      .orderBy(playlistSongs.addedAt);
 
     return { ...playlist, songs: songsList as Song[] };
   }
