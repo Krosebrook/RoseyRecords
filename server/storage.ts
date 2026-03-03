@@ -160,24 +160,15 @@ export class DatabaseStorage implements IStorage {
     const playlist = await this.getPlaylist(id);
     if (!playlist) return undefined;
 
-    const playlistSongRows = await db.select({ songId: playlistSongs.songId })
-      .from(playlistSongs)
-      .where(eq(playlistSongs.playlistId, id));
-
-    const songIds = playlistSongRows.map(r => r.songId).filter(id => typeof id === 'number' && !isNaN(id));
-
-    if (songIds.length === 0) {
-      return { ...playlist, songs: [] };
-    }
-
-    const songsResult = await db.select()
+    // Optimized: Single query using innerJoin to fetch songs directly in insertion order (by playlistSongs.id)
+    // This replaces the previous N+1 pattern of fetching IDs then fetching songs
+    const songsList = await db.select(getTableColumns(songs))
       .from(songs)
-      .where(inArray(songs.id, songIds));
+      .innerJoin(playlistSongs, eq(songs.id, playlistSongs.songId))
+      .where(eq(playlistSongs.playlistId, id))
+      .orderBy(playlistSongs.id);
 
-    const songMap = new Map(songsResult.map(s => [s.id, s]));
-    const songsList = songIds.map(id => songMap.get(id)).filter((s): s is Song => !!s);
-
-    return { ...playlist, songs: songsList };
+    return { ...playlist, songs: songsList as Song[] };
   }
 
   async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
