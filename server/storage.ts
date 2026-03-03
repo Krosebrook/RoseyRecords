@@ -160,14 +160,13 @@ export class DatabaseStorage implements IStorage {
     const playlist = await this.getPlaylist(id);
     if (!playlist) return undefined;
 
-    // Optimized: Fetch songs in a single query using join, preserving order
     const songsList = await db.select(getTableColumns(songs))
       .from(songs)
       .innerJoin(playlistSongs, eq(songs.id, playlistSongs.songId))
       .where(eq(playlistSongs.playlistId, id))
-      .orderBy(playlistSongs.id);
+      .orderBy(playlistSongs.addedAt);
 
-    return { ...playlist, songs: songsList };
+    return { ...playlist, songs: songsList as Song[] };
   }
 
   async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
