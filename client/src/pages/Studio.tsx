@@ -1655,6 +1655,7 @@ export default function Studio() {
                               onClick={handlePlayPause}
                               className="rounded-full bg-primary/20 backdrop-blur hover-elevate"
                               data-testid="button-play-pause"
+                              aria-label={isPlaying ? "Pause" : "Play"}
                             >
                               {isPlaying ? (
                                 <Pause className="w-6 h-6" />
@@ -1668,6 +1669,7 @@ export default function Studio() {
                               onClick={handleToggleMute}
                               className="rounded-full bg-primary/10"
                               data-testid="button-mute"
+                              aria-label={isMuted ? "Unmute" : "Mute"}
                             >
                               {isMuted ? (
                                 <VolumeX className="w-4 h-4" />
@@ -1683,6 +1685,7 @@ export default function Studio() {
                                   className="rounded-full bg-primary/10"
                                   asChild
                                   data-testid="button-download"
+                                  aria-label="Download audio"
                                 >
                                   <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
                                     <Download className="w-4 h-4" />
@@ -1699,6 +1702,7 @@ export default function Studio() {
                                   disabled={isSavingSong || savedToLibrary}
                                   data-testid="button-save-library"
                                   title={savedToLibrary ? "Saved to library" : "Save to library"}
+                                  aria-label={savedToLibrary ? "Saved to library" : "Save to library"}
                                 >
                                   {isSavingSong ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1773,6 +1777,7 @@ export default function Studio() {
                     onClick={handleGetProductionTip}
                     disabled={isGettingTip}
                     data-testid="button-get-tip"
+                    aria-label="Get new production tip"
                   >
                     {isGettingTip ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
