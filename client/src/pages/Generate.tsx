@@ -32,6 +32,7 @@ export default function Generate() {
   const [mood, setMood] = useState<string>("Happy");
   const [generatedContent, setGeneratedContent] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [isRandomLoading, setIsRandomLoading] = useState(false);
   
   const [aiEngine, setAiEngine] = useState<AIEngine>("openai");
   const [isGeneratingLocal, setIsGeneratingLocal] = useState(false);
@@ -95,9 +96,14 @@ export default function Generate() {
   };
 
   const handleRandomPrompt = async () => {
-    const prompt = await getRandomPrompt();
-    if (prompt) {
-      setTopic(prompt);
+    setIsRandomLoading(true);
+    try {
+      const prompt = await getRandomPrompt();
+      if (prompt) {
+        setTopic(prompt);
+      }
+    } finally {
+      setIsRandomLoading(false);
     }
   };
 
@@ -211,15 +217,18 @@ export default function Generate() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium" htmlFor="topic-input">Topic / Theme</label>
-                  <button 
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={handleRandomPrompt}
-                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+                    disabled={loading || isRandomLoading}
+                    className="text-xs text-primary hover:text-primary/80 h-auto p-0 hover:bg-transparent"
                     data-testid="button-random-prompt"
                   >
-                    <Shuffle className="w-3 h-3" />
+                    {isRandomLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Shuffle className="w-3 h-3" />}
                     Random idea
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-start gap-1">
                   <textarea 
