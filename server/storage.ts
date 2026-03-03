@@ -10,7 +10,7 @@ import {
   type Playlist,
   type InsertPlaylist,
 } from "@shared/schema";
-import { eq, desc, and, inArray, sql, getTableColumns } from "drizzle-orm";
+import { eq, desc, and, sql, getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Song CRUD
