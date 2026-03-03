@@ -96,6 +96,11 @@ const audioTestCases = [
     expected: "audio/aac"
   },
   {
+    name: "Reject generic MP4 (isom brand)",
+    input: Buffer.from("0000002066747970" + "69736f6d", "hex"), // ftyp + isom brand
+    expected: null
+  },
+  {
     name: "Reject Text File",
     input: Buffer.from("Just a text file", "utf8"),
     expected: null
