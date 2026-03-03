@@ -14,3 +14,7 @@
 **Vulnerability:** The `/api/audio/generate-with-reference` route trusted user-provided `Content-Type` headers (via `multer`) to validate uploaded files, potentially allowing execution of malicious scripts disguised as audio.
 **Learning:** `multer`'s `fileFilter` relies on the client's `Content-Type` header, which is easily spoofed. True file validation requires inspecting the file content (magic bytes).
 **Prevention:** Implement server-side content validation using magic bytes (file signatures) for all file uploads, regardless of the client-provided MIME type.
+## 2024-05-18 - [Proxy Rate Limiting Bypass & False Positives]
+**Vulnerability:** IP-based rate limiting was using `req.ip` without Express's `trust proxy` configured. Behind Replit's reverse proxy, all unauthenticated requests appeared to originate from the same internal proxy IP.
+**Learning:** This leads to a denial of service (false positive) where one user exceeding the rate limit would ban all unauthenticated users. Conversely, it might allow a distributed attack to bypass per-user limits.
+**Prevention:** Always configure `app.set("trust proxy", 1);` in Express when deploying behind a reverse proxy (like Replit, Heroku, or Nginx) to ensure `req.ip` reflects the actual client IP (via `X-Forwarded-For`).

@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { sanitizeLog } from "./utils";
 
 const app = express();
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 // Sentinel: Add security headers
@@ -77,7 +78,10 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Hide internal error details in production
+    const message = (process.env.NODE_ENV === "production" && status >= 500)
+      ? "Internal Server Error"
+      : (err.message || "Internal Server Error");
 
     console.error("Internal Server Error:", err);
 
