@@ -166,7 +166,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(playlistSongs.playlistId, id))
       .orderBy(playlistSongs.addedAt);
 
-    return { ...playlist, songs: songsList };
+    return { ...playlist, songs: songsList as Song[] };
   }
 
   async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
