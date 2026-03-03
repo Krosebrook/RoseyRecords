@@ -34,8 +34,7 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
       {/* Main card link overlay */}
       <Link
         href={`/songs/${song.id}`}
-        className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl"
-        aria-label={`View song ${song.title}`}
+        className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
       >
         <span className="sr-only">View song {song.title}</span>
       </Link>
