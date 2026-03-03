@@ -2,6 +2,7 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { detectAudioFormat } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";

@@ -40,3 +40,51 @@ export function sanitizeLog(data: any): any {
 
   return sanitized;
 }
+
+export function detectAudioFormat(buffer: Buffer): string | null {
+  if (!buffer || buffer.length < 4) return null;
+
+  // WAV: RIFF .... WAVE
+  if (buffer.length >= 12 &&
+      buffer.toString('hex', 0, 4) === '52494646' &&
+      buffer.toString('hex', 8, 12) === '57415645') {
+    return 'audio/wav';
+  }
+
+  // MP3: ID3
+  if (buffer.toString('hex', 0, 3) === '494433') {
+    return 'audio/mpeg';
+  }
+
+  // AAC: ADTS Header
+  // Sync (12 bits) means first 4 bits of byte 1 are 1.
+  // Layer (bits 1,2 of byte 1) is 00.
+  // Mask 0xF6 (1111 0110) should result in 0xF0 (1111 0000)
+  if (buffer[0] === 0xFF && (buffer[1] & 0xF6) === 0xF0) {
+    return 'audio/aac';
+  }
+
+  // MP3: Frame Sync (11 bits) means first 3 bits of byte 1 are 1.
+  // Layer (bits 1,2 of byte 1) is NOT 00.
+  if (buffer[0] === 0xFF && (buffer[1] & 0xE0) === 0xE0 && (buffer[1] & 0x06) !== 0x00) {
+    return 'audio/mpeg';
+  }
+
+  // OGG: OggS
+  if (buffer.toString('utf8', 0, 4) === 'OggS') {
+    return 'audio/ogg';
+  }
+
+  // FLAC: fLaC
+  if (buffer.toString('utf8', 0, 4) === 'fLaC') {
+    return 'audio/flac';
+  }
+
+  // M4A/AAC (MP4 container): ftypM4A or ftypmp42 or similar
+  // Looking for 'ftyp' at offset 4
+  if (buffer.length >= 8 && buffer.toString('utf8', 4, 8) === 'ftyp') {
+    return 'audio/mp4'; // Covers m4a, mp4 audio
+  }
+
+  return null;
+}
