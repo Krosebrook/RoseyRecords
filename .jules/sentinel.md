@@ -10,7 +10,7 @@
 **Learning:** When splitting route definitions into multiple modules/files, it is easy to assume that authentication is handled globally or to forget to apply it to the new module.
 **Prevention:** Always verify authentication middleware is applied to *all* API routes, preferably by applying it to the entire router path (e.g., `app.use("/api/integrations", isAuthenticated)`) before registering sub-routes.
 
-## 2026-02-27 - Insecure File Upload Validation (Magic Bytes)
-**Vulnerability:** The `generate-with-reference` endpoint relied solely on Multer's `fileFilter` which checks the client-provided `Content-Type` header. Malicious users could bypass this by sending a non-audio file with a spoofed `audio/mpeg` header.
-**Learning:** Multer's `fileFilter` is not a security control for file content; it only filters based on metadata. Real validation requires inspecting the file buffer (magic bytes).
-**Prevention:** Always implement server-side magic byte detection (e.g., checking for `RIFF`, `ID3`, `fLaC`, `ADTS`) for file uploads before processing them, regardless of the claimed MIME type.
+## 2026-02-27 - Insecure File Upload Validation
+**Vulnerability:** The `/api/audio/generate-with-reference` route trusted user-provided `Content-Type` headers (via `multer`) to validate uploaded files, potentially allowing execution of malicious scripts disguised as audio.
+**Learning:** `multer`'s `fileFilter` relies on the client's `Content-Type` header, which is easily spoofed. True file validation requires inspecting the file content (magic bytes).
+**Prevention:** Implement server-side content validation using magic bytes (file signatures) for all file uploads, regardless of the client-provided MIME type.
