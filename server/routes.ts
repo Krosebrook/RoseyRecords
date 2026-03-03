@@ -2,14 +2,15 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { detectAudioFormat, sanitizeLog } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
-import { verifyAudioFileSignature, sanitizeLog } from "./utils";
 
 // Helper to validate numeric IDs from route params
 function parseNumericId(value: string, res: Response): number | null {
@@ -79,7 +80,7 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  // Sentinel: Add rate limiting to AI endpoints
+  // Add rate limiting to AI endpoints
   app.use("/api/generate", aiRateLimiter.middleware);
   app.use("/api/audio", aiRateLimiter.middleware);
   app.use("/api/stable-audio", aiRateLimiter.middleware);
@@ -87,7 +88,7 @@ export async function registerRoutes(
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
 
-  // Sentinel: Protect integration routes (chat & image)
+  // Protect integration routes (chat & image)
   // These routes were previously unprotected, allowing unauthenticated access to AI resources
   app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware);
   app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware);
@@ -191,7 +192,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs/:id/play
-  app.post(api.songs.incrementPlay.path, async (req, res) => {
+  app.post(api.songs.incrementPlay.path, writeRateLimiter.middleware, async (req, res) => {
     const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const songId = parseNumericId(idParam, res);
     if (songId === null) return;
@@ -209,8 +210,7 @@ export async function registerRoutes(
   // GET /api/songs/liked-ids - Get user's liked song IDs
   app.get('/api/songs/liked-ids', isAuthenticated, async (req: any, res) => {
     const userId = req.user.claims.sub;
-    const likedSongs = await storage.getLikedSongs(userId);
-    const ids = likedSongs.map(s => s.id);
+    const ids = await storage.getLikedSongIds(userId);
     res.json({ likedIds: ids });
   });
 
@@ -1148,15 +1148,15 @@ Also suggest a fitting title for the song.`;
         return res.status(400).json({ message: "Reference audio file is required" });
       }
 
-      // Verify file signature (magic bytes)
-      if (!verifyAudioFileSignature(file.buffer)) {
-        console.error("File signature validation failed:", sanitizeLog({
-          userId: req.user.claims.sub,
+      // Verify file signature (magic bytes) to prevent malicious uploads
+      const detectedFormat = detectAudioFormat(file.buffer);
+      if (detectedFormat === null) {
+        console.warn("File signature validation failed:", sanitizeLog({
+          userId: req.user?.claims?.sub,
           fileSize: file.size,
-          mimeType: file.mimetype,
-          originalName: file.originalname
+          claimedMimeType: file.mimetype,
         }));
-        return res.status(400).json({ message: "Invalid file signature. Please upload a valid audio file." });
+        return res.status(400).json({ message: "Invalid or unsupported audio format" });
       }
 
       const { prompt, duration } = req.body;
@@ -1165,7 +1165,7 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
+      const dataUrl = `data:${mimeType};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,

@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 export function sanitizeLog(data: any): any {
   if (!data || typeof data !== "object") {
     return data;
@@ -44,58 +46,53 @@ export function sanitizeLog(data: any): any {
   return sanitized;
 }
 
-/**
- * Validates audio file signatures to prevent malicious uploads.
- * Checks for MP3, WAV, OGG, FLAC, and AAC/M4A magic bytes.
- */
-export function verifyAudioFileSignature(buffer: Buffer): boolean {
-  if (!buffer || buffer.length < 12) return false;
+export function detectAudioFormat(buffer: Buffer): string | null {
+  if (!buffer || buffer.length < 4) return null;
 
-  const header = buffer.subarray(0, 12);
+  // WAV: RIFF .... WAVE
+  if (buffer.length >= 12 &&
+      buffer.toString('hex', 0, 4) === '52494646' &&
+      buffer.toString('hex', 8, 12) === '57415645') {
+    return 'audio/wav';
+  }
 
-  // Magic bytes constants
-  const SIGNATURES = {
-    ID3: Buffer.from([0x49, 0x44, 0x33]),
-    RIFF: Buffer.from([0x52, 0x49, 0x46, 0x46]),
-    WAVE: Buffer.from([0x57, 0x41, 0x56, 0x45]),
-    OGG: Buffer.from([0x4F, 0x67, 0x67, 0x53]),
-    FLAC: Buffer.from([0x66, 0x4C, 0x61, 0x43]),
-    FTYP: Buffer.from([0x66, 0x74, 0x79, 0x70]),
-  };
+  // MP3: ID3
+  if (buffer.toString('hex', 0, 3) === '494433') {
+    return 'audio/mpeg';
+  }
 
-  // MP3: ID3v2 tag or Sync Frame.
-  // Sync frame: FF Fx (MPEG-1 Layer III: FF FB/FA, MPEG-2 Layer III: FF F3/F2, MPEG-2.5 Layer III: FF E3/E2)
-  // We explicitly check for Layer III to avoid false positives like UTF-16 LE BOM (FF FE) which looks like MPEG-1 Layer I.
-  const isMp3 =
-    header.subarray(0, 3).equals(SIGNATURES.ID3) ||
-    (header[0] === 0xff && (
-      header[1] === 0xfb || header[1] === 0xfa || // MPEG-1 Layer III
-      header[1] === 0xf3 || header[1] === 0xf2 || // MPEG-2 Layer III
-      header[1] === 0xe3 || header[1] === 0xe2    // MPEG-2.5 Layer III
-    ));
+  // AAC: ADTS Header
+  // Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
+  // 0xF1 = MPEG-4 Audio without CRC, 0xF9 = MPEG-4 Audio with CRC
+  if (buffer[0] === 0xFF && (buffer[1] === 0xF1 || buffer[1] === 0xF9)) {
+    return 'audio/aac';
+  }
 
-  // WAV: RIFF header with WAVE format
-  const isWav =
-    header.subarray(0, 4).equals(SIGNATURES.RIFF) &&
-    header.subarray(8, 12).equals(SIGNATURES.WAVE);
+  // MP3: Frame Sync (11 bits) means first 3 bits of byte 1 are 1.
+  // Layer (bits 1,2 of byte 1) is NOT 00.
+  if (buffer[0] === 0xFF && (buffer[1] & 0xE0) === 0xE0 && (buffer[1] & 0x06) !== 0x00) {
+    return 'audio/mpeg';
+  }
 
-  // OGG: OggS capture pattern
-  const isOgg = header.subarray(0, 4).equals(SIGNATURES.OGG);
+  // OGG: OggS
+  if (buffer.toString('utf8', 0, 4) === 'OggS') {
+    return 'audio/ogg';
+  }
 
-  // FLAC: fLaC marker
-  const isFlac = header.subarray(0, 4).equals(SIGNATURES.FLAC);
+  // FLAC: fLaC
+  if (buffer.toString('utf8', 0, 4) === 'fLaC') {
+    return 'audio/flac';
+  }
 
-  // M4A/MP4: ftyp box at offset 4 AND valid audio brand
-  // Brands: M4A, M4B, M4P
-  const isM4a =
-    header.subarray(4, 8).equals(SIGNATURES.FTYP) &&
-    (header.subarray(8, 12).equals(Buffer.from("M4A ")) ||
-     header.subarray(8, 12).equals(Buffer.from("M4B ")) ||
-     header.subarray(8, 12).equals(Buffer.from("M4P ")));
+  // M4A: ISO BMFF with 'ftyp' at offset 4 and an audio-specific major brand
+  // Only accept M4A , M4B , M4P  brands; reject generic MP4 brands like 'isom'
+  if (buffer.length >= 12 && buffer.toString('utf8', 4, 8) === 'ftyp') {
+    const majorBrand = buffer.toString('ascii', 8, 12);
+    const allowedM4ABrands = new Set(['M4A ', 'M4B ', 'M4P ']);
+    if (allowedM4ABrands.has(majorBrand)) {
+      return 'audio/mp4';
+    }
+  }
 
-  // AAC ADTS: Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
-  // We check specifically for MPEG-4 (0xF1) and MPEG-2 (0xF9) to avoid overlap with MP3 sync frames
-  const isAacAdts = header[0] === 0xff && (header[1] === 0xf1 || header[1] === 0xf9);
-
-  return isMp3 || isWav || isOgg || isFlac || isM4a || isAacAdts;
+  return null;
 }
