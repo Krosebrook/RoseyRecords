@@ -11,6 +11,7 @@ import { registerImageRoutes } from "./replit_integrations/image";
 import { detectAudioFormat } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
+import { verifyAudioFileSignature, sanitizeLog } from "./utils";
 
 // Helper to validate numeric IDs from route params
 function parseNumericId(value: string, res: Response): number | null {
