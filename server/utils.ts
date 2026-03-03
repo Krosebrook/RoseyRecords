@@ -62,10 +62,9 @@ export function detectAudioFormat(buffer: Buffer): string | null {
   }
 
   // AAC: ADTS Header
-  // Sync (12 bits) means first 4 bits of byte 1 are 1.
-  // Layer (bits 1,2 of byte 1) is 00.
-  // Mask 0xF6 (1111 0110) should result in 0xF0 (1111 0000)
-  if (buffer[0] === 0xFF && (buffer[1] & 0xF6) === 0xF0) {
+  // Sync word is 0xFFF in the first 12 bits (byte 0 = 0xFF, high nibble of byte 1 = 0xF)
+  // 0xF1 = MPEG-4 Audio without CRC, 0xF9 = MPEG-4 Audio with CRC
+  if (buffer[0] === 0xFF && (buffer[1] === 0xF1 || buffer[1] === 0xF9)) {
     return 'audio/aac';
   }
 
@@ -85,10 +84,14 @@ export function detectAudioFormat(buffer: Buffer): string | null {
     return 'audio/flac';
   }
 
-  // M4A/AAC (MP4 container): ftypM4A or ftypmp42 or similar
-  // Looking for 'ftyp' at offset 4
-  if (buffer.length >= 8 && buffer.toString('utf8', 4, 8) === 'ftyp') {
-    return 'audio/mp4'; // Covers m4a, mp4 audio
+  // M4A: ISO BMFF with 'ftyp' at offset 4 and an audio-specific major brand
+  // Only accept M4A , M4B , M4P  brands; reject generic MP4 brands like 'isom'
+  if (buffer.length >= 12 && buffer.toString('utf8', 4, 8) === 'ftyp') {
+    const majorBrand = buffer.toString('ascii', 8, 12);
+    const allowedM4ABrands = new Set(['M4A ', 'M4B ', 'M4P ']);
+    if (allowedM4ABrands.has(majorBrand)) {
+      return 'audio/mp4';
+    }
   }
 
   return null;
