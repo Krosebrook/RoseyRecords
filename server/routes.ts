@@ -2,11 +2,13 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { detectAudioFormat } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { detectAudioFormat } from "./replit_integrations/audio/client";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
 import OpenAI from "openai";
 
@@ -1145,6 +1147,12 @@ Also suggest a fitting title for the song.`;
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "Reference audio file is required" });
+      }
+
+      // Sentinel: Validate file content using magic bytes to prevent malicious uploads
+      const detectedFormat = detectAudioFormat(file.buffer);
+      if (detectedFormat === "unknown") {
+        return res.status(400).json({ message: "Invalid or unsupported audio format" });
       }
 
       const { prompt, duration } = req.body;
