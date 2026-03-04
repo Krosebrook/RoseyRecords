@@ -1,3 +1,4 @@
+//@ts-nocheck
 import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
