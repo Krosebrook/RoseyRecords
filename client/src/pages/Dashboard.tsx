@@ -112,6 +112,8 @@ export default function Dashboard() {
                   onClick={clearFilters}
                   className="shrink-0"
                   data-testid="button-clear-filters"
+                  aria-label="Clear filters"
+                  title="Clear filters"
                 >
                   <X className="w-4 h-4" />
                 </Button>

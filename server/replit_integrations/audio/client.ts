@@ -5,9 +5,9 @@ import { writeFile, unlink, readFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
-import { detectAudioFormat, type AudioFormat } from "../../utils";
+import { type AudioFormat } from "../../utils";
 
-export { detectAudioFormat, type AudioFormat };
+export { type AudioFormat };
 
 export const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
