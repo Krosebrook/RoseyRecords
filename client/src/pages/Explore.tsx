@@ -153,7 +153,7 @@ export default function Explore() {
     return filtered;
   }, [songs, debouncedSearchQuery, genreFilter, moodFilter, sortBy]);
 
-  const hasActiveFilters = searchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
+const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
 
   const clearFilters = () => {
     setSearchQuery("");
