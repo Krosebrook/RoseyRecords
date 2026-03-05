@@ -5,6 +5,17 @@ import { Link, useParams } from "wouter";
 import { motion } from "framer-motion";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import type { Song } from "@shared/schema";
 import { memo, useCallback } from "react";
@@ -43,17 +54,37 @@ const PlaylistSongRow = memo(function PlaylistSongRow({ song, playlistId, onRemo
           <Play className="w-3 h-3" />
           {song.playCount || 0}
         </span>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => onRemove(song.id)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
-          data-testid={`button-remove-${song.id}`}
-          aria-label={`Remove ${song.title} from playlist`}
-          title={`Remove ${song.title} from playlist`}
-        >
-          <Trash2 className="w-4 h-4 text-destructive" />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              data-testid={`button-remove-${song.id}`}
+              aria-label={`Remove ${song.title} from playlist`}
+              title={`Remove ${song.title} from playlist`}
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Song</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove "{song.title}" from this playlist?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => onRemove(song.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
@@ -68,9 +99,7 @@ export default function PlaylistDetails() {
   usePageTitle(playlist?.name || "Playlist");
 
   const handleRemove = useCallback((songId: number) => {
-    if (confirm("Remove this song from the playlist?")) {
-      removeSong({ playlistId, songId });
-    }
+    removeSong({ playlistId, songId });
   }, [playlistId, removeSong]);
 
   if (isLoading) {
