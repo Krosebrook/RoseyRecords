@@ -9,6 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -48,18 +59,42 @@ const PlaylistCard = memo(function PlaylistCard({ playlist, onDelete, isDeleting
               <ListMusic className="w-6 h-6 text-secondary group-hover:text-white transition-colors" />
             </div>
 
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={(e) => onDelete(e, playlist.id)}
-              disabled={isDeleting}
-              className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity pointer-events-auto"
-              data-testid={`button-delete-${playlist.id}`}
-              aria-label={`Delete playlist ${playlist.name}`}
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  disabled={isDeleting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity pointer-events-auto"
+                  data-testid={`button-delete-${playlist.id}`}
+                  aria-label={`Delete playlist ${playlist.name}`}
+                  title={`Delete playlist ${playlist.name}`}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Playlist</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete the playlist "{playlist.name}"? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => onDelete(e, playlist.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors" data-testid={`text-playlist-name-${playlist.id}`}>
@@ -106,11 +141,8 @@ export default function Playlists() {
   };
 
   const handleDelete = useCallback((e: React.MouseEvent, id: number) => {
-    e.preventDefault();
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this playlist?")) {
-      deletePlaylist(id);
-    }
+    deletePlaylist(id);
   }, [deletePlaylist]);
 
   return (
