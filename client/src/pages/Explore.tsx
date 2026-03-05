@@ -22,6 +22,7 @@ import type { Song } from "@shared/schema";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo, memo } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface PublicSongCardProps {
   song: Song;
@@ -122,6 +123,7 @@ export default function Explore() {
   const likedIds = likedData?.likedIds || [];
 
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [genreFilter, setGenreFilter] = useState<string>("all");
   const [moodFilter, setMoodFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("popular");
@@ -130,9 +132,9 @@ export default function Explore() {
     if (!songs) return [];
     
     let filtered = songs.filter(song => {
-      const matchesSearch = searchQuery === "" || 
-        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.lyrics.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = debouncedSearchQuery === "" ||
+        song.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        song.lyrics.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       
       const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
@@ -149,7 +151,7 @@ export default function Explore() {
     }
 
     return filtered;
-  }, [songs, searchQuery, genreFilter, moodFilter, sortBy]);
+  }, [songs, debouncedSearchQuery, genreFilter, moodFilter, sortBy]);
 
   const hasActiveFilters = searchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
 
