@@ -42,7 +42,7 @@ export default function Dashboard() {
     });
   }, [songs, debouncedSearchQuery, genreFilter, moodFilter]);
 
-  const hasActiveFilters = searchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
+const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" || moodFilter !== "all";
 
   const clearFilters = () => {
     setSearchQuery("");
