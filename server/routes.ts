@@ -3,25 +3,14 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { detectAudioFormat, sanitizeLog } from "./utils";
+import { detectAudioFormat, sanitizeLog, parseNumericId } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { aiRateLimiter, writeRateLimiter } from "./middleware";
-import { detectAudioFormat } from "./replit_integrations/audio/client";
 import OpenAI from "openai";
-
-// Helper to validate numeric IDs from route params
-function parseNumericId(value: string, res: Response): number | null {
-  const id = Number(value);
-  if (isNaN(id) || !Number.isInteger(id) || id < 1) {
-    res.status(400).json({ message: 'Invalid ID parameter' });
-    return null;
-  }
-  return id;
-}
 import * as geminiService from "./services/gemini";
 import * as replicateService from "./services/replicate";
 import * as stableAudioService from "./services/stableAudio";
