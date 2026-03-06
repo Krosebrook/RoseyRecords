@@ -178,34 +178,37 @@ export async function registerRoutes(
 
   // POST /api/songs/:id/like
   app.post(api.songs.like.path, isAuthenticated, writeRateLimiter.middleware, async (req: any, res) => {
-    const songId = parseNumericId(req.params.id, res);
-    if (songId === null) return;
-    
-    const userId = req.user.claims.sub;
-    const song = await storage.getSong(songId);
-    
-    if (!song) {
-      return res.status(404).json({ message: 'Song not found' });
+    try {
+      const songId = parseNumericId(req.params.id, res);
+      if (songId === null) return;
+
+      const userId = req.user.claims.sub;
+
+      const result = await storage.toggleLike(userId, songId);
+      res.json(result);
+    } catch (err: any) {
+      if (err.message && err.message.includes('not found')) {
+        return res.status(404).json({ message: 'Song not found' });
+      }
+      throw err;
     }
-    
-    const result = await storage.toggleLike(userId, songId);
-    res.json(result);
   });
 
   // POST /api/songs/:id/play
   app.post(api.songs.incrementPlay.path, writeRateLimiter.middleware, async (req, res) => {
-    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const songId = parseNumericId(idParam, res);
-    if (songId === null) return;
-    
-    const song = await storage.getSong(songId);
-    
-    if (!song) {
-      return res.status(404).json({ message: 'Song not found' });
+    try {
+      const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const songId = parseNumericId(idParam, res);
+      if (songId === null) return;
+
+      const playCount = await storage.incrementPlayCount(songId);
+      res.json({ playCount });
+    } catch (err: any) {
+      if (err.message && err.message.includes('not found')) {
+        return res.status(404).json({ message: 'Song not found' });
+      }
+      throw err;
     }
-    
-    const playCount = await storage.incrementPlayCount(songId);
-    res.json({ playCount });
   });
 
   // GET /api/songs/liked-ids - Get user's liked song IDs

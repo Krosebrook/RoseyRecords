@@ -30,10 +30,12 @@ export default function Dashboard() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
+    const queryLower = debouncedSearchQuery.toLowerCase();
+
     return songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        song.lyrics.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      const matchesSearch = queryLower === "" ||
+        song.title.toLowerCase().includes(queryLower) ||
+        song.lyrics.toLowerCase().includes(queryLower);
       
       const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
