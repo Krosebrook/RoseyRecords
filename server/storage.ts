@@ -101,7 +101,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songs.id, id))
       .returning({ playCount: songs.playCount });
     
-    return updatedSong?.playCount || 0;
+    if (!updatedSong) {
+      throw new Error(`Song ${id} not found`);
+    }
+
+    return updatedSong.playCount || 0;
   }
 
   // === Likes ===
@@ -129,9 +133,6 @@ export class DatabaseStorage implements IStorage {
 
         return { liked: false, likeCount: updatedSong.likeCount ?? 0 };
       } else {
-        // Like
-        await tx.insert(songLikes).values({ userId, songId });
-
         // Atomic increment using SQL to ensure consistency
         const [updatedSong] = await tx.update(songs)
           .set({ likeCount: sql`COALESCE(${songs.likeCount}, 0) + 1` })
@@ -141,6 +142,9 @@ export class DatabaseStorage implements IStorage {
         if (!updatedSong) {
           throw new Error(`Song ${songId} not found`);
         }
+
+        // Like (only insert after ensuring the song exists to avoid foreign key errors)
+        await tx.insert(songLikes).values({ userId, songId });
 
         return { liked: true, likeCount: updatedSong.likeCount ?? 0 };
       }
