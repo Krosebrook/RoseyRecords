@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import type { Response } from "express";
 
 export function sanitizeLog(data: any): any {
   if (!data || typeof data !== "object") {
@@ -95,4 +96,14 @@ export function detectAudioFormat(buffer: Buffer): string | null {
   }
 
   return null;
+}
+
+// Helper to validate numeric IDs from route params
+export function parseNumericId(value: string, res: Response): number | null {
+  const id = Number(value);
+  if (isNaN(id) || !Number.isInteger(id) || id < 1) {
+    res.status(400).json({ message: 'Invalid ID parameter' });
+    return null;
+  }
+  return id;
 }
