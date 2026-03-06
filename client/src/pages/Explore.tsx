@@ -131,12 +131,10 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
-    const queryLower = debouncedSearchQuery.toLowerCase();
-
     let filtered = songs.filter(song => {
-      const matchesSearch = queryLower === "" ||
-        song.title.toLowerCase().includes(queryLower) ||
-        song.lyrics.toLowerCase().includes(queryLower);
+      const matchesSearch = debouncedSearchQuery === "" ||
+        song.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        song.lyrics.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       
       const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
