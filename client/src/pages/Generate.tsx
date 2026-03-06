@@ -15,6 +15,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Onboarding, GENERATE_ONBOARDING_STEPS } from "@/components/Onboarding";
 import { AiSuggestButton } from "@/components/AiSuggestButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 
 type AIEngine = "openai" | "gemini";
@@ -231,7 +232,7 @@ export default function Generate() {
                   </Button>
                 </div>
                 <div className="flex items-start gap-1">
-                  <textarea 
+                  <Textarea
                     id="topic-input"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
