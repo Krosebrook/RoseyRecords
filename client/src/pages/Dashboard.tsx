@@ -30,10 +30,13 @@ export default function Dashboard() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
+    // Extract loop-invariant toLowerCase() operation to prevent redundant O(N) string allocations during search filtering
+    const searchLower = debouncedSearchQuery.toLowerCase();
+
     return songs.filter(song => {
       const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        song.lyrics.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        song.title.toLowerCase().includes(searchLower) ||
+        song.lyrics.toLowerCase().includes(searchLower);
       
       const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
