@@ -77,6 +77,7 @@ export async function registerRoutes(
   app.use("/api/bark", aiRateLimiter.middleware);
   app.use("/api/suno", aiRateLimiter.middleware);
   app.use("/api/ace-step", aiRateLimiter.middleware);
+  app.use("/api/music-theory", aiRateLimiter.middleware);
 
   // Protect integration routes (chat & image)
   // These routes were previously unprotected, allowing unauthenticated access to AI resources
@@ -184,7 +185,7 @@ export async function registerRoutes(
   });
 
   // POST /api/songs/:id/play
-  app.post(api.songs.incrementPlay.path, writeRateLimiter.middleware, async (req, res) => {
+  app.post(api.songs.incrementPlay.path, isAuthenticated, writeRateLimiter.middleware, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const songId = parseNumericId(idParam, res);
