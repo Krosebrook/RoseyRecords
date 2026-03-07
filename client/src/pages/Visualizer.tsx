@@ -395,6 +395,8 @@ export default function Visualizer() {
             onClick={() => setIsMuted(!isMuted)}
             className="p-2 md:p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30 h-auto w-auto"
             data-testid="button-mute"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
           </Button>
@@ -405,6 +407,8 @@ export default function Visualizer() {
             onValueChange={(v) => setVolume(v[0] / 100)}
             className="w-16 md:w-24"
             data-testid="slider-volume"
+            aria-label="Volume"
+            title="Volume"
           />
 
           <Button
@@ -413,6 +417,8 @@ export default function Visualizer() {
             disabled={!audioFile}
             className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-orange-500 to-red-600 border-2 border-orange-400/50 text-white hover:from-orange-400 hover:to-red-500 disabled:opacity-50"
             data-testid="button-play-pause"
+            aria-label={isPlaying ? "Pause" : "Play"}
+            title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6" /> : <Play className="w-5 h-5 md:w-6 md:h-6 ml-0.5" />}
           </Button>
@@ -427,6 +433,8 @@ export default function Visualizer() {
                 : "bg-cyan-900/30 border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30"
             }`}
             data-testid="button-loop"
+            aria-label={isLooping ? "Disable loop" : "Enable loop"}
+            title={isLooping ? "Disable loop" : "Enable loop"}
           >
             <RotateCcw className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
