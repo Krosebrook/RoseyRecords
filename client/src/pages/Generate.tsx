@@ -162,6 +162,7 @@ export default function Generate() {
                 className="text-muted-foreground hover:text-foreground h-8 w-8"
                 data-testid="button-generate-tour"
                 aria-label="Show help tour"
+                title="Show help tour"
               >
                 <HelpCircle className="w-4 h-4" />
               </Button>
