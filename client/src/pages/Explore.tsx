@@ -150,7 +150,15 @@ export default function Explore() {
     } else if (sortBy === "liked") {
       filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
     } else if (sortBy === "recent") {
-      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      // Optimization: Avoid expensive O(N log N) Date instantiations during sort.
+      // ISO 8601 strings and JS Date objects can both be correctly sorted chronologically
+      // using standard relational operators without conversion overhead.
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt || "";
+        const dateB = b.createdAt || "";
+        if (dateA === dateB) return 0;
+        return dateB > dateA ? 1 : -1;
+      });
     }
 
     return filtered;

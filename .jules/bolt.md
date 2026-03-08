@@ -8,3 +8,6 @@
 ## 2026-03-06 - Eliminate Read-Before-Write Database Round Trips
 **Learning:** Redundant `SELECT` queries before atomic updates (like toggling a like) can be safely eliminated by relying on the `RETURNING` clause. However, the order of operations in the transaction is critical: the `UPDATE` must be executed *before* any `INSERT` operations on related tables to safely detect a missing primary record and prevent Foreign Key constraint errors.
 **Action:** When migrating to atomic updates, restructure transaction steps to ensure the primary entity update and its existence check occur first.
+## 2024-03-09 - Client-side array sorting performance
+**Learning:** Instantiating `new Date()` inside an `Array.prototype.sort` comparator is extremely slow and executes O(N log N) times. Furthermore, `String.prototype.localeCompare` is notoriously slow because it invokes the browser's heavy Internationalization (Intl) API.
+**Action:** For timestamps or ISO 8601 formatted date strings returned from a database or API, use standard relational operators (e.g., `a > b ? 1 : -1`) instead of parsing dates or using localeCompare to improve client-side sorting performance. Ensure fallback values are strings (like `""`) to prevent NaN issues during comparison.
