@@ -377,12 +377,13 @@ export default function Visualizer() {
 
         {/* Control buttons */}
         <div className="flex items-center justify-center gap-2 md:gap-4">
-          <label className="cursor-pointer">
+          <label className="cursor-pointer" title="Upload new audio">
             <input
               type="file"
               accept="audio/*"
               onChange={handleFileUpload}
               className="hidden"
+              aria-label="Upload new audio"
             />
             <div className="p-2 md:p-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-800/30 transition-colors">
               <Upload className="w-4 h-4 md:w-5 md:h-5" />
