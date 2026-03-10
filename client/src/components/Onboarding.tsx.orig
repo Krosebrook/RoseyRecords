@@ -33,7 +33,7 @@ export function Onboarding({ steps, storageKey, isOpen, onComplete, onSkip }: On
       setIsVisible(true);
       return;
     }
-    
+
     const hasSeenOnboarding = localStorage.getItem(storageKey);
     if (!hasSeenOnboarding) {
       const timer = setTimeout(() => setIsVisible(true), 500);
@@ -43,7 +43,7 @@ export function Onboarding({ steps, storageKey, isOpen, onComplete, onSkip }: On
 
   useEffect(() => {
     if (!isVisible) return;
-    
+
     const step = steps[currentStep];
     if (step?.targetSelector) {
       const element = document.querySelector(step.targetSelector);
@@ -200,8 +200,6 @@ export function Onboarding({ steps, storageKey, isOpen, onComplete, onSkip }: On
                   onClick={handleSkip}
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   data-testid="button-onboarding-skip"
-                  aria-label="Skip onboarding"
-                  title="Skip onboarding"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -231,7 +229,7 @@ export function Onboarding({ steps, storageKey, isOpen, onComplete, onSkip }: On
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Back
                 </Button>
-                
+
                 <div className="flex gap-1">
                   {steps.map((_, idx) => (
                     <button
