@@ -18,3 +18,8 @@
 **Vulnerability:** IP-based rate limiting was using `req.ip` without Express's `trust proxy` configured. Behind Replit's reverse proxy, all unauthenticated requests appeared to originate from the same internal proxy IP.
 **Learning:** This leads to a denial of service (false positive) where one user exceeding the rate limit would ban all unauthenticated users. Conversely, it might allow a distributed attack to bypass per-user limits.
 **Prevention:** Always configure `app.set("trust proxy", 1);` in Express when deploying behind a reverse proxy (like Replit, Heroku, or Nginx) to ensure `req.ip` reflects the actual client IP (via `X-Forwarded-For`).
+
+## 2024-05-24 - Server-Side Request Forgery (SSRF) in AI Resource Fetching
+**Vulnerability:** The `/api/stable-audio/transform` endpoint accepted a user-provided `audioUrl` without validation. The application would fetch this URL, which could be exploited to probe internal network services, databases, or bypass firewalls.
+**Learning:** Any endpoint that fetches external resources based on user input is a potential SSRF vector. Unvalidated URLs can be manipulated to point to `localhost`, internal IPs (e.g., `10.x.x.x`, `192.168.x.x`), or unexpected protocols (like `file://` or `gopher://`).
+**Prevention:** Always parse and explicitly validate URLs provided by users before making outgoing requests. Enforce a strict protocol whitelist (e.g., `http:`, `https:`), and block common internal hostnames and private IP ranges to mitigate SSRF risks.
