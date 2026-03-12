@@ -135,14 +135,20 @@ export default function Explore() {
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     let filtered = songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+      // Cheap exact-match checks first
+      if (genreFilter !== "all" && song.genre !== genreFilter) return false;
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
+      // Expensive string operations only for items that passed basic criteria
+      if (debouncedSearchQuery !== "") {
+        const titleMatches = song.title.toLowerCase().includes(searchLower);
+        if (titleMatches) return true;
+
+        const lyricsMatches = song.lyrics.toLowerCase().includes(searchLower);
+        return lyricsMatches;
+      }
       
-      return matchesSearch && matchesGenre && matchesMood;
+      return true;
     });
 
     if (sortBy === "popular") {
