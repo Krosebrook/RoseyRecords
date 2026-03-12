@@ -51,3 +51,6 @@
 ## 2026-02-10 - Drizzle nullsLast Compatibility
 **Learning:** `orderBy(desc(col).nullsLast())` causes type errors in some Drizzle setups.
 **Action:** Avoid `.nullsLast()` unless strictly necessary and supported by the environment; usually standard `desc()` suffices for effectively non-null columns.
+## 2026-02-23 - Playwright Verification with Service Workers
+**Learning:** Service Workers in PWA-enabled apps intercept network requests, bypassing Playwright's `page.route` intercepts unless explicitly blocked.
+**Action:** Always initialize Playwright browser context with `service_workers='block'` when mocking API responses for PWA frontends.

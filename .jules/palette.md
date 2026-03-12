@@ -28,3 +28,6 @@
 ## 2026-02-14 - Invisible Focus Traps in List Items
 **Learning:** Elements with `opacity-0 group-hover:opacity-100` create invisible focus traps for keyboard users.
 **Action:** Always add `focus:opacity-100` alongside `group-hover:opacity-100` for interactive elements that appear on hover.
+## 2026-02-23 - Transient vs Persistent Actions
+**Learning:** For generative AI interfaces, users often want to use the output immediately (Copy) without committing it to storage (Save). Providing both actions side-by-side reduces friction.
+**Action:** Audit all generation result screens to ensure transient actions like "Copy" or "Share" are available alongside "Save".
