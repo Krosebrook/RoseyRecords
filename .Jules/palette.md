@@ -1,3 +1,0 @@
-## 2026-02-28 - Add Log Out ARIA label and title
-**Learning:** Icon-only buttons (like the `LogOut` button in `Layout.tsx`) require explicit `aria-label` and `title` attributes. Without them, screen readers cannot announce the button's purpose, and sighted users cannot see a hover tooltip, leading to poor accessibility and UX.
-**Action:** When adding or reviewing icon-only buttons, always ensure both an `aria-label` (for screen readers) and a `title` (for native tooltips) are present to provide full context to all users.
