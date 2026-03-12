@@ -189,9 +189,9 @@ export default function SongDetails() {
                       size="icon"
                       variant="destructive"
                       disabled={isDeleting}
-                      title="Delete Song"
                       data-testid="button-delete-song"
                       aria-label="Delete song"
+                      title="Delete song"
                     >
                       <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>

@@ -62,6 +62,7 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
                     disabled={isPending}
                     data-testid={`button-like-${song.id}`}
                     aria-label={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
+                    title={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
                   >
                     <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
                   </Button>
@@ -244,6 +245,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                       className="shrink-0"
                       data-testid="button-clear-filters"
                       aria-label="Clear filters"
+                      title="Clear filters"
                     >
                       <X className="w-4 h-4" />
                     </Button>

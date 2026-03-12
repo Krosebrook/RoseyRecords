@@ -9,3 +9,7 @@
 ## 2026-03-03 - Studio Piano Keys Accessibility
 **Learning:** Custom interactive elements representing domain-specific controls (like Piano keys in the Studio view) lack native semantics. Without explicit `aria-label` (e.g., Note name) and `aria-pressed` attributes, they are completely inaccessible to screen readers and difficult to use for keyboard-only users who can't see the visual active state.
 **Action:** Always add `aria-label`, `aria-pressed`, and `title` attributes to custom interactive controls that mimic toggleable elements, ensuring their state and purpose are exposed to assistive technologies.
+
+## 2026-03-09 - Icon-Only Button Native Tooltips
+**Learning:** Icon-only buttons with `aria-label` are accessible to screen readers, but sighted users rely on native hover tooltips provided by the `title` attribute to understand the action if there's no visible text.
+**Action:** Always add a `title` attribute matching the `aria-label` to provide a native hover tooltip on icon-only buttons for sighted users.

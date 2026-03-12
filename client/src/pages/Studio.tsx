@@ -1656,6 +1656,7 @@ export default function Studio() {
                               className="rounded-full bg-primary/20 backdrop-blur hover-elevate"
                               data-testid="button-play-pause"
                               aria-label={isPlaying ? "Pause" : "Play"}
+                              title={isPlaying ? "Pause" : "Play"}
                             >
                               {isPlaying ? (
                                 <Pause className="w-6 h-6" />
@@ -1670,6 +1671,7 @@ export default function Studio() {
                               className="rounded-full bg-primary/10"
                               data-testid="button-mute"
                               aria-label={isMuted ? "Unmute" : "Mute"}
+                              title={isMuted ? "Unmute" : "Mute"}
                             >
                               {isMuted ? (
                                 <VolumeX className="w-4 h-4" />
@@ -1686,6 +1688,7 @@ export default function Studio() {
                                   asChild
                                   data-testid="button-download"
                                   aria-label="Download audio"
+                                  title="Download audio"
                                 >
                                   <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
                                     <Download className="w-4 h-4" />
@@ -1778,6 +1781,7 @@ export default function Studio() {
                     disabled={isGettingTip}
                     data-testid="button-get-tip"
                     aria-label="Get new production tip"
+                    title="Get new production tip"
                   >
                     {isGettingTip ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
