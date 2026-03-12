@@ -21,3 +21,10 @@
 ## 2026-02-12 - List View Payload Optimization
 **Learning:** Truncating large text fields (lyrics) and excluding unused fields (description) in list endpoints significantly reduces payload size. However, this creates a "Summary vs Detail" pattern where the list data is incomplete.
 **Action:** Always verify that edit/detail views use a separate endpoint that fetches the full record to prevent data loss. Be aware that Drizzle's `getTableColumns` and destructuring is a powerful way to implement this cleanly. Also, `desc().nullsLast()` may cause type errors in some environments; removing `.nullsLast()` is a valid workaround if the column is non-nullable.
+## 2026-03-01 - Join Optimization
+**Learning:** Fetching related items (like songs in a playlist) by first fetching IDs and then fetching items (N+1-ish) is inefficient and complex to sort manually.
+**Action:** Use `innerJoin` with `orderBy` on the join table to fetch related items in a single query with correct ordering, reducing round trips and code complexity.
+
+## 2026-03-01 - Drizzle nullsLast
+**Learning:** The `.nullsLast()` method on `desc()` may not be available or cause type errors in some Drizzle versions/configurations.
+**Action:** Remove `.nullsLast()` if the column is effectively non-nullable (e.g., `defaultNow()`), or use `sql` operator if strictly needed.
