@@ -36,3 +36,7 @@
 **Vulnerability:** The `POST /api/songs/:id/play` endpoint lacked rate limiting middleware (`writeRateLimiter`), allowing for potential play count manipulation (artificial inflation) and minor DoS risks via database write spamming.
 **Learning:** Even utility-like endpoints that modify database state need to be protected. Developers may sometimes assume that simple increment operations are low risk and forget to apply standard rate limiting.
 **Prevention:** Always apply the appropriate rate limiting middleware (`writeRateLimiter` for writes/mutations, `aiRateLimiter` for generation) to all state-modifying or expensive endpoints during route definition.
+## 2026-02-27 - Missing Rate Limiting on Public Metrics Endpoint
+**Vulnerability:** The `POST /api/songs/:id/play` endpoint, which increments play counts, had no authentication or rate limiting. This allowed unauthenticated users to artificially inflate play counts via automated scripts.
+**Learning:** Metrics endpoints (views, plays, likes) are often overlooked for security because they don't expose data, but they affect platform integrity and resource usage.
+**Prevention:** Apply rate limiting middleware (e.g., `writeRateLimiter`) to all public write endpoints, even if they seem minor. Consider specific "metrics" rate limiters (e.g., 1 per minute per IP) for such endpoints.
