@@ -40,3 +40,7 @@
 **Vulnerability:** The `POST /api/songs/:id/play` endpoint, which increments play counts, had no authentication or rate limiting. This allowed unauthenticated users to artificially inflate play counts via automated scripts.
 **Learning:** Metrics endpoints (views, plays, likes) are often overlooked for security because they don't expose data, but they affect platform integrity and resource usage.
 **Prevention:** Apply rate limiting middleware (e.g., `writeRateLimiter`) to all public write endpoints, even if they seem minor. Consider specific "metrics" rate limiters (e.g., 1 per minute per IP) for such endpoints.
+## 2026-02-14 - Incomplete File Upload Validation
+**Vulnerability:** The `/api/audio/generate-with-reference` endpoint relied solely on client-provided `mimetype` for file validation, allowing spoofed uploads. Additionally, the existing `detectAudioFormat` utility lacked support for FLAC and AAC formats used by the endpoint.
+**Learning:** Relying on `file.mimetype` from `multer` is insufficient as it is easily spoofed. Magic byte validation must be comprehensive and cover all allowed file types to prevent legitimate uploads from being rejected or malicious ones accepted.
+**Prevention:** Always validate file uploads using magic bytes (file signature) on the server side before processing. Ensure the validation utility supports all accepted formats.
