@@ -34,3 +34,6 @@
 ## 2026-02-12 - Drizzle ORM N+1 and Type Issues
 **Learning:** Fetching items by ID list (N+1) is inefficient; replace with `innerJoin` and `orderBy` on the join table. Also, `.nullsLast()` on `desc()` sort operations causes type errors in Drizzle 0.39.3; rely on default sorting for non-nullable columns.
 **Action:** Use `db.select(getTableColumns(T)).from(T).innerJoin(...)` for related data fetching.
+## 2026-03-01 - Debouncing Frontend Filter Computations
+**Learning:** Performing case-insensitive substring searches across multiple fields (`title`, `lyrics`) inside a `useMemo` block driven by a synchronous keystroke state can freeze the main thread when data arrays grow.
+**Action:** Always decouple the `input` value state from the derived computation state using a `useDebounce` hook (e.g., `client/src/hooks/use-debounce.ts`). This allows instant typing feedback while deferring heavy array iterations until the user pauses.
