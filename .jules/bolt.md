@@ -28,3 +28,6 @@
 ## 2026-03-01 - Drizzle nullsLast
 **Learning:** The `.nullsLast()` method on `desc()` may not be available or cause type errors in some Drizzle versions/configurations.
 **Action:** Remove `.nullsLast()` if the column is effectively non-nullable (e.g., `defaultNow()`), or use `sql` operator if strictly needed.
+## 2026-02-11 - Drizzle Query Instability
+**Learning:** The `.nullsLast()` method on `desc()` sort operations causes type errors (`Property 'nullsLast' does not exist`) in this environment.
+**Action:** Avoid `.nullsLast()` and rely on default null handling (or explicit `sql` fragments) for sorting.
