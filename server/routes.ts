@@ -1163,7 +1163,7 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${mimeType};base64,${base64}`;
+      const dataUrl = `data:${detectedFormat};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,
