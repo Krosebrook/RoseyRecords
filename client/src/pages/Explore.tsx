@@ -156,7 +156,13 @@ export default function Explore() {
     } else if (sortBy === "liked") {
       filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
     } else if (sortBy === "recent") {
-      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      // Optimized: Avoid O(N log N) new Date() instantiations during sort.
+      // ISO 8601 strings (or fallback empty strings) sort correctly with standard operators.
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt ? String(a.createdAt) : "";
+        const dateB = b.createdAt ? String(b.createdAt) : "";
+        return dateA > dateB ? -1 : dateA < dateB ? 1 : 0;
+      });
     }
 
     return filtered;
