@@ -16,3 +16,6 @@
 ## 2024-10-24 - Icon-only button tooltips
 **Learning:** We have many `<Button size="icon">` instances that use `lucide-react` icons and correctly provide `aria-label`s for screen readers but omit `title` attributes. This leaves sighted users who don't use screen readers without a tooltip to explain the action, relying purely on iconography which can be ambiguous (e.g. download icon vs share icon). Some Radix tooltips are used but for simpler buttons the native browser tooltip is best.
 **Action:** Always add a `title` attribute that matches the `aria-label` on any icon-only button to provide a native hover tooltip.
+## 2026-02-12 - Robust Clipboard Pattern
+**Learning:** To support older environments or restrictive contexts (like some embedded webviews), `navigator.clipboard.writeText` is insufficient on its own and should be paired with a `document.execCommand('copy')` fallback using a temporary textarea.
+**Action:** When implementing copy functionality, always include the legacy fallback to ensure reliability across all user contexts.
