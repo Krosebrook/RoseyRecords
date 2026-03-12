@@ -5,16 +5,19 @@ import { createServer } from "http";
 import { sanitizeLog } from "./utils";
 
 const app = express();
-app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
-// Add security headers
-app.use((_req, res, next) => {
+// Configure trust proxy before security headers to ensure req.secure works correctly
+app.set("trust proxy", 1);
+
+// Sentinel: Add security headers
+app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  if (process.env.NODE_ENV === "production") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  // Only set HSTS in production over HTTPS to avoid breaking local HTTP development
+  if (process.env.NODE_ENV === "production" && req.secure) {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000");
   }
   // Note: X-Frame-Options is omitted to allow Replit iframe previews
   next();
@@ -78,10 +81,7 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    // Hide internal error details in production
-    const message = (process.env.NODE_ENV === "production" && status >= 500)
-      ? "Internal Server Error"
-      : (err.message || "Internal Server Error");
+    const message = err.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
 
