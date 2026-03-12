@@ -31,3 +31,6 @@
 ## 2026-02-11 - Drizzle Query Instability
 **Learning:** The `.nullsLast()` method on `desc()` sort operations causes type errors (`Property 'nullsLast' does not exist`) in this environment.
 **Action:** Avoid `.nullsLast()` and rely on default null handling (or explicit `sql` fragments) for sorting.
+## 2026-02-12 - Drizzle ORM N+1 and Type Issues
+**Learning:** Fetching items by ID list (N+1) is inefficient; replace with `innerJoin` and `orderBy` on the join table. Also, `.nullsLast()` on `desc()` sort operations causes type errors in Drizzle 0.39.3; rely on default sorting for non-nullable columns.
+**Action:** Use `db.select(getTableColumns(T)).from(T).innerJoin(...)` for related data fetching.
