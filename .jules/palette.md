@@ -22,3 +22,6 @@
 ## 2026-02-25 - Piano Keys Accessibility
 **Learning:** Custom interactive elements like the Piano keys in `Studio.tsx` rely on visual color changes and position, but lack semantic labels and state for assistive technologies.
 **Action:** Use `aria-label` (e.g., Note name) and `aria-pressed` attributes to communicate the element's identity and selection state to screen readers.
+## 2024-05-19 - Missing Aria-labels and Titles on Icon-only Buttons
+**Learning:** Across the application's list components (e.g., Favorites, Playlists, Explore), `size="icon"` buttons were consistently missing both `aria-label` and `title` attributes. Without these, the buttons are invisible to screen readers and lack native hover tooltips for sighted users.
+**Action:** Always ensure that icon-only buttons include both `aria-label` (for screen readers) and `title` (for native tooltips) to guarantee full accessibility and a better user experience.
