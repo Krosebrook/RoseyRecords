@@ -37,3 +37,10 @@
 ## 2026-03-01 - Debouncing Frontend Filter Computations
 **Learning:** Performing case-insensitive substring searches across multiple fields (`title`, `lyrics`) inside a `useMemo` block driven by a synchronous keystroke state can freeze the main thread when data arrays grow.
 **Action:** Always decouple the `input` value state from the derived computation state using a `useDebounce` hook (e.g., `client/src/hooks/use-debounce.ts`). This allows instant typing feedback while deferring heavy array iterations until the user pauses.
+## 2026-02-12 - N+1 Query Optimization with Drizzle InnerJoin
+**Learning:** Fetching related items using `inArray` (IDs -> Fetch Items) results in multiple queries and requires manual in-memory sorting.
+**Action:** Use `innerJoin` with `orderBy` on the join table's timestamp (e.g., `playlistSongs.addedAt`) to fetch and sort related items in a single query.
+
+## 2026-02-12 - Drizzle .nullsLast() Type Error
+**Learning:** The `.nullsLast()` method on `desc()` sorting causes type errors in the current environment configuration.
+**Action:** Avoid `.nullsLast()` on `desc()` operations to maintain type safety.
