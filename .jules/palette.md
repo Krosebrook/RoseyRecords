@@ -25,3 +25,6 @@
 ## 2024-05-19 - Missing Aria-labels and Titles on Icon-only Buttons
 **Learning:** Across the application's list components (e.g., Favorites, Playlists, Explore), `size="icon"` buttons were consistently missing both `aria-label` and `title` attributes. Without these, the buttons are invisible to screen readers and lack native hover tooltips for sighted users.
 **Action:** Always ensure that icon-only buttons include both `aria-label` (for screen readers) and `title` (for native tooltips) to guarantee full accessibility and a better user experience.
+## 2026-02-14 - Invisible Focus Traps in List Items
+**Learning:** Elements with `opacity-0 group-hover:opacity-100` create invisible focus traps for keyboard users.
+**Action:** Always add `focus:opacity-100` alongside `group-hover:opacity-100` for interactive elements that appear on hover.
