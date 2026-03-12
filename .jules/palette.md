@@ -19,3 +19,6 @@
 ## 2026-02-12 - Robust Clipboard Pattern
 **Learning:** To support older environments or restrictive contexts (like some embedded webviews), `navigator.clipboard.writeText` is insufficient on its own and should be paired with a `document.execCommand('copy')` fallback using a temporary textarea.
 **Action:** When implementing copy functionality, always include the legacy fallback to ensure reliability across all user contexts.
+## 2026-02-25 - Piano Keys Accessibility
+**Learning:** Custom interactive elements like the Piano keys in `Studio.tsx` rely on visual color changes and position, but lack semantic labels and state for assistive technologies.
+**Action:** Use `aria-label` (e.g., Note name) and `aria-pressed` attributes to communicate the element's identity and selection state to screen readers.
