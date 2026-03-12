@@ -79,39 +79,39 @@ export default function Studio() {
   const { mutate: saveSong, isPending: isSavingSong } = useCreateSong();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [savedToLibrary, setSavedToLibrary] = useState(false);
-  
+
   const [audioPrompt, setAudioPrompt] = useState("");
   const [targetDuration, setTargetDuration] = useState("60");
   const [selectedGenre, setSelectedGenre] = useState("Electronic");
   const [selectedMood, setSelectedMood] = useState("Energetic");
   const [bpm, setBpm] = useState("");
   const [musicalKey, setMusicalKey] = useState("");
-  
+
   const [generationMode, setGenerationMode] = useState<GenerationMode>("sample");
   const [generationEngine, setGenerationEngine] = useState<GenerationEngine>("stable");
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
-  
+
   const [sampleUrl, setSampleUrl] = useState<string | null>(null);
   const [fullTrackUrl, setFullTrackUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
-  
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<number | null>(null);
-  
+
   const [chordKey, setChordKey] = useState("C");
   const [chordMood, setChordMood] = useState("Happy");
   const [chordProgression, setChordProgression] = useState<ChordData[]>([]);
   const [isGeneratingChords, setIsGeneratingChords] = useState(false);
-  
+
   const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
   const [scaleResults, setScaleResults] = useState<{ scale: string; reasoning: string }[]>([]);
   const [isLookingUpScales, setIsLookingUpScales] = useState(false);
-  
+
   const [productionTip, setProductionTip] = useState<string | null>(null);
   const [isGettingTip, setIsGettingTip] = useState(false);
 
@@ -174,7 +174,7 @@ export default function Studio() {
     }
     setIsPlaying(false);
     setPlaybackProgress(0);
-    
+
     if (currentAudioUrl) {
       const audio = new Audio(currentAudioUrl);
       audio.onended = () => {
@@ -221,7 +221,7 @@ export default function Studio() {
       toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
       return;
     }
-    
+
     setGenerationMode("sample");
     setIsGeneratingAudio(true);
     setGenerationProgress(0);
@@ -229,16 +229,16 @@ export default function Studio() {
     setFullTrackUrl(null);
     setCurrentAudioUrl(null);
     setSavedToLibrary(false);
-    
+
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => Math.min(prev + 5, 90));
     }, 500);
-    
+
     try {
-      const endpoint = generationEngine === "stable" 
+      const endpoint = generationEngine === "stable"
         ? "/api/stable-audio/sample"
         : "/api/audio/generate";
-      
+
       const response = await apiRequest("POST", endpoint, {
         prompt: audioPrompt,
         duration: 15,
@@ -248,9 +248,9 @@ export default function Studio() {
         key: musicalKey || undefined,
         instrumental: true
       });
-      
+
       const data = await response.json();
-      
+
       if (data.audioUrl) {
         setGenerationProgress(100);
         setSampleUrl(data.audioUrl);
@@ -273,21 +273,21 @@ export default function Studio() {
       toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
       return;
     }
-    
+
     setGenerationMode("full");
     setIsGeneratingAudio(true);
     setGenerationProgress(0);
     setFullTrackUrl(null);
     setSavedToLibrary(false);
-    
+
     const duration = parseInt(targetDuration);
     const estimatedTime = duration > 47 ? 30000 : 15000;
     const progressIncrement = 100 / (estimatedTime / 500);
-    
+
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => Math.min(prev + progressIncrement, 95));
     }, 500);
-    
+
     try {
       const response = await apiRequest("POST", "/api/stable-audio/full", {
         prompt: audioPrompt,
@@ -299,17 +299,17 @@ export default function Studio() {
         instrumental: true,
         useV25: duration > 47
       });
-      
+
       const data = await response.json();
-      
+
       if (data.audioUrl) {
         setGenerationProgress(100);
         setFullTrackUrl(data.audioUrl);
         setCurrentAudioUrl(data.audioUrl);
         setGenerationMode("full");
-        toast({ 
-          title: "Full Track Ready!", 
-          description: `Your ${formatDuration(duration)} track is ready to play` 
+        toast({
+          title: "Full Track Ready!",
+          description: `Your ${formatDuration(duration)} track is ready to play`
         });
       }
     } catch (err) {
@@ -324,7 +324,7 @@ export default function Studio() {
 
   const handlePlayPause = () => {
     if (!audioRef.current || !currentAudioUrl) return;
-    
+
     if (isPlaying) {
       audioRef.current.pause();
       if (progressIntervalRef.current) {
@@ -354,10 +354,10 @@ export default function Studio() {
 
   const handleSaveToLibrary = () => {
     if (!currentAudioUrl) return;
-    
+
     const title = sunoTitle || audioPrompt.slice(0, 50) || "Untitled Track";
     const lyrics = sunoLyrics || "";
-    
+
     saveSong({
       title,
       lyrics,
@@ -486,8 +486,8 @@ export default function Studio() {
 
   const handlePianoKeyClick = (note: string) => {
     playNoteSound(note);
-    setSelectedNotes(prev => 
-      prev.includes(note) 
+    setSelectedNotes(prev =>
+      prev.includes(note)
         ? prev.filter(n => n !== note)
         : [...prev, note]
     );
@@ -498,7 +498,7 @@ export default function Studio() {
       toast({ variant: "destructive", title: "Error", description: "Select at least 2 notes" });
       return;
     }
-    
+
     setIsLookingUpScales(true);
     try {
       const response = await apiRequest("POST", "/api/music-theory/lookup-scales", {
@@ -599,13 +599,13 @@ export default function Studio() {
       vocalsAudioRef.current = null;
     }
     setIsPlayingVocals(false);
-    
+
     if (vocalsUrl) {
       const audio = new Audio(vocalsUrl);
       audio.onended = () => setIsPlayingVocals(false);
       vocalsAudioRef.current = audio;
     }
-    
+
     return () => {
       if (vocalsAudioRef.current) {
         vocalsAudioRef.current.pause();
@@ -616,7 +616,7 @@ export default function Studio() {
 
   const toggleVocalsPlayback = () => {
     if (!vocalsUrl || !vocalsAudioRef.current) return;
-    
+
     if (isPlayingVocals) {
       vocalsAudioRef.current.pause();
       setIsPlayingVocals(false);
@@ -651,10 +651,10 @@ export default function Studio() {
           }
         }
       } catch {
-        setSunoConfig({ 
-          configured: false, 
+        setSunoConfig({
+          configured: false,
           provider: "none",
-          styles: [], 
+          styles: [],
           models: [],
           pollingConfig: { initialDelayMs: 1500, maxDelayMs: 6000, maxWaitMs: 120000, backoffMultiplier: 1.5 }
         });
@@ -662,7 +662,7 @@ export default function Studio() {
     };
     checkSuno();
   }, []);
-  
+
   // Fetch user info only when Suno is configured with DefAPI
   useEffect(() => {
     if (sunoConfig?.configured && sunoConfig?.provider === "defapi") {
@@ -708,34 +708,34 @@ export default function Studio() {
     const prompt = overrides?.prompt || audioPrompt;
     const lyrics = overrides?.lyrics ?? sunoLyrics;
     const instrumental = overrides?.instrumental ?? sunoInstrumental;
-    
+
     if (!prompt) {
       toast({ variant: "destructive", title: "Error", description: "Please describe the music you want to create" });
       return;
     }
-    
+
     if (!sunoConfig?.configured) {
-      toast({ 
-        variant: "destructive", 
-        title: "Suno Not Configured", 
-        description: "Please add SUNO_API_KEY to use professional music generation" 
+      toast({
+        variant: "destructive",
+        title: "Suno Not Configured",
+        description: "Please add SUNO_API_KEY to use professional music generation"
       });
       return;
     }
-    
+
     setGenerationMode("full");
     setIsGeneratingAudio(true);
     setGenerationProgress(0);
     setFullTrackUrl(null);
     setSunoTaskId(null);
     setSavedToLibrary(false);
-    
+
     if (sunoPollTimeoutRef.current) {
       clearTimeout(sunoPollTimeoutRef.current);
     }
-    
+
     setGenerationProgress(5);
-    
+
     try {
       const response = await apiRequest("POST", "/api/suno/generate", {
         prompt,
@@ -745,22 +745,22 @@ export default function Studio() {
         instrumental,
         model: sunoModel
       });
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       if (data.audioUrl) {
         setGenerationProgress(100);
         setFullTrackUrl(data.audioUrl);
         setCurrentAudioUrl(data.audioUrl);
         setSunoTaskId(data.id);
         setIsGeneratingAudio(false);
-        toast({ 
-          title: "Suno Track Ready!", 
-          description: `Your studio-quality ${sunoInstrumental ? "instrumental" : "song"} is ready` 
+        toast({
+          title: "Suno Track Ready!",
+          description: `Your studio-quality ${sunoInstrumental ? "instrumental" : "song"} is ready`
         });
       } else if (data.id && data.status === "processing") {
         setGenerationProgress(10);
@@ -785,24 +785,24 @@ export default function Studio() {
       maxWaitMs: 120000,
       backoffMultiplier: 1.5
     };
-    
+
     const startTime = Date.now();
     let currentDelay = config.initialDelayMs;
     let lastStatus = "starting";
     let statusStartTime = Date.now();
-    
+
     const statusProgressRange: Record<string, [number, number]> = {
       "starting": [10, 30],
       "processing": [30, 90],
     };
-    
+
     const poll = async () => {
       try {
         const res = await fetch(`/api/suno/status/${taskId}`, { credentials: "include" });
         if (!res.ok) throw new Error("Failed to check status");
-        
+
         const data = await res.json();
-        
+
         if (data.status === "complete" && (data.audioUrl || data.clips?.[0]?.audioUrl)) {
           const audioUrl = data.audioUrl || data.clips?.[0]?.audioUrl;
           setGenerationProgress(100);
@@ -812,29 +812,29 @@ export default function Studio() {
           toast({ title: "Track Ready!", description: "Your studio-quality track is complete" });
           return;
         }
-        
+
         if (data.status === "failed") {
           throw new Error(data.error || "Generation failed");
         }
-        
+
         const totalElapsed = Date.now() - startTime;
         if (totalElapsed >= config.maxWaitMs) {
           throw new Error("Generation timed out");
         }
-        
+
         const currentStatus = data.status || lastStatus;
         if (currentStatus !== lastStatus) {
           lastStatus = currentStatus;
           statusStartTime = Date.now();
         }
-        
+
         const [rangeMin, rangeMax] = statusProgressRange[currentStatus] || [10, 90];
         const statusDuration = currentStatus === "processing" ? config.maxWaitMs * 0.7 : config.maxWaitMs * 0.3;
         const statusElapsed = Date.now() - statusStartTime;
         const fraction = Math.min(statusElapsed / statusDuration, 0.95);
         const progress = rangeMin + Math.round((rangeMax - rangeMin) * fraction);
         setGenerationProgress(Math.min(progress, 95));
-        
+
         sunoPollTimeoutRef.current = setTimeout(poll, currentDelay);
         currentDelay = Math.min(currentDelay * config.backoffMultiplier, config.maxDelayMs);
       } catch (err) {
@@ -843,7 +843,7 @@ export default function Studio() {
         toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Generation failed" });
       }
     };
-    
+
     poll();
   };
 
@@ -1060,15 +1060,15 @@ export default function Studio() {
 
     const instrumental = new Audio(instrumentalUrl);
     const vocals = new Audio(vocalsUrl);
-    
+
     instrumental.volume = instrumentalVolume;
     vocals.volume = vocalsVolume;
-    
+
     mixInstrumentalRef.current = instrumental;
     mixVocalsRef.current = vocals;
 
     instrumental.play();
-    
+
     if (vocalsDelay > 0) {
       setTimeout(() => {
         vocals.play();
@@ -1090,10 +1090,10 @@ export default function Studio() {
       toast({ title: "Generate both instrumental and vocals first", variant: "destructive" });
       return;
     }
-    
-    toast({ 
-      title: "Download Individual Tracks", 
-      description: "Due to browser limitations, please download the instrumental and vocals separately, then combine them in any audio editor." 
+
+    toast({
+      title: "Download Individual Tracks",
+      description: "Due to browser limitations, please download the instrumental and vocals separately, then combine them in any audio editor."
     });
   };
 
@@ -1117,7 +1117,7 @@ export default function Studio() {
         onComplete={() => setShowOnboarding(false)}
         onSkip={() => setShowOnboarding(false)}
       />
-      
+
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -1296,8 +1296,8 @@ export default function Studio() {
                           {sunoConfig?.provider === "defapi" ? "DefAPI" : "Suno"} Pro - Studio Quality
                         </div>
                         {sunoUserInfo && (
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={cn("text-xs", sunoUserInfo.credits === -1 && "bg-green-500/20 text-green-500 border-green-500/30")}
                             data-testid="badge-suno-credits"
                           >
@@ -1305,7 +1305,7 @@ export default function Studio() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Music Style</Label>
@@ -1609,7 +1609,7 @@ export default function Studio() {
                     Audio Player
                   </CardTitle>
                   <CardDescription data-testid="text-player-description">
-                    {currentAudioUrl 
+                    {currentAudioUrl
                       ? `Playing: ${generationMode === "sample" ? "15s Sample" : "Full Track"}`
                       : "Generate music to start listening"
                     }
@@ -1626,7 +1626,7 @@ export default function Studio() {
                       >
                         <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex flex-col items-center justify-center relative overflow-hidden p-4">
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent animate-pulse" />
-                          
+
                           {sampleUrl && fullTrackUrl && (
                             <div className="flex gap-2 mb-4 z-10">
                               <Button
@@ -1656,7 +1656,6 @@ export default function Studio() {
                               className="rounded-full bg-primary/20 backdrop-blur hover-elevate"
                               data-testid="button-play-pause"
                               aria-label={isPlaying ? "Pause" : "Play"}
-                              title={isPlaying ? "Pause" : "Play"}
                             >
                               {isPlaying ? (
                                 <Pause className="w-6 h-6" />
@@ -1671,7 +1670,6 @@ export default function Studio() {
                               className="rounded-full bg-primary/10"
                               data-testid="button-mute"
                               aria-label={isMuted ? "Unmute" : "Mute"}
-                              title={isMuted ? "Unmute" : "Mute"}
                             >
                               {isMuted ? (
                                 <VolumeX className="w-4 h-4" />
@@ -1688,7 +1686,6 @@ export default function Studio() {
                                   asChild
                                   data-testid="button-download"
                                   aria-label="Download audio"
-                                  title="Download audio"
                                 >
                                   <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
                                     <Download className="w-4 h-4" />
@@ -1719,7 +1716,7 @@ export default function Studio() {
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Slider
                             value={[playbackProgress]}
@@ -1781,7 +1778,6 @@ export default function Studio() {
                     disabled={isGettingTip}
                     data-testid="button-get-tip"
                     aria-label="Get new production tip"
-                    title="Get new production tip"
                   >
                     {isGettingTip ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -2057,8 +2053,6 @@ export default function Studio() {
                             }
                           }}
                           data-testid="button-play-vocals"
-                          aria-label="Play vocals"
-                          title="Play vocals"
                         >
                           {isPlaying ? (
                             <Pause className="w-5 h-5" />
@@ -2077,8 +2071,6 @@ export default function Studio() {
                           variant="outline"
                           asChild
                           data-testid="button-download-vocals"
-                          aria-label="Download vocals"
-                          title="Download vocals"
                         >
                           <a href={vocalsUrl || fullTrackUrl || ""} download="vocals.mp3">
                             <Download className="w-4 h-4" />
@@ -2210,7 +2202,7 @@ export default function Studio() {
                           </>
                         )}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="lg"
@@ -2356,21 +2348,19 @@ export default function Studio() {
                         <button
                           key={i}
                           onClick={() => handlePianoKeyClick(key.note)}
-                          aria-label={`Note ${key.note}`}
-                          aria-pressed={selectedNotes.includes(key.note)}
                           className={cn(
                             "transition-all",
                             key.black
                               ? cn(
                                   "absolute w-6 h-16 -ml-3 z-10 rounded-b-md",
-                                  selectedNotes.includes(key.note) 
-                                    ? "bg-primary" 
+                                  selectedNotes.includes(key.note)
+                                    ? "bg-primary"
                                     : "bg-gray-800 hover:bg-gray-700"
                                 )
                               : cn(
                                   "w-10 h-24 border border-border rounded-b-md",
-                                  selectedNotes.includes(key.note) 
-                                    ? "bg-primary text-white" 
+                                  selectedNotes.includes(key.note)
+                                    ? "bg-primary text-white"
                                     : "bg-white dark:bg-gray-100 text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-200"
                                 )
                           )}

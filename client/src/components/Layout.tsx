@@ -30,17 +30,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = location === item.href || 
+            const isActive = location === item.href ||
               (item.href === "/dashboard" && location.startsWith("/songs/")) ||
               (item.href === "/playlists" && location.startsWith("/playlists/"));
             return (
-              <Link 
-                key={item.href} 
-                href={item.href} 
+              <Link
+                key={item.href}
+                href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                  isActive 
-                    ? "bg-primary/10 text-primary font-medium" 
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
                 data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
@@ -55,9 +55,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-t border-border mt-auto">
           <div className="bg-muted/30 rounded-xl p-4 flex items-center gap-3 mb-3">
             {user?.profileImageUrl ? (
-              <img 
-                src={user.profileImageUrl} 
-                alt="Profile" 
+              <img
+                src={user.profileImageUrl}
+                alt="Profile"
                 className="w-10 h-10 rounded-full border border-border"
                 data-testid="img-user-avatar"
                 loading="lazy"
@@ -73,14 +73,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-xs text-muted-foreground truncate" data-testid="text-user-email">{user?.email}</p>
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Link
               href="/settings"
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors",
-                location === "/settings" 
-                  ? "bg-primary/10 text-primary" 
+                location === "/settings"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               data-testid="button-settings"
@@ -88,10 +88,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Settings className="w-4 h-4" />
               Settings
             </Link>
-            <button 
-              onClick={() => logout()} 
+            <button
+              onClick={() => logout()}
+              aria-label="Log out"
+              title="Log out"
               className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
               data-testid="button-logout"
+              aria-label="Log out"
+              title="Log out"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -103,7 +107,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-y-auto relative">
         {/* Background ambient glow */}
         <div className="absolute top-0 left-0 w-full h-96 bg-primary/5 blur-[100px] -z-10 pointer-events-none" />
-        
+
         <div className="max-w-7xl mx-auto p-4 md:p-8">
           {children}
         </div>
