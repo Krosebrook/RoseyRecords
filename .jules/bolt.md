@@ -15,3 +15,6 @@
 ## 2024-03-09 - Client-side array sorting performance
 **Learning:** Instantiating `new Date()` inside an `Array.prototype.sort` comparator is extremely slow and executes O(N log N) times. Furthermore, `String.prototype.localeCompare` is notoriously slow because it invokes the browser's heavy Internationalization (Intl) API.
 **Action:** For timestamps or ISO 8601 formatted date strings returned from a database or API, use standard relational operators (e.g., `a > b ? 1 : -1`) instead of parsing dates or using localeCompare to improve client-side sorting performance. Ensure fallback values are strings (like `""`) to prevent NaN issues during comparison.
+## 2026-03-11 - Short-circuit Array Filtering
+**Learning:** Checking all conditions in a single boolean expression inside `.filter()` forces JavaScript to evaluate expensive string operations (like `.toLowerCase().includes()`) even when simpler, exact-match checks (like `.genre === genreFilter`) would have already disqualified the item.
+**Action:** Always structure filter callbacks with early returns for cheap operations first. This completely skips O(N) string allocations for items that fail basic categorical filters.
