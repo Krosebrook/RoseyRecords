@@ -32,3 +32,7 @@
 **Vulnerability:** The integration routes (`audio/routes.ts` and `chat/routes.ts`) were parsing dynamic route parameters (`:id`) using `parseInt()`. `parseInt` dangerously parses partial numeric strings, evaluating `"1; DROP TABLE users"` or `"1/../../"` as `1`, ignoring the malicious suffix. This can bypass validation constraints and pass unexpected characters to downstream handlers or database queries.
 **Learning:** In JavaScript/TypeScript, `parseInt` is too permissive for security-critical input validation compared to strict numeric parsing using `Number()`.
 **Prevention:** Always use strict numeric parsing for IDs. The `parseNumericId` helper (using `Number(value)` combined with `!isNaN` and `Number.isInteger` checks) should be the standard for parsing any numeric route parameters across the entire application.
+## 2024-03-24 - Missing Rate Limiting on Database Write Endpoints
+**Vulnerability:** The `POST /api/songs/:id/play` endpoint lacked rate limiting middleware (`writeRateLimiter`), allowing for potential play count manipulation (artificial inflation) and minor DoS risks via database write spamming.
+**Learning:** Even utility-like endpoints that modify database state need to be protected. Developers may sometimes assume that simple increment operations are low risk and forget to apply standard rate limiting.
+**Prevention:** Always apply the appropriate rate limiting middleware (`writeRateLimiter` for writes/mutations, `aiRateLimiter` for generation) to all state-modifying or expensive endpoints during route definition.
