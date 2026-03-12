@@ -13,3 +13,6 @@
 ## 2026-03-09 - Icon-Only Button Native Tooltips
 **Learning:** Icon-only buttons with `aria-label` are accessible to screen readers, but sighted users rely on native hover tooltips provided by the `title` attribute to understand the action if there's no visible text.
 **Action:** Always add a `title` attribute matching the `aria-label` to provide a native hover tooltip on icon-only buttons for sighted users.
+## 2024-10-24 - Icon-only button tooltips
+**Learning:** We have many `<Button size="icon">` instances that use `lucide-react` icons and correctly provide `aria-label`s for screen readers but omit `title` attributes. This leaves sighted users who don't use screen readers without a tooltip to explain the action, relying purely on iconography which can be ambiguous (e.g. download icon vs share icon). Some Radix tooltips are used but for simpler buttons the native browser tooltip is best.
+**Action:** Always add a `title` attribute that matches the `aria-label` on any icon-only button to provide a native hover tooltip.
