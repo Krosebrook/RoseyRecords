@@ -12,3 +12,6 @@
 ## 2026-03-08 - Short-circuiting expensive array filters
 **Learning:** Eager evaluation of complex filter callbacks runs expensive operations (like `.toLowerCase().includes()`) for every item, even when cheap exact-match conditions fail.
 **Action:** When filtering arrays by multiple conditions, always implement early returns (`if (!cheapCondition) return false;`) to evaluate cheap checks first, completely skipping execution of expensive string operations for irrelevant items.
+## 2024-03-09 - Client-side array sorting performance
+**Learning:** Instantiating `new Date()` inside an `Array.prototype.sort` comparator is extremely slow and executes O(N log N) times. Furthermore, `String.prototype.localeCompare` is notoriously slow because it invokes the browser's heavy Internationalization (Intl) API.
+**Action:** For timestamps or ISO 8601 formatted date strings returned from a database or API, use standard relational operators (e.g., `a > b ? 1 : -1`) instead of parsing dates or using localeCompare to improve client-side sorting performance. Ensure fallback values are strings (like `""`) to prevent NaN issues during comparison.
