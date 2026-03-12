@@ -44,3 +44,10 @@
 ## 2026-02-12 - Drizzle .nullsLast() Type Error
 **Learning:** The `.nullsLast()` method on `desc()` sorting causes type errors in the current environment configuration.
 **Action:** Avoid `.nullsLast()` on `desc()` operations to maintain type safety.
+## 2026-02-10 - Explicit Column Selection
+**Learning:** Using `getTableColumns` and destructuring to exclude fields is risky because critical fields (like `audioUrl`) might be accidentally assumed to be excluded or included. Implicit behavior leads to bugs.
+**Action:** Use explicit column selection for summary views (e.g., `select({ id: table.id, ... })`) to ensure the "API contract" is clear and robust.
+
+## 2026-02-10 - Drizzle nullsLast Compatibility
+**Learning:** `orderBy(desc(col).nullsLast())` causes type errors in some Drizzle setups.
+**Action:** Avoid `.nullsLast()` unless strictly necessary and supported by the environment; usually standard `desc()` suffices for effectively non-null columns.
