@@ -13,7 +13,10 @@ export function registerChatRoutes(app: Express): void {
   // Get all conversations
   app.get("/api/conversations", async (req: Request, res: Response) => {
     try {
-      const conversations = await chatStorage.getAllConversations();
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const conversations = await chatStorage.getAllConversations(userId);
       res.json(conversations);
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -24,10 +27,13 @@ export function registerChatRoutes(app: Express): void {
   // Get single conversation with messages
   app.get("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
       const id = parseNumericId(req.params.id, res);
       if (id === null) return;
 
-      const conversation = await chatStorage.getConversation(id);
+      const conversation = await chatStorage.getConversation(id, userId);
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
       }
@@ -42,8 +48,11 @@ export function registerChatRoutes(app: Express): void {
   // Create new conversation
   app.post("/api/conversations", async (req: Request, res: Response) => {
     try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
       const { title } = req.body;
-      const conversation = await chatStorage.createConversation(title || "New Chat");
+      const conversation = await chatStorage.createConversation(title || "New Chat", userId);
       res.status(201).json(conversation);
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -54,13 +63,19 @@ export function registerChatRoutes(app: Express): void {
   // Delete conversation
   app.delete("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
       const id = parseNumericId(req.params.id, res);
       if (id === null) return;
 
-      await chatStorage.deleteConversation(id);
+      await chatStorage.deleteConversation(id, userId);
       res.status(204).send();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting conversation:", error);
+      if (error.message === "Conversation not found or unauthorized") {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
       res.status(500).json({ error: "Failed to delete conversation" });
     }
   });
@@ -68,8 +83,19 @@ export function registerChatRoutes(app: Express): void {
   // Send message and get AI response (streaming)
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const conversationId = parseNumericId(req.params.id, res);
       if (conversationId === null) return;
+
+      // Ensure user owns conversation
+      const conversation = await chatStorage.getConversation(conversationId, userId);
+      if (!conversation) {
+         return res.status(404).json({ error: "Conversation not found" });
+      }
 
       const { content } = req.body;
 
@@ -123,4 +149,3 @@ export function registerChatRoutes(app: Express): void {
     }
   });
 }
-
