@@ -150,7 +150,8 @@ export default function Explore() {
         song.lyrics.toLowerCase().includes(searchLower);
       
       const matchesGenre = genreFilter === "all" || 
-        song.genre?.toLowerCase().includes(genreFilter);
+        song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
+        song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
       
       return matchesSearch && matchesGenre && matchesMood;
