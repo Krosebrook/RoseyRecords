@@ -27,7 +27,7 @@ Two rate limiters are applied:
 - **AI Rate Limiter** (50 requests / 15 minutes): Applied to AI generation endpoints
 - **Write Rate Limiter** (100 requests / 15 minutes): Applied to database write endpoints
 
-Admin users (listed in `ADMIN_USER_IDS` env var) bypass rate limits.
+Admin users (listed in `ADMIN_USER_IDS` env var) get unlimited Suno credits (returned as `credits: -1` from `/api/suno/user`).
 
 ---
 

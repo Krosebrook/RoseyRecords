@@ -149,9 +149,12 @@ Add `data-testid` to elements for automated testing:
 
 ### Running Tests
 ```bash
-# Unit tests (if available)
-npx vitest run
+# Existing unit tests (tsx-based, no test runner configured)
+npx tsx server/utils.test.ts
+npx tsx client/src/lib/queryClient.test.ts
 ```
+
+Note: No test runner (vitest/jest) is currently configured. Tests are standalone TypeScript files.
 
 ## Documentation
 

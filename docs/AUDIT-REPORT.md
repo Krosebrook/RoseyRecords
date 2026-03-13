@@ -72,7 +72,7 @@ HarmoniQ is a functional AI music generation platform with a solid feature set. 
 
 #### E2E Test Results (2026-03-13 audit session)
 
-Tests executed via Playwright against running dev server:
+Ad-hoc E2E tests executed during audit via Replit's Playwright testing tool (not a persistent test suite in the repo). These are one-time verification results, not repeatable CI tests.
 
 | Test Suite | Tests | Pass | Fail | Notes |
 |---|---|---|---|---|
@@ -84,7 +84,7 @@ Tests executed via Playwright against running dev server:
 | Error states | 4 | 4 | 0 | Empty inputs rejected, invalid data handled |
 | **Total** | **19** | **19** | **0** | All passing |
 
-Command: `npx playwright test` (Chromium headless, against `http://localhost:5000`)
+Note: No Playwright config or test suite exists in the repository. These tests were run via Replit's built-in testing tool (Chromium headless, against `http://localhost:5000`). Establishing a persistent E2E test suite is a recommended action item.
 
 ### 4. Security (6/10)
 
@@ -137,7 +137,7 @@ See `docs/SECURITY.md` for detailed analysis and recommendations.
 **Weaknesses:**
 - Large monolithic files (routes.ts: 1183 lines, storage.ts: large)
 - Inconsistent error handling across routes
-- Dead code: unmounted audio/image integration routes
+- Dead code: unmounted audio integration module (`replit_integrations/audio/`); chat and image routes ARE mounted
 - Coming Soon stubs (Marketplace, Mixer, VideoCreator, Activity) add surface area without value
 - No linting configuration (ESLint/Prettier not configured)
 

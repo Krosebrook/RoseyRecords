@@ -16,7 +16,7 @@
 ### Authorization
 - Route-level: `isAuthenticated` middleware checks `req.user` exists
 - Resource-level: Song/playlist CRUD verifies `userId` matches `req.user.claims.sub`
-- Admin: `ADMIN_USER_IDS` env var grants unlimited rate limits
+- Admin: `ADMIN_USER_IDS` env var grants unlimited Suno credits (does not bypass rate limits)
 
 ### Input Validation
 - **Zod schemas** (`drizzle-zod`): Validate request bodies before database writes
