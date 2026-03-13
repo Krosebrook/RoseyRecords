@@ -169,10 +169,11 @@ export default function Activity() {
     <Layout>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-activity-title">
-            <Bell className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold flex items-center gap-2" data-testid="text-activity-title">
+            <Bell className="w-7 h-7 text-primary" />
             Activity
           </h1>
+          <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">Preview</span>
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-2">

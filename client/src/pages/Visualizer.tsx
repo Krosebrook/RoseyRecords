@@ -4,6 +4,7 @@ import { Play, Pause, RotateCcw, Upload, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePageTitle } from "@/hooks/use-page-title";
+import Layout from "@/components/Layout";
 
 export default function Visualizer() {
   usePageTitle("Audio Visualizer");
@@ -52,7 +53,6 @@ export default function Visualizer() {
 
     const bufferLength = analyser.frequencyBinCount;
 
-    // Bolt Optimization: Reuse the Uint8Array to avoid garbage collection pressure in the render loop
     if (!dataArrayRef.current || dataArrayRef.current.length !== bufferLength) {
       dataArrayRef.current = new Uint8Array(bufferLength);
     }
@@ -300,7 +300,8 @@ export default function Visualizer() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] flex flex-col">
+    <Layout>
+    <div className="bg-[#0a0a1a] flex flex-col -m-4 md:-m-8 min-h-[calc(100vh-4rem)]">
       {/* Header */}
       <header className="p-3 md:p-4 border-b border-cyan-900/30">
         <h1 
@@ -460,5 +461,6 @@ export default function Visualizer() {
         data-testid="audio-element"
       />
     </div>
+    </Layout>
   );
 }

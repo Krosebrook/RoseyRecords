@@ -142,7 +142,6 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
-    // Extract loop-invariant toLowerCase() operation to prevent redundant O(N) string allocations during search filtering
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     let filtered = songs.filter(song => {
@@ -210,7 +209,10 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
         </div>
 
         <section data-testid="container-featured-artists">
-          <h3 className="text-lg font-bold mb-3">Featured Artists</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-lg font-bold">Featured Artists</h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Coming Soon</span>
+          </div>
           <div className="flex gap-6 overflow-x-auto pb-2">
             {FEATURED_ARTISTS.map((artist) => (
               <div key={artist.id} className="flex flex-col items-center gap-2 min-w-[72px]" data-testid={`artist-${artist.id}`}>

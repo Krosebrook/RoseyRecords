@@ -4,6 +4,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Search, Download, Star, ShoppingBag, Sparkles, Music, Mic, Headphones } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -148,12 +149,11 @@ export default function Marketplace() {
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
+          <Input
             placeholder="Search Sound Packs & Models"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-muted-foreground/50"
+            className="pl-12 h-12"
             data-testid="input-marketplace-search"
           />
         </div>
@@ -209,8 +209,9 @@ export default function Marketplace() {
                   <div className="flex items-center justify-between">
                     <Button
                       size="sm"
+                      variant="outline"
                       onClick={() => handleDownload(pack)}
-                      className="text-xs font-bold shadow-lg shadow-primary/20"
+                      className="text-xs font-bold"
                       data-testid={`button-download-${pack.id}`}
                     >
                       <Download className="w-3.5 h-3.5 mr-1.5" />

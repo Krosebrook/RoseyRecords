@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import Layout from "@/components/Layout";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { SlidersHorizontal, Play, Pause, SkipBack, SkipForward, Volume2, Sparkles } from "lucide-react";
+import { SlidersHorizontal, Play, Pause, SkipBack, SkipForward, Volume2, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,10 +55,12 @@ function ChannelStrip({
   track,
   onToggleSolo,
   onToggleMute,
+  onVolumeChange,
 }: {
   track: TrackChannel;
   onToggleSolo: (id: string) => void;
   onToggleMute: (id: string) => void;
+  onVolumeChange: (id: string, volume: number) => void;
 }) {
   return (
     <div
@@ -82,12 +84,22 @@ function ChannelStrip({
             animate={{ height: `${track.volume}%` }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
-          <motion.div
-            className="absolute left-1/2 -translate-x-1/2 w-8 h-4 bg-white rounded-sm shadow-lg border border-primary/50 cursor-grab active:cursor-grabbing"
-            animate={{ bottom: `${track.volume - 2}%` }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-8 h-4 bg-white rounded-sm shadow-lg border border-primary/50 pointer-events-none"
+            style={{ bottom: `${track.volume - 2}%` }}
           />
         </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={track.volume}
+          onChange={(e) => onVolumeChange(track.id, Number(e.target.value))}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          style={{ writingMode: "vertical-lr", direction: "rtl" }}
+          aria-label={`${track.name} volume`}
+          data-testid={`slider-volume-${track.id}`}
+        />
       </div>
 
       <div className="text-center mb-1">
@@ -217,11 +229,18 @@ export default function Mixer() {
     setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, isMuted: !t.isMuted } : t)));
   }, []);
 
+  const handleVolumeChange = useCallback((id: string, volume: number) => {
+    setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, volume } : t)));
+  }, []);
+
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const handleFinalizeMix = () => {
+    setIsFinalizing(true);
     toast({
       title: "Finalizing Mix",
       description: "Your mix is being processed. This may take a moment.",
     });
+    setTimeout(() => setIsFinalizing(false), 2000);
   };
 
   const handleAIMaster = (preset: MasteringPreset) => {
@@ -236,13 +255,13 @@ export default function Mixer() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-mixer-title">
-              <SlidersHorizontal className="w-6 h-6 text-primary" />
+            <h1 className="text-3xl font-bold flex items-center gap-2" data-testid="text-mixer-title">
+              <SlidersHorizontal className="w-7 h-7 text-primary" />
               Mixing & AI Mastering
             </h1>
           </div>
-          <Button onClick={handleFinalizeMix} className="font-bold neon-shadow" data-testid="button-finalize-mix">
-            Finalize
+          <Button onClick={handleFinalizeMix} disabled={isFinalizing} className="font-bold neon-shadow" data-testid="button-finalize-mix">
+            {isFinalizing ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</> : "Finalize"}
           </Button>
         </div>
 
@@ -271,6 +290,7 @@ export default function Mixer() {
                 track={track}
                 onToggleSolo={handleToggleSolo}
                 onToggleMute={handleToggleMute}
+                onVolumeChange={handleVolumeChange}
               />
             ))}
           </div>
