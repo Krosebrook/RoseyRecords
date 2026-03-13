@@ -892,7 +892,7 @@ GET /api/suno/status
 }
 ```
 
-### Generate Song (Synchronous)
+### Generate Song
 
 ```
 POST /api/suno/generate
@@ -905,8 +905,8 @@ POST /api/suno/generate
 {
   "prompt": "An upbeat pop song about dancing in the rain",
   "lyrics": "Optional custom lyrics...",
-  "genre": "Pop",
-  "mood": "Happy",
+  "title": "Optional title",
+  "style": "Pop",
   "model": "chirp-bluejay",
   "instrumental": false
 }
@@ -914,19 +914,23 @@ POST /api/suno/generate
 
 **Parameters:**
 - `prompt` (required): Description of the song
-- `lyrics`: Custom lyrics (if empty, Suno generates lyrics)
+- `lyrics`: Custom lyrics (if provided, enables custom mode)
+- `title`: Song title (used in custom mode)
+- `style`: Style/genre tags
 - `model`: One of `chirp-crow` (v5), `chirp-bluejay` (v4.5+, default), `chirp-auk` (v4.5), `chirp-v4` (v4)
-- `instrumental`: If true, generates without vocals
+- `instrumental`: If true, generates without vocals (default: false)
 
-**Response:**
+**Response (SunoGenerationResult):**
 ```json
 {
-  "audioUrl": "https://cdn.suno.ai/...",
-  "title": "Dancing in the Rain",
-  "lyrics": "Generated lyrics...",
-  "imageUrl": "https://cdn.suno.ai/..."
+  "id": "task_abc123...",
+  "status": "processing",
+  "audioUrl": null,
+  "clips": []
 }
 ```
+
+Both endpoints return a `SunoGenerationResult` — an async task. Use the status endpoint to poll for completion.
 
 ### Start Async Song Generation
 
@@ -936,14 +940,9 @@ POST /api/suno/generate/start
 
 **Authentication:** Required
 
-**Request Body:** Same as synchronous generation
+**Request Body:** Same as `/api/suno/generate`
 
-**Response:**
-```json
-{
-  "taskId": "task_abc123..."
-}
-```
+**Response (SunoGenerationResult):** Same as `/api/suno/generate`
 
 ### Check Suno Generation Status
 
@@ -953,19 +952,26 @@ GET /api/suno/status/:taskId
 
 **Authentication:** Required
 
-**Response:**
+**Response (SunoStatusResult):**
 ```json
 {
-  "status": "completed",
-  "result": {
-    "audioUrl": "https://cdn.suno.ai/...",
-    "title": "Dancing in the Rain",
-    "lyrics": "..."
-  }
+  "id": "task_abc123...",
+  "status": "complete",
+  "audioUrl": "https://cdn.suno.ai/...",
+  "title": "Dancing in the Rain",
+  "lyrics": "Generated lyrics...",
+  "clips": [
+    {
+      "id": "clip_1",
+      "audioUrl": "https://cdn.suno.ai/...",
+      "title": "Dancing in the Rain",
+      "imageUrl": "https://cdn.suno.ai/..."
+    }
+  ]
 }
 ```
 
-Status values: `pending`, `processing`, `completed`, `failed`
+Status values: `starting`, `processing`, `complete`, `failed`
 
 ### Generate Lyrics with Suno
 
@@ -997,13 +1003,26 @@ GET /api/suno/user
 
 **Authentication:** Required
 
-**Response:**
+**Response (admin user):**
 ```json
 {
-  "creditsLeft": 50,
-  "provider": "defapi"
+  "userId": "user_123",
+  "credits": -1,
+  "plan": "admin",
+  "isAdmin": true
 }
 ```
+
+**Response (regular user — SunoUserInfo):**
+```json
+{
+  "credits": 50,
+  "userId": "user_123",
+  "plan": "pro"
+}
+```
+
+Returns `404` if the current provider does not support user info.
 
 ---
 
@@ -1023,7 +1042,10 @@ GET /api/ace-step/config
 ```json
 {
   "configured": true,
-  "maxDuration": 300
+  "maxDuration": 240,
+  "minDuration": 15,
+  "defaultDuration": 60,
+  "features": ["Full songs with vocals", "50+ language support", "..."]
 }
 ```
 
@@ -1186,16 +1208,23 @@ POST /api/generate-image
 ```json
 {
   "prompt": "Album cover art, synthwave style sunset",
-  "style": "digital-art"
+  "size": "1024x1024"
 }
 ```
+
+**Parameters:**
+- `prompt` (required): Image description
+- `size` (optional): Image dimensions — `1024x1024` (default), `512x512`, or `256x256`
 
 **Response:**
 ```json
 {
-  "imageUrl": "https://..."
+  "url": "https://...",
+  "b64_json": null
 }
 ```
+
+Returns the generated image URL and/or base64 data from OpenAI's `gpt-image-1` model.
 
 ---
 
@@ -1256,8 +1285,8 @@ POST /api/generate-image
 | POST | `/api/bark/generate/start` | - | Bark vocals (async) |
 | GET | `/api/bark/status` | - | Bark config status |
 | GET | `/api/suno/status` | - | Suno config status |
-| POST | `/api/suno/generate` | - | Suno generate (sync) |
-| POST | `/api/suno/generate/start` | - | Suno generate (async) |
+| POST | `/api/suno/generate` | - | Suno generate (async task) |
+| POST | `/api/suno/generate/start` | - | Suno generate (async task) |
 | GET | `/api/suno/status/:taskId` | - | Check Suno status |
 | POST | `/api/suno/lyrics` | - | Suno lyrics |
 | GET | `/api/suno/user` | - | Suno user/credits |

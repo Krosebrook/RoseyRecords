@@ -229,16 +229,22 @@ All endpoints, environment variables, and features were cross-referenced against
 | `DEFAPI_BASE_URL` | Env var | `server/services/suno.ts:153` |
 | `ADMIN_USER_IDS` | Env var | `server/routes.ts` |
 
-### Previously Documented but Incorrect
+### Previously Documented but Incorrect (all corrected)
 
 | Item | Error | Correction |
 |---|---|---|
 | `POST /api/logout` | Wrong method | Actual: `GET /api/logout` |
 | Chat/image endpoints | Listed as unauthenticated | Auth via `app.use()` middleware before route registration |
 | ACE-Step params | Documented `prompt`/`instrumental` | Actual: `tags` (required), `lyrics`, `duration`, `seed` |
+| ACE-Step config maxDuration | Documented `300` | Actual: `240` (from `MAX_DURATION` constant) |
 | Reference audio response | Documented `{audioUrl, duration}` | Actual: `{predictionId, status}` (async) |
+| Suno generate response | Documented sync `{audioUrl, title, lyrics}` | Actual: async `{id, status: "processing"}` (SunoGenerationResult) |
+| Suno status response | Documented `{status, result: {...}}` | Actual: flat `{id, status, audioUrl, clips: [...]}` (SunoStatusResult) |
+| Suno user response | Documented `{creditsLeft, provider}` | Actual: `{credits, userId, plan}` (SunoUserInfo) or admin `{credits: -1, plan: "admin", isAdmin: true}` |
+| Image generation response | Documented `{imageUrl}` | Actual: `{url, b64_json}` from gpt-image-1 |
+| Image generation params | Documented `{prompt, style}` | Actual: `{prompt, size}` (1024x1024/512x512/256x256) |
 | npm vulnerabilities | Reported as 2 | Actual: 4 (1 low, 3 high) |
-| `SUNOAPI_COOKIE` in .env.example | Listed as used | Not referenced in any server code |
+| `SUNOAPI_COOKIE` in .env.example | Listed as used | Not referenced in any server code (removed) |
 
 ---
 
