@@ -160,7 +160,7 @@ See `docs/SECURITY.md` for detailed analysis and recommendations.
 - Replit integrations reduce external dependency management
 
 **Weaknesses:**
-- 2 npm audit vulnerabilities
+- 4 npm audit vulnerabilities (1 low, 3 high): multer (DoS), rollup (path traversal), qs (DoS)
 - `multer` used only for reference audio upload (`/api/audio/generate-with-reference`)
 - Large dependency tree (common for Node.js but increases attack surface)
 
@@ -184,7 +184,7 @@ See `docs/SECURITY.md` for detailed analysis and recommendations.
 ### Immediate (This Sprint)
 1. Remove `@ts-nocheck` from `storage.ts` and `routes.ts`
 2. Add missing database indexes
-3. Resolve npm audit vulnerabilities (minimatch, multer)
+3. Resolve npm audit vulnerabilities (4 total: multer, rollup, qs — all fixable via `npm audit fix`)
 
 ### Short-Term (Next 2 Sprints)
 5. Split `routes.ts` into domain modules

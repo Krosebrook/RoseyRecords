@@ -2,6 +2,8 @@
 
 This document provides comprehensive documentation for all API endpoints in the HarmoniQ platform.
 
+**Last Updated:** 2026-03-13
+
 ## Base URL
 
 All API endpoints are relative to the application root URL.
@@ -12,11 +14,20 @@ Most endpoints require authentication. HarmoniQ uses Replit Auth via OpenID Conn
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/auth/user` | Get current authenticated user |
-| GET | `/api/login` | Initiate login flow |
-| POST | `/api/logout` | Log out current user |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/auth/user` | Required | Get current authenticated user |
+| GET | `/api/login` | None | Initiate OIDC login flow (redirects to Replit) |
+| GET | `/api/callback` | None | OIDC callback (handles token exchange) |
+| GET | `/api/logout` | None | Log out current user (destroys session) |
+
+### Rate Limiting
+
+Two rate limiters are applied:
+- **AI Rate Limiter** (50 requests / 15 minutes): Applied to AI generation endpoints
+- **Write Rate Limiter** (100 requests / 15 minutes): Applied to database write endpoints
+
+Admin users (listed in `ADMIN_USER_IDS` env var) bypass rate limits.
 
 ---
 
@@ -89,6 +100,7 @@ POST /api/songs
 ```
 
 **Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Request Body:**
 ```json
@@ -119,6 +131,7 @@ DELETE /api/songs/:id
 ```
 
 **Authentication:** Required (must own the song)
+**Rate Limit:** Write (100/15min)
 
 **Response:** `204 No Content`
 
@@ -129,6 +142,7 @@ POST /api/songs/:id/like
 ```
 
 **Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Response:**
 ```json
@@ -144,7 +158,8 @@ POST /api/songs/:id/like
 POST /api/songs/:id/play
 ```
 
-**Authentication:** Not required
+**Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Response:**
 ```json
@@ -167,6 +182,16 @@ GET /api/songs/liked-ids
   "likedIds": [1, 5, 12, 23]
 }
 ```
+
+### Get User's Liked Songs
+
+```
+GET /api/songs/liked
+```
+
+**Authentication:** Required
+
+**Response:** Array of full song objects that the user has liked
 
 ---
 
@@ -212,6 +237,7 @@ POST /api/playlists
 ```
 
 **Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Request Body:**
 ```json
@@ -232,6 +258,7 @@ DELETE /api/playlists/:id
 ```
 
 **Authentication:** Required (must own the playlist)
+**Rate Limit:** Write (100/15min)
 
 **Response:** `204 No Content`
 
@@ -242,6 +269,7 @@ POST /api/playlists/:id/songs
 ```
 
 **Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Request Body:**
 ```json
@@ -257,8 +285,37 @@ DELETE /api/playlists/:id/songs/:songId
 ```
 
 **Authentication:** Required
+**Rate Limit:** Write (100/15min)
 
 **Response:** `204 No Content`
+
+---
+
+## AI Suggestions API
+
+### AI Suggest
+
+```
+POST /api/generate/ai-suggest
+```
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "context": "lyrics",
+  "currentValue": "A song about...",
+  "field": "prompt"
+}
+```
+
+**Response:**
+```json
+{
+  "suggestion": "AI-generated suggestion text..."
+}
+```
 
 ---
 
@@ -510,7 +567,7 @@ POST /api/music-theory/lookup-scales
 
 ---
 
-## Audio Generation API (Replicate)
+## Audio Generation API (MusicGen via Replicate)
 
 Short-form audio generation using Meta's MusicGen model (5-30 seconds).
 
@@ -589,6 +646,28 @@ POST /api/audio/sound-effect
 {
   "prompt": "Thunder rumbling in the distance",
   "duration": 5
+}
+```
+
+### Generate with Reference Audio
+
+```
+POST /api/audio/generate-with-reference
+```
+
+**Authentication:** Required
+**Content-Type:** `multipart/form-data`
+
+**Request Body:**
+- `referenceAudio` (file): Audio file to use as style reference (max 10MB, audio/* only)
+- `prompt` (text): Text description of desired output
+- `duration` (text): Duration in seconds
+
+**Response:**
+```json
+{
+  "audioUrl": "https://replicate.delivery/...",
+  "duration": 15
 }
 ```
 
@@ -793,9 +872,406 @@ GET /api/bark/status
 
 ---
 
+## Suno API (DefAPI / Multi-Provider)
+
+Studio-quality music generation with realistic vocals via Suno.
+
+### Check Suno Status
+
+```
+GET /api/suno/status
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "configured": true,
+  "provider": "defapi"
+}
+```
+
+### Generate Song (Synchronous)
+
+```
+POST /api/suno/generate
+```
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "prompt": "An upbeat pop song about dancing in the rain",
+  "lyrics": "Optional custom lyrics...",
+  "genre": "Pop",
+  "mood": "Happy",
+  "model": "chirp-bluejay",
+  "instrumental": false
+}
+```
+
+**Parameters:**
+- `prompt` (required): Description of the song
+- `lyrics`: Custom lyrics (if empty, Suno generates lyrics)
+- `model`: One of `chirp-crow` (v5), `chirp-bluejay` (v4.5+, default), `chirp-auk` (v4.5), `chirp-v4` (v4)
+- `instrumental`: If true, generates without vocals
+
+**Response:**
+```json
+{
+  "audioUrl": "https://cdn.suno.ai/...",
+  "title": "Dancing in the Rain",
+  "lyrics": "Generated lyrics...",
+  "imageUrl": "https://cdn.suno.ai/..."
+}
+```
+
+### Start Async Song Generation
+
+```
+POST /api/suno/generate/start
+```
+
+**Authentication:** Required
+
+**Request Body:** Same as synchronous generation
+
+**Response:**
+```json
+{
+  "taskId": "task_abc123..."
+}
+```
+
+### Check Suno Generation Status
+
+```
+GET /api/suno/status/:taskId
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "status": "completed",
+  "result": {
+    "audioUrl": "https://cdn.suno.ai/...",
+    "title": "Dancing in the Rain",
+    "lyrics": "..."
+  }
+}
+```
+
+Status values: `pending`, `processing`, `completed`, `failed`
+
+### Generate Lyrics with Suno
+
+```
+POST /api/suno/lyrics
+```
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "prompt": "A heartfelt ballad about lost love"
+}
+```
+
+**Response:**
+```json
+{
+  "lyrics": "Generated lyrics text..."
+}
+```
+
+### Get Suno User Info
+
+```
+GET /api/suno/user
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "creditsLeft": 50,
+  "provider": "defapi"
+}
+```
+
+---
+
+## ACE-Step 1.5 API (Replicate)
+
+Commercial-grade full song generation with vocals via ACE-Step 1.5 model.
+
+### Get ACE-Step Configuration
+
+```
+GET /api/ace-step/config
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "configured": true,
+  "maxDuration": 300
+}
+```
+
+### Generate Song
+
+```
+POST /api/ace-step/generate
+```
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "lyrics": "Song lyrics with verse/chorus structure...",
+  "prompt": "Genre and style description",
+  "duration": 120,
+  "instrumental": false
+}
+```
+
+**Response:**
+```json
+{
+  "predictionId": "abc123...",
+  "status": "starting"
+}
+```
+
+### Check ACE-Step Generation Status
+
+```
+GET /api/ace-step/status/:predictionId
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "status": "succeeded",
+  "output": "https://replicate.delivery/..."
+}
+```
+
+Status values: `starting`, `processing`, `succeeded`, `failed`
+
+---
+
+## AI Chat API (Conversations)
+
+AI-powered chat conversations using OpenAI.
+
+### List Conversations
+
+```
+GET /api/conversations
+```
+
+**Authentication:** Not required (no auth middleware applied)
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Chat about music theory",
+    "createdAt": "2026-01-25T00:00:00Z"
+  }
+]
+```
+
+### Get Conversation with Messages
+
+```
+GET /api/conversations/:id
+```
+
+**Authentication:** Not required
+
+**Response:**
+```json
+{
+  "id": 1,
+  "title": "Chat about music theory",
+  "messages": [
+    { "id": 1, "role": "user", "content": "What is a chord?", "createdAt": "..." },
+    { "id": 2, "role": "assistant", "content": "A chord is...", "createdAt": "..." }
+  ]
+}
+```
+
+### Create Conversation
+
+```
+POST /api/conversations
+```
+
+**Authentication:** Not required
+
+**Request Body:**
+```json
+{
+  "title": "New conversation"
+}
+```
+
+### Delete Conversation
+
+```
+DELETE /api/conversations/:id
+```
+
+**Authentication:** Not required
+
+**Response:** `204 No Content`
+
+### Send Message (with AI Response)
+
+```
+POST /api/conversations/:id/messages
+```
+
+**Authentication:** Not required
+
+**Request Body:**
+```json
+{
+  "content": "What are the best chord progressions for pop music?"
+}
+```
+
+**Response:** AI-generated response message
+
+---
+
+## Image Generation API
+
+### Generate Image
+
+```
+POST /api/generate-image
+```
+
+**Authentication:** Not required (no auth middleware applied)
+
+**Request Body:**
+```json
+{
+  "prompt": "Album cover art, synthwave style sunset",
+  "style": "digital-art"
+}
+```
+
+**Response:**
+```json
+{
+  "imageUrl": "https://..."
+}
+```
+
+---
+
+## Endpoint Summary
+
+### Public Endpoints (No Auth Required)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/songs/public` | List public songs |
+| GET | `/api/generate/random-prompt` | Random song prompt |
+| GET | `/api/generate/random-lyrics` | Random lyrics sample |
+| GET | `/api/login` | Initiate login |
+| GET | `/api/callback` | OIDC callback |
+| GET | `/api/logout` | Logout |
+| GET | `/api/conversations` | List conversations |
+| GET | `/api/conversations/:id` | Get conversation |
+| POST | `/api/conversations` | Create conversation |
+| DELETE | `/api/conversations/:id` | Delete conversation |
+| POST | `/api/conversations/:id/messages` | Send message |
+| POST | `/api/generate-image` | Generate image |
+
+### Authenticated Endpoints
+
+| Method | Path | Rate Limit | Description |
+|--------|------|------------|-------------|
+| GET | `/api/auth/user` | - | Current user |
+| GET | `/api/songs` | - | User's songs |
+| GET | `/api/songs/:id` | - | Get song |
+| POST | `/api/songs` | Write | Create song |
+| DELETE | `/api/songs/:id` | Write | Delete song |
+| POST | `/api/songs/:id/like` | Write | Like/unlike |
+| POST | `/api/songs/:id/play` | Write | Increment play |
+| GET | `/api/songs/liked-ids` | - | Liked song IDs |
+| GET | `/api/songs/liked` | - | Liked songs |
+| GET | `/api/playlists` | - | User's playlists |
+| GET | `/api/playlists/:id` | - | Get playlist |
+| POST | `/api/playlists` | Write | Create playlist |
+| DELETE | `/api/playlists/:id` | Write | Delete playlist |
+| POST | `/api/playlists/:id/songs` | Write | Add song to playlist |
+| DELETE | `/api/playlists/:id/songs/:songId` | Write | Remove song |
+| POST | `/api/generate/ai-suggest` | - | AI suggestion |
+| POST | `/api/generate/lyrics` | - | Generate lyrics (OpenAI) |
+| POST | `/api/generate/song-concept` | - | Song concept (Gemini) |
+| POST | `/api/generate/lyrics-gemini` | - | Lyrics (Gemini) |
+| POST | `/api/generate/analyze-lyrics` | - | Analyze lyrics |
+| POST | `/api/generate/production-tips` | - | Production tips |
+| POST | `/api/generate/cover-art-prompt` | - | Cover art prompt |
+| POST | `/api/music-theory/chord-progression` | - | Chord progression |
+| POST | `/api/music-theory/reharmonize` | - | Reharmonize |
+| POST | `/api/music-theory/lookup-scales` | - | Scale lookup |
+| POST | `/api/audio/generate` | - | MusicGen (sync) |
+| POST | `/api/audio/generate/start` | - | MusicGen (async) |
+| GET | `/api/audio/status/:predictionId` | - | Check MusicGen status |
+| POST | `/api/audio/sound-effect` | - | Sound effect |
+| POST | `/api/audio/generate-with-reference` | - | Generate with reference audio |
+| POST | `/api/stable-audio/sample` | - | Stable Audio sample |
+| POST | `/api/stable-audio/full` | - | Stable Audio full |
+| POST | `/api/stable-audio/start` | - | Stable Audio (async) |
+| GET | `/api/stable-audio/status/:requestId` | - | Check Stable Audio status |
+| POST | `/api/stable-audio/transform` | - | Transform audio |
+| GET | `/api/bark/voices` | - | Available voices |
+| POST | `/api/bark/generate` | - | Bark vocals (sync) |
+| POST | `/api/bark/generate/start` | - | Bark vocals (async) |
+| GET | `/api/bark/status` | - | Bark config status |
+| GET | `/api/suno/status` | - | Suno config status |
+| POST | `/api/suno/generate` | - | Suno generate (sync) |
+| POST | `/api/suno/generate/start` | - | Suno generate (async) |
+| GET | `/api/suno/status/:taskId` | - | Check Suno status |
+| POST | `/api/suno/lyrics` | - | Suno lyrics |
+| GET | `/api/suno/user` | - | Suno user/credits |
+| GET | `/api/ace-step/config` | - | ACE-Step config |
+| POST | `/api/ace-step/generate` | - | ACE-Step generate |
+| GET | `/api/ace-step/status/:predictionId` | - | Check ACE-Step status |
+
+---
+
 ## Error Responses
 
 All endpoints may return the following error formats:
+
+### Rate Limited (429)
+```json
+{
+  "message": "Rate limit exceeded. Try again later.",
+  "retryAfter": 900
+}
+```
 
 ### Validation Error (400)
 ```json

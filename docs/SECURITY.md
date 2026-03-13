@@ -44,10 +44,15 @@ Set in `server/index.ts`:
 
 ### npm Audit Results (2026-03-13)
 
+4 vulnerabilities (1 low, 3 high):
+
 | Package | Severity | Type | Notes |
 |---|---|---|---|
-| `minimatch` | Moderate | ReDoS | Transitive dep of `drizzle-kit` (devDep only) |
-| `multer` | Unknown | Pending advisory | Production dependency |
+| `multer` | High | DoS via resource exhaustion + uncontrolled recursion | Production dep (used for reference audio upload) |
+| `rollup` | High | Arbitrary file write via path traversal | Transitive dep of Vite (devDep) |
+| `qs` | Low | arrayLimit bypass in comma parsing (DoS) | Transitive dep |
+
+All fixable via `npm audit fix`.
 
 ### Code Quality Issues Impacting Security
 
