@@ -41,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           data-testid="button-mobile-menu"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -134,7 +134,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
             <button 
               onClick={() => logout()} 
-              className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+              className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] text-sm text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               data-testid="button-logout"
             >
               <LogOut className="w-4 h-4" />

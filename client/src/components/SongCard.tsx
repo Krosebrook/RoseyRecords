@@ -75,7 +75,7 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
                         variant="ghost"
                         onClick={(e) => e.stopPropagation()}
                         disabled={isPending}
-                        className="md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        className="opacity-70 hover:opacity-100 focus:opacity-100 transition-opacity"
                         data-testid={`button-delete-${song.id}`}
                         aria-label="Delete song"
                       >

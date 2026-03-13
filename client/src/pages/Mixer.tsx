@@ -110,7 +110,7 @@ function ChannelStrip({
         <button
           onClick={() => onToggleSolo(track.id)}
           className={cn(
-            "w-full min-h-[36px] py-2 rounded-md text-[10px] font-bold tracking-tight uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "w-full min-h-[44px] py-2.5 rounded-md text-xs font-bold tracking-tight uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             track.isSolo
               ? "bg-primary/20 border border-primary text-primary"
               : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -122,7 +122,7 @@ function ChannelStrip({
         <button
           onClick={() => onToggleMute(track.id)}
           className={cn(
-            "w-full min-h-[36px] py-2 rounded-md text-[10px] font-bold tracking-tight uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "w-full min-h-[44px] py-2.5 rounded-md text-xs font-bold tracking-tight uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             track.isMuted
               ? "bg-destructive/20 border border-destructive text-destructive"
               : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -197,7 +197,7 @@ function AIMasteringSection({ onMaster }: { onMaster: (preset: MasteringPreset) 
               key={preset}
               onClick={() => setActivePreset(preset)}
               className={cn(
-                "flex-1 py-2 px-3 min-h-[36px] rounded-full text-[10px] font-bold uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "flex-1 py-2.5 px-3 min-h-[44px] rounded-full text-xs font-bold uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activePreset === preset
                   ? "bg-yellow-400 text-background"
                   : "text-muted-foreground hover:text-foreground"
