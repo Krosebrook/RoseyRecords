@@ -71,7 +71,7 @@ Preferred communication style: Simple, everyday language.
   - Environment variable: `FAL_API_KEY` or `FAL_KEY`
 - **Suno API (via DefAPI)**: For professional studio-quality music with realistic vocals.
   - Environment variable: `DEFAPI_API_KEY` (recommended)
-  - Supports models like chirp-bluejay (v4.5+).
+  - Supported models: chirp-crow (v5), chirp-bluejay (v4.5+, default), chirp-auk (v4.5), chirp-v4 (v4). Deprecated v3.x models removed.
 
 ### Database
 - **PostgreSQL**: Primary data store for users, songs, playlists.
