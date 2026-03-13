@@ -80,3 +80,20 @@ Preferred communication style: Simple, everyday language.
 ### Authentication
 - **Replit Auth**: OpenID Connect-based authentication.
   - Environment variables: `ISSUER_URL`, `REPL_ID`, `SESSION_SECRET`
+
+## Documentation
+
+Comprehensive documentation suite in `docs/`:
+- `ARCHITECTURE.md` — System architecture, schema, auth flow
+- `API.md` — All API endpoints
+- `DATABASE.md` — Table definitions, indexes, migration strategy
+- `PRD.md` — Product requirements
+- `ROADMAP.md` — Version history and planned features
+- `CHANGELOG.md` — Detailed changelog
+- `CONTRIBUTING.md` — Development guidelines
+- `RUNBOOK.md` — Operations and troubleshooting
+- `SECURITY.md` — Security architecture and recommendations
+- `AUDIT-REPORT.md` — Full codebase audit (2026-03-13)
+- `DEAD-CODE-TRIAGE.md` — Dead code analysis
+- `docs/adr/` — 5 Architecture Decision Records
+- `.env.example` — All 21 environment variables documented

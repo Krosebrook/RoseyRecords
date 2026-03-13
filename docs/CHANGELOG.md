@@ -6,19 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Planning
-- **Beta Testing Strategy**: Comprehensive public beta testing plan created
-  - 3-phase rollout: Closed Alpha → Private Beta → Open Beta
-  - Security audit and hardening recommendations
-  - User recruitment and engagement strategy
-  - Success metrics and KPIs defined
-  - Risk mitigation strategies
-  - Timeline and milestone planning
+### Added
+- **ACE-Step 1.5 Integration**: Commercial-grade full song generation via Replicate
+- **Multi-Provider Suno Architecture**: DefAPI, Kie, SunoOrg providers selectable via `SUNO_PROVIDER` env var
+- **Rate Limiting**: AI endpoints (50 req/15min) and write endpoints (100 req/15min) with per-user tracking
+- **Security Headers**: X-Content-Type-Options, X-XSS-Protection (X-Frame-Options omitted for Replit iframe compatibility)
+- **Log Sanitization**: `sanitizeLog()` redacts sensitive data (passwords, tokens, emails, PII) from server logs
+- **Admin Bypass**: `ADMIN_USER_IDS` env var for unlimited rate limits
+
+### Changed
+- **OpenAI Model**: Updated from gpt-4o-mini/gpt-4o to gpt-5.2
+- **Gemini Model**: Updated from gemini-2.5-flash to gemini-3-pro-preview (all 8 instances)
+- **Suno Models**: Switched to bird codenames (chirp-crow v5, chirp-bluejay v4.5+ default, chirp-auk v4.5, chirp-v4 v4)
+- **MusicGen**: Updated Replicate model hash to 671ac645
+
+### Removed
+- **Deprecated Suno Models**: Removed v3/v3.5 model references
 
 ### Documentation
-- Added `BETA_TESTING_PLAN.md` - Detailed beta testing roadmap
-- Added `SECURITY_AUDIT.md` - Security assessment and recommendations
-- Added `BETA_CHECKLIST.md` - Actionable pre-launch checklist
+- Full codebase audit completed (2026-03-13)
+- 13-document documentation suite generated:
+  - `.env.example`, `ARCHITECTURE.md`, `API.md`, `PRD.md`, `ROADMAP.md`
+  - `CONTRIBUTING.md`, `RUNBOOK.md`, `DATABASE.md`, `SECURITY.md`, `AUDIT-REPORT.md`
+  - 5 Architecture Decision Records (ADRs)
+- Dead code triage completed (`DEAD-CODE-TRIAGE.md`) with 15 candidates identified
+
+### Planning
+- Production readiness audit (score: 25/50 PROTOTYPE)
+- Beta testing strategy (3-phase rollout plan)
+- Security audit and hardening recommendations
 
 ## [1.3.0] - 2026-01-26
 
@@ -80,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Temperature control for voice variation
   - Lyrics-to-singing generation
 
-- **Audio Player Enhancements**: 
+- **Audio Player Enhancements**:
   - Progress bar with seek functionality
   - Duration display for longer tracks
   - Mute toggle control
@@ -114,6 +130,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| Unreleased | 2026-03-13 | ACE-Step 1.5, model updates, rate limiting, full docs |
 | 1.3.0 | 2026-01-26 | Mobile responsive design, error handling |
 | 1.2.0 | 2026-01-25 | Audio visualizer, onboarding tours, branding |
 | 1.1.0 | 2026-01-24 | Gemini AI, Stable Audio, Music Studio, Bark vocals |
