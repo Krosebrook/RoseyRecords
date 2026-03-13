@@ -84,7 +84,7 @@ HarmoniQ is a functional AI music generation platform with a solid feature set. 
 - No CSRF protection
 - Rate limiter is in-memory (resets on restart)
 - `@ts-nocheck` on security-critical code paths
-- 2 npm audit vulnerabilities (minimatch, multer)
+- 4 npm audit vulnerabilities (1 low, 3 high): multer, rollup, qs
 - No request body size limits explicitly set
 - No Content-Security-Policy header
 
@@ -199,3 +199,136 @@ See `docs/SECURITY.md` for detailed analysis and recommendations.
 12. Migrate rate limiting to Redis
 13. Add structured logging
 14. Complete Marketplace and Mixer features
+
+---
+
+## Documentation Drift Analysis
+
+### Methodology
+
+All endpoints, environment variables, and features were cross-referenced against source code. Routes verified by grepping `app.get/post/delete` in `server/routes.ts` (50 handlers) and `server/replit_integrations/*/routes.ts` (6 handlers). Auth verified via `isAuthenticated` middleware and `app.use()` path-level middleware. Env vars verified via `grep -roh "process\.env\.\w+"` across server code.
+
+### Implemented but Previously Undocumented
+
+| Item | Type | Location |
+|---|---|---|
+| `POST /api/generate/ai-suggest` | Endpoint | `server/routes.ts:353` |
+| `GET /api/songs/liked` | Endpoint | `server/routes.ts:212` |
+| `POST /api/suno/generate` | Endpoint | `server/routes.ts:911` |
+| `POST /api/suno/generate/start` | Endpoint | `server/routes.ts:946` |
+| `GET /api/suno/status/:taskId` | Endpoint | `server/routes.ts:981` |
+| `POST /api/suno/lyrics` | Endpoint | `server/routes.ts:1005` |
+| `GET /api/suno/user` | Endpoint | `server/routes.ts:1029` |
+| `GET /api/suno/status` | Endpoint | `server/routes.ts:900` |
+| `GET /api/ace-step/config` | Endpoint | `server/routes.ts:1068` |
+| `POST /api/ace-step/generate` | Endpoint | `server/routes.ts:1077` |
+| `GET /api/ace-step/status/:predictionId` | Endpoint | `server/routes.ts:1102` |
+| `POST /api/audio/generate-with-reference` | Endpoint | `server/routes.ts:1138` |
+| `POST /api/generate-image` | Endpoint | `replit_integrations/image/routes.ts:6` |
+| Conversation endpoints (5) | Endpoints | `replit_integrations/chat/routes.ts` |
+| `DEFAPI_BASE_URL` | Env var | `server/services/suno.ts:153` |
+| `ADMIN_USER_IDS` | Env var | `server/routes.ts` |
+
+### Previously Documented but Incorrect
+
+| Item | Error | Correction |
+|---|---|---|
+| `POST /api/logout` | Wrong method | Actual: `GET /api/logout` |
+| Chat/image endpoints | Listed as unauthenticated | Auth via `app.use()` middleware before route registration |
+| ACE-Step params | Documented `prompt`/`instrumental` | Actual: `tags` (required), `lyrics`, `duration`, `seed` |
+| Reference audio response | Documented `{audioUrl, duration}` | Actual: `{predictionId, status}` (async) |
+| npm vulnerabilities | Reported as 2 | Actual: 4 (1 low, 3 high) |
+| `SUNOAPI_COOKIE` in .env.example | Listed as used | Not referenced in any server code |
+
+---
+
+## Dependency Inventory
+
+### Production Dependencies (74 packages)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@fal-ai/client` | ^1.7.2 | Stable Audio API client |
+| `@google/genai` | ^1.38.0 | Gemini AI integration |
+| `@hookform/resolvers` | ^3.10.0 | Form validation resolvers |
+| `@radix-ui/*` (20 packages) | various | shadcn/ui component primitives |
+| `@tanstack/react-query` | ^5.60.5 | Server state management |
+| `class-variance-authority` | ^0.7.1 | Variant styling utility |
+| `clsx` | ^2.1.1 | Class name utility |
+| `cmdk` | ^1.1.1 | Command palette component |
+| `connect-pg-simple` | ^10.0.0 | PostgreSQL session store |
+| `date-fns` | ^3.6.0 | Date formatting |
+| `drizzle-orm` | ^0.39.3 | Database ORM |
+| `drizzle-zod` | ^0.7.1 | Drizzle-Zod schema bridge |
+| `embla-carousel-react` | ^8.6.0 | Carousel component |
+| `express` | ^5.0.1 | HTTP server framework |
+| `express-session` | ^1.19.0 | Session middleware |
+| `framer-motion` | ^11.18.2 | Animation library |
+| `input-otp` | ^1.4.2 | OTP input component |
+| `lucide-react` | ^0.453.0 | Icon library |
+| `memoizee` | ^0.4.17 | Function memoization |
+| `memorystore` | ^1.6.7 | In-memory session store (fallback) |
+| `multer` | ^2.0.2 | File upload handling (reference audio) |
+| `next-themes` | ^0.4.6 | Theme switching |
+| `openai` | ^6.16.0 | OpenAI API client |
+| `openid-client` | ^6.8.1 | OIDC authentication |
+| `p-limit` | ^7.2.0 | Concurrency limiter |
+| `p-retry` | ^7.1.1 | Retry with backoff |
+| `passport` | ^0.7.0 | Authentication framework |
+| `passport-local` | ^1.0.0 | Local strategy (unused — see below) |
+| `pg` | ^8.16.3 | PostgreSQL client |
+| `react` | ^18.3.1 | UI framework |
+| `react-dom` | ^18.3.1 | React DOM renderer |
+| `react-day-picker` | ^8.10.1 | Date picker component |
+| `react-hook-form` | ^7.55.0 | Form state management |
+| `react-icons` | ^5.4.0 | Icon library (company logos) |
+| `react-resizable-panels` | ^2.1.7 | Resizable panel layout |
+| `recharts` | ^2.15.2 | Chart components |
+| `replicate` | ^1.4.0 | Replicate API client |
+| `tailwind-merge` | ^2.6.0 | Tailwind class merging |
+| `tailwindcss-animate` | ^1.0.7 | Animation utilities |
+| `tw-animate-css` | ^1.2.5 | CSS animation utilities |
+| `vaul` | ^1.1.2 | Drawer component |
+| `wouter` | ^3.3.5 | Client-side router |
+| `ws` | ^8.18.0 | WebSocket client (unused in current routes) |
+| `zod` | ^3.25.76 | Schema validation |
+| `zod-validation-error` | ^3.5.4 | Zod error formatting |
+
+### Dev Dependencies (23 packages)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@replit/vite-plugin-*` (3) | various | Replit development tooling |
+| `@tailwindcss/typography` | ^0.5.15 | Typography plugin |
+| `@tailwindcss/vite` | ^4.1.18 | Tailwind Vite integration |
+| `@types/*` (9) | various | TypeScript type definitions |
+| `@vitejs/plugin-react` | ^4.7.0 | React Vite plugin |
+| `autoprefixer` | ^10.4.20 | CSS vendor prefixing |
+| `drizzle-kit` | ^0.31.8 | Database migration tooling |
+| `esbuild` | ^0.25.0 | Production bundler |
+| `postcss` | ^8.4.47 | CSS processing |
+| `tailwindcss` | ^3.4.17 | CSS framework |
+| `tsx` | ^4.21.0 | TypeScript execution |
+| `typescript` | 5.6.3 | TypeScript compiler |
+| `vite` | ^7.3.0 | Dev server and bundler |
+
+### Potentially Unused Dependencies
+
+| Package | Evidence | Recommendation |
+|---|---|---|
+| `passport-local` | No `LocalStrategy` usage found in server code; app uses OIDC only | Remove |
+| `ws` | No WebSocket server or client usage in current route handlers | Remove unless planned for real-time features |
+| `memorystore` | `connect-pg-simple` is used for sessions; memorystore appears unused | Remove |
+| `next-themes` | App uses custom CSS variables for theming, not next-themes | Verify usage or remove |
+| `@types/memoizee` | Listed in prod deps instead of devDeps | Move to devDependencies |
+| `@types/multer` | Listed in prod deps instead of devDeps | Move to devDependencies |
+
+### Vulnerability Audit (npm audit, 2026-03-13)
+
+| Package | Severity | Advisory | Fix |
+|---|---|---|---|
+| `multer` | High (x2) | DoS via resource exhaustion; DoS via uncontrolled recursion | `npm audit fix` |
+| `rollup` | High | Arbitrary file write via path traversal (in Vite devDep chain) | `npm audit fix` |
+| `qs` | Low | arrayLimit bypass in comma parsing (DoS) | `npm audit fix` |
+
+All 4 vulnerabilities are fixable via `npm audit fix`.

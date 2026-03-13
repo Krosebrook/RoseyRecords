@@ -1280,8 +1280,7 @@ All endpoints may return the following error formats:
 ### Rate Limited (429)
 ```json
 {
-  "message": "Rate limit exceeded. Try again later.",
-  "retryAfter": 900
+  "message": "Rate limit exceeded. Try again later."
 }
 ```
 
