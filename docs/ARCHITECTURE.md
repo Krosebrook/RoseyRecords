@@ -253,8 +253,8 @@ interface IStorage {
 
 | Service | Technology | Capabilities |
 |---------|------------|--------------|
-| **OpenAI** | GPT-4o | Fast lyrics generation |
-| **Gemini** | Gemini Pro | Full song concepts, music theory, production tips |
+| **OpenAI** | GPT-5.2 | Fast lyrics generation |
+| **Gemini** | Gemini 3 Pro | Full song concepts, music theory, production tips |
 | **Replicate** | MusicGen | Short audio clips (5-30 seconds) |
 | **Replicate** | Bark | AI singing vocals |
 | **fal.ai** | Stable Audio | Extended duration tracks (up to 3 minutes) |

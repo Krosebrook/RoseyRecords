@@ -56,9 +56,10 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### AI Services
-- **OpenAI API**: For fast lyrics and AI suggestions.
+- **OpenAI API**: For fast lyrics and AI suggestions (model: `gpt-5.2`).
   - Environment variables: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`
-- **Gemini API**: For comprehensive song concepts.
+  - Uses `max_completion_tokens` parameter (not deprecated `max_tokens`)
+- **Gemini API**: For comprehensive song concepts (model: `gemini-3-pro-preview`).
   - Environment variables: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
 - **Replicate API**: For MusicGen (short audio/music) and ACE-Step 1.5 (full songs with vocals).
   - Environment variable: `REPLICATE_API_KEY`

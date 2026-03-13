@@ -374,7 +374,7 @@ export async function registerRoutes(
           { role: "system", content: systemPrompt },
           { role: "user", content: context ? `Context: ${context}\n\nGenerate a suggestion.` : "Generate a suggestion." },
         ],
-        max_tokens: 500,
+        max_completion_tokens: 500,
         temperature: 0.9,
       });
 
