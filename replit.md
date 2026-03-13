@@ -46,6 +46,8 @@ Preferred communication style: Simple, everyday language.
 - **User Library**: Personal song management.
 - **Public Explore**: Browse and interact with publicly shared songs.
 - **Playlist Management**: Create and manage song playlists.
+- **Sound Marketplace**: Browse and discover premium sound packs and AI voice models.
+- **Mixing Console**: Multi-channel mixer with EQ visualizers, solo/mute controls, and master output.
 - **PWA Capabilities**: Offline caching and auto-updates.
 
 ### UI/UX Decisions

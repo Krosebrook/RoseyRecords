@@ -17,6 +17,8 @@ const Playlists = lazy(() => import("@/pages/Playlists"));
 const PlaylistDetails = lazy(() => import("@/pages/PlaylistDetails"));
 const Favorites = lazy(() => import("@/pages/Favorites"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const Marketplace = lazy(() => import("@/pages/Marketplace"));
+const Mixer = lazy(() => import("@/pages/Mixer"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function PageLoader() {
@@ -105,6 +107,14 @@ function Router() {
 
       <Route path="/settings">
         <ProtectedRoute component={Settings} />
+      </Route>
+
+      <Route path="/marketplace">
+        <ProtectedRoute component={Marketplace} />
+      </Route>
+
+      <Route path="/mixer">
+        <ProtectedRoute component={Mixer} />
       </Route>
 
       <Route>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ecb613",
+                        "background-light": "#f8f8f6",
+                        "background-dark": "#221d10",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<title>AI Video Creator</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white selection:bg-primary/30">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-white/5">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-white cursor-pointer">arrow_back_ios</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center">Video Creator</h2>
+<div class="flex size-12 items-center justify-end">
+<button class="flex items-center justify-center rounded-full h-10 w-10 bg-white/5 text-white">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</header>
+<!-- MediaPlayer / Video Preview -->
+<div class="p-4 pt-6">
+<div class="group relative flex flex-col overflow-hidden rounded-xl bg-black shadow-2xl shadow-primary/10">
+<div class="relative aspect-[9/16] md:aspect-video w-full bg-cover bg-center" data-alt="Futuristic cyberpunk neon cityscape with glowing lights" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeGIpLRnfhAD48gJGVvUOdR-5IGyYcoHlt0qpVouN_y5-unMk-vjYHkvmtRURxT-0zmCjAcK4D5SS_KYBNthMMFO9zZ9e5cUSVXAA9JrdFO-7YqWS0v57Nrb2wuN2lcAjWpERImdx8Hu_eGKYWCw6u1-V_8XgR3nLaElIOfR4zXwoEcwBZssaZ3_5ylBo09-UGLee6j-LAIJ0dA9juxVVbl3hBLgRARCE6VgpcpgGb0tjUym4QKg3kLRKA8TgADDHaMQ04C_I7vw");'>
+<!-- Overlay for depth -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<!-- Play Button -->
+<div class="absolute inset-0 flex items-center justify-center">
+<button class="flex items-center justify-center rounded-full size-20 bg-primary text-background-dark shadow-lg shadow-primary/40 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1">play_arrow</span>
+</button>
+</div>
+<!-- Media Controls -->
+<div class="absolute inset-x-0 bottom-0 p-6 space-y-3">
+<div class="flex items-center gap-3">
+<div class="h-1.5 flex-1 rounded-full bg-white/20 overflow-hidden">
+<div class="h-full w-1/3 bg-primary rounded-full relative">
+<div class="absolute -right-1 -top-1 size-3.5 rounded-full bg-white border-2 border-primary"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-white/80 text-xs font-medium">0:42</p>
+<p class="text-white/80 text-xs font-medium">2:15</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SectionHeader -->
+<div class="px-4 pt-6 flex justify-between items-end">
+<div>
+<h3 class="text-white text-xl font-bold leading-tight tracking-tight">Visual Styles</h3>
+<p class="text-white/50 text-sm">Select AI aesthetic direction</p>
+</div>
+<button class="text-primary text-sm font-semibold">View All</button>
+</div>
+<!-- Carousel -->
+<div class="flex overflow-x-auto snap-x scroll-smooth [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<div class="flex items-stretch p-4 gap-4">
+<div class="flex flex-col gap-3 min-w-[140px] snap-start">
+<div class="relative w-full aspect-[3/4] bg-cover bg-center rounded-xl border-2 border-primary shadow-lg shadow-primary/20" data-alt="Neon pink and blue cyberpunk style city street" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC7VuXWLUrOg41Z3xz9g1yp1oKWUKfYxvuj9bkI6SFJGzFDuno9QpTmXkDFStY0dHtqoH0GmyHnmByxjznYbLIN5NSRoU8vk-eup06LxNXXullKMnTaNNrtkMUMFs4IGa3uD39txvooMbzDZYep1qY4byLfi52IzEW6g3-xDD7hoUITdt59_urXu8cUX687HgnfVOr49t9hp00uytMt08Icm0j53Czytcf4y3WwgMcGGp-jxybIfKPKrBIV_-dOsL0_6lU2Dwrn8Q");'>
+<div class="absolute top-2 right-2 bg-primary text-background-dark rounded-full p-1">
+<span class="material-symbols-outlined text-xs font-bold">check</span>
+</div>
+</div>
+<p class="text-primary text-sm font-bold text-center">Cyberpunk</p>
+</div>
+<div class="flex flex-col gap-3 min-w-[140px] snap-start opacity-70">
+<div class="w-full aspect-[3/4] bg-cover bg-center rounded-xl grayscale-[20%]" data-alt="Dreamy surreal clouds and floating islands" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB9iLkZc2gv2fd6L1ARsUoE5CCeZKMX7ixS3pYhzLbP3WPOHsfOr1HNUv5ZiJZX39kdZo49gviOv8HenNOlcvqDUnszL0GOByDaQyyoWhAmq4vEs8bI94U8GKnOxvjJzcNcO6_VRHfzyxRtCgf2LgdO1qd6P0_HCt1BH9N6tGQDp45FyohQNSZYg-KT5JMMxTWI9i_BVSo8QepeFFAkxrD_U3mS8tF-rAYiVCOwxe97BYO3kf-hu6CVcFlqRdZOV39hwn-JpAuDhQ");'></div>
+<p class="text-white text-sm font-medium text-center">Dreamscape</p>
+</div>
+<div class="flex flex-col gap-3 min-w-[140px] snap-start opacity-70">
+<div class="w-full aspect-[3/4] bg-cover bg-center rounded-xl grayscale-[20%]" data-alt="Retro 80s grid landscape with sunset" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8pOAnMI5fw5xHmpvA_8OBQXhEEkZPMSStxCofdDBxAOweE7gv5FMaP47uK0JTgNw3d9EqzaeJkqcC0mEx-inmMEPA1J_tPBjC-eHvZr31nL0nMFCFBNlvfiMx_bkFOTDBpe8aEw14r1n5M3f-kk44W24-fPlZ02HrLph2Y4eOfQxF3b8fwxw_w-FPkmm7eC7_QrgEta97Bpq1AmTLysqOvLyCCMWyL8T8yVHUHLjqXQoCTrVX1z2cRAjYPNRZ8NsKk_M0Y2DCKw");'></div>
+<p class="text-white text-sm font-medium text-center">Retro-Wave</p>
+</div>
+<div class="flex flex-col gap-3 min-w-[140px] snap-start opacity-70">
+<div class="w-full aspect-[3/4] bg-cover bg-center rounded-xl grayscale-[20%]" data-alt="Fluid colorful abstract liquid art" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBDGpsxXuRjdpvBV2iMCYwpuVsbq2z6MP_aZa1RvK6nVEuam2W0ihSx7xd5rLFKpgEo34aWrs58OAmv13g7OPBcEK0jWXWv0VdeW6wW9lKb4CYGY5yBv8GHcNref5j-7Hhc4WsHgyZL3gNmQkHMZmUn34dIDJdhm_uwRsOHdamlmYgGTRMbelRDK7FqfnWjmpyzYaMAt92Uje-4_GA-Vfa5hr0v7Fn580OTRwSrm-ldbD_kTdrRKnG4q72Rf5j0BNsPYgTCYkFC8g");'></div>
+<p class="text-white text-sm font-medium text-center">Abstract Flow</p>
+</div>
+</div>
+</div>
+<!-- Slider Section -->
+<div class="px-4 py-6 space-y-6">
+<div class="bg-white/5 rounded-2xl p-5 border border-white/5">
+<div class="flex w-full items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">equalizer</span>
+<p class="text-white text-base font-semibold">Sync to Beat Intensity</p>
+</div>
+<p class="text-primary text-sm font-bold bg-primary/10 px-2 py-1 rounded-lg">82%</p>
+</div>
+<div class="flex h-6 w-full items-center gap-4">
+<div class="flex h-2 flex-1 rounded-full bg-white/10 overflow-visible relative">
+<div class="h-full w-[82%] rounded-full bg-gradient-to-r from-primary/50 to-primary"></div>
+<div class="absolute left-[82%] -top-2">
+<div class="size-6 rounded-full bg-primary shadow-[0_0_15px_rgba(236,182,19,0.5)] border-4 border-background-dark cursor-pointer"></div>
+</div>
+</div>
+</div>
+<div class="mt-4 flex justify-between text-[10px] text-white/40 uppercase tracking-widest font-bold">
+<span>Chill</span>
+<span>Explosive</span>
+</div>
+</div>
+</div>
+<!-- Fixed Generate Button -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-dark via-background-dark to-transparent pt-10">
+<button class="w-full h-16 rounded-full bg-background-dark border-2 border-primary flex items-center justify-center gap-3 group relative overflow-hidden">
+<!-- Glowing effect -->
+<div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined text-primary group-hover:animate-pulse">bolt</span>
+<span class="text-primary text-lg font-bold tracking-wide">GENERATE VIDEO</span>
+<div class="absolute inset-0 rounded-full border-2 border-primary shadow-[0_0_20px_rgba(236,182,19,0.3)] pointer-events-none"></div>
+</button>
+<!-- iOS Home Indicator Spacing -->
+<div class="h-4"></div>
+</div>
+</div>
+</body></html>

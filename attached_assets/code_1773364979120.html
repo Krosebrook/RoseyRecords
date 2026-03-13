@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Explore Trending Music</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7f13ec",
+                        "accent-cyan": "#00f2ff",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#191022",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-effect {
+            background: rgba(25, 16, 34, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .glow-border {
+            box-shadow: 0 0 15px rgba(127, 19, 236, 0.4);
+        }
+        .heat-glow {
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.6);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased">
+<!-- Top Navigation Bar -->
+<nav class="sticky top-0 z-50 glass-effect border-b border-white/5">
+<div class="flex items-center p-4 justify-between">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight flex-1 text-center">Explore</h2>
+<div class="flex w-10 items-center justify-end text-white/70 hover:text-white">
+<span class="material-symbols-outlined cursor-pointer">search</span>
+</div>
+</div>
+</nav>
+<!-- Category Chips -->
+<div class="flex gap-3 px-4 py-4 overflow-x-auto no-scrollbar">
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary px-5 shadow-lg shadow-primary/20">
+<p class="text-white text-sm font-semibold tracking-tight">#Trending</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white/5 border border-white/10 px-5 hover:bg-white/10 transition-colors">
+<p class="text-white/80 text-sm font-medium">#Synthwave</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white/5 border border-white/10 px-5 hover:bg-white/10 transition-colors">
+<p class="text-white/80 text-sm font-medium">#LoFi</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white/5 border border-white/10 px-5 hover:bg-white/10 transition-colors">
+<p class="text-white/80 text-sm font-medium">#Cyberpunk</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white/5 border border-white/10 px-5 hover:bg-white/10 transition-colors">
+<p class="text-white/80 text-sm font-medium">#Trap</p>
+</div>
+</div>
+<!-- Featured Creators Section -->
+<section>
+<h3 class="text-white text-lg font-bold px-4 pt-4 pb-2 tracking-tight">Featured Artists</h3>
+<div class="flex w-full overflow-x-auto px-4 py-3 gap-6 no-scrollbar">
+<!-- Artist 1 -->
+<div class="flex flex-col items-center gap-3 min-w-[72px]">
+<div class="relative p-0.5 rounded-full bg-gradient-to-tr from-primary to-accent-cyan glow-border">
+<div class="w-16 h-16 bg-center bg-cover rounded-full border-2 border-background-dark" data-alt="Cyberpunk portrait of an AI artist" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCO4JZeu9vYOoRLTbWHeWaca5v8FPbuuvPUBY5x0FeRBrSAzJc5IVOzJyPSXmiAMZCw64YSQAtIc8EFRABI9aeMjn5BsXdzXnYZrunrSqZKLdhBPaWy6zcmK9N5__3V9VvkUdelKk6rM93MyYIU1Z9Ln8Z3ONP1yqjGx23oQCDXDfQZRkP7pU1p7FotRY3lQRB7dh_-cw8oUh4f6so_szAYM_PWVi_qFAaRz_GCeyCNIPupuiGTMBPyS1tGxGMKDmFkZ5bC6dTduQ");'></div>
+<div class="absolute bottom-0 right-0 size-5 bg-primary rounded-full border-2 border-background-dark flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-white font-bold">check</span>
+</div>
+</div>
+<p class="text-white text-[12px] font-medium truncate w-20 text-center">X-Neon</p>
+</div>
+<!-- Artist 2 -->
+<div class="flex flex-col items-center gap-3 min-w-[72px]">
+<div class="relative p-0.5 rounded-full bg-white/10">
+<div class="w-16 h-16 bg-center bg-cover rounded-full" data-alt="Ethereal digital avatar of a female producer" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAylzxCYcCkctsL4RRd-4FMMlY0EMKw-zefw0lBUIZLjudD4xpZjbN9IsBVARhIovdl6BgGzhsrWmQ9mbXLOWh0nLv2v2MI_0f_FwQx982CtisTZZotCjv3mTiJ3oJvdncMxVENXOLvBZjYh2xFhbVbYAb4mwdkQPQe3vKKBbBCV-hvp01W_xtl4VYE5yzOhCXJGzNyQ-dI_6nXB4q_R6bqSlm8-KUC3SUACeNFJAsAuKxn0Askng_8c_LaCukG3fpU2AdmRjPO7g");'></div>
+</div>
+<p class="text-white/70 text-[12px] font-medium truncate w-20 text-center">Aura.ai</p>
+</div>
+<!-- Artist 3 -->
+<div class="flex flex-col items-center gap-3 min-w-[72px]">
+<div class="relative p-0.5 rounded-full bg-gradient-to-tr from-primary to-accent-cyan glow-border">
+<div class="w-16 h-16 bg-center bg-cover rounded-full border-2 border-background-dark" data-alt="Futuristic robotic character avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCDHw3aUQ1tHoXKiLQka4u2aeZfFYEvK4HtNCdKlqDHITrnUl_o9v59khDzXE7bGmmpKug4Gnc1rfSHZIX_9KuueQjXCU1ig2VzEyelo_zNm8iYqnXvDscnROyP8XGa2Llgzl6--ThWAI6sBO7PWbalEUzd_Ap7o1bTgYpgXgIni8Sbqo_bWJDdi2hQYXWRV9YuZFKCUnfYLTVl5_YRQSJ9Zt9L2DHx5i1l01L2BZ7D0nDlDHLWpLv765qJ5_JqO_R9UdocBOjoyA");'></div>
+</div>
+<p class="text-white text-[12px] font-medium truncate w-20 text-center">Volt</p>
+</div>
+<!-- Artist 4 -->
+<div class="flex flex-col items-center gap-3 min-w-[72px]">
+<div class="relative p-0.5 rounded-full bg-white/10">
+<div class="w-16 h-16 bg-center bg-cover rounded-full" data-alt="Abstract vibrant geometric avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCW_d6uFAB-EUssEFC139sJtXwgQ3bzzO-zi5RcSaCu7oHLUVb_co5uUAjiEebw2TyAe7j5Qf1dfG7tvLT5pX0JElm_fpLaixGzkdbeHoSs6jc5sEaKxbnx0Vxdnh-7_hbM_EfFNsfYxAaxVJWHC1_EfxLzAKn9pNinAWQ4pZqTyayQeuUfOPfLFsw5DNHDfqcO6W509zvx4MMi5pM30J77KlDnO3WgAjQJJwqC63vv7Nr3qGZHQdEFpiNYYudNvyJWF9niWZozjg");'></div>
+</div>
+<p class="text-white/70 text-[12px] font-medium truncate w-20 text-center">Pulse</p>
+</div>
+<!-- Artist 5 -->
+<div class="flex flex-col items-center gap-3 min-w-[72px]">
+<div class="relative p-0.5 rounded-full bg-white/10">
+<div class="w-16 h-16 bg-center bg-cover rounded-full" data-alt="Minimalist futuristic character face" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDudB6IIFnonCx7U831j6K6bamQF9FH6UYKphkX0wBGJ65nvxzXWoG-wVj2WpilLGmK73QlPfo5fpDpnEvYDp2RwtxaqA0aRaiE1mCXKqjzvOpvwt6OIpLFbEsAxqy-RP89tqIRVMQfeTWngc5YWX62TNsUUu7zYQffrfgDvTG9_ErEXRWrYpeokjLCXNz2cnBPmdeAOwlMJQkbED5eB0SO5Ir5pAFS9EU8kh9OI0ok7rVnX3vwl2ERXMy5deAx5jYWMKe50nmhTg");'></div>
+</div>
+<p class="text-white/70 text-[12px] font-medium truncate w-20 text-center">Echo</p>
+</div>
+</div>
+</section>
+<!-- Trending Now Section -->
+<section class="pb-24">
+<div class="flex items-center justify-between px-4 pt-6 pb-2">
+<h3 class="text-white text-lg font-bold tracking-tight">Trending Now</h3>
+<p class="text-primary text-sm font-bold">View all</p>
+</div>
+<div class="flex flex-col gap-1 px-4">
+<!-- Track 1 -->
+<div class="flex items-center justify-between py-3 group">
+<div class="flex items-center gap-4">
+<div class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="AI album art with purple nebula and grids" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA5GzVNuimQxn8sp20fnqLjI26SZBzI4dX_9jlTAyOfY4JAABdplPBof5xn5y6L1lha3Yrvql0iVIkyWmz7ICo5qOmJVmN5ta_orhgJzTZHcG6_WDoHIBAibUlQ2xogWvBZ1sVgCi1p8nwzCHtrBsbcKCnfoioOzW-M-XamFBsAcFypD6m2tF739enu2oIAQX-He5I8wfi2dDucwvlpk3ms0DrOBxyIAcEwZAGRJGjo2lg8dmcugZcHMz4jtdR47gxdsTysktBb1A");'></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl fill-1">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-tight truncate w-40">Neon Dreams</p>
+<p class="text-white/50 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                            X-Neon
+                        </p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-accent-cyan heat-glow">
+<span class="material-symbols-outlined text-sm fill-1">local_fire_department</span>
+<span class="text-sm font-bold">12.4k</span>
+</div>
+<p class="text-[10px] text-white/30 uppercase tracking-widest font-bold">Heat Score</p>
+</div>
+<button class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Track 2 -->
+<div class="flex items-center justify-between py-3 group">
+<div class="flex items-center gap-4">
+<div class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="Vibrant synthwave landscape with a digital sun" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC7OO6qrVm6dngKycF0d8N7uhug8Sek3HDyYQnxmEFjU9ugWgocdGRxkqG4lSl1ZvWcBtGp8AopWKHVLcySykHWOxN2DWHBkPrkAfK0hf8h3GdEzWcPektYke80io0y3vDKZu0Um0XZGDJUbzF16ZQbjxsvXs8gmtXYGh6fwq-DPNx_VuO3SNbtFAJbD7VatWMJQrfOndEvHTrZF6Ywai47pgE90HvqdJkPE22DzFaemCnkgk2up5Ie96Fwxf6cLu4YdmNKJDlOng");'></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl fill-1">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-tight truncate w-40">Quantum Echoes</p>
+<p class="text-white/50 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                            Volt
+                        </p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-accent-cyan heat-glow">
+<span class="material-symbols-outlined text-sm fill-1">local_fire_department</span>
+<span class="text-sm font-bold">8.9k</span>
+</div>
+<p class="text-[10px] text-white/30 uppercase tracking-widest font-bold">Heat Score</p>
+</div>
+<button class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Track 3 -->
+<div class="flex items-center justify-between py-3 group">
+<div class="flex items-center gap-4">
+<div class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="Lo-fi rainy city window view AI art" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBpc2VSo6ZNZotlGJQ2hvgwZu2ZBPN2R-WXeD9D5MpbM2O2WWeklGjWB_cJIY5KywwPnAW50UPBdxjsjnsfDWhXqRigvh5b79sp5M7_1ulaK5xuSPF6S1eTMlV7CMgYN1FZU6qJjvbB9TXumQw_oDeqCAay8FPd2qLYEatUke0V3Rh-48or29LgI0nTG3jZyoW8t43jJaOkm6dZ6Iwidfqds0-Mh29kKVajYft5eMNm30h7dDQagzX5TLji8w0nxOrmb0xC1LRDUQ");'></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl fill-1">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-tight truncate w-40">Static Rain</p>
+<p class="text-white/50 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                            Aura.ai
+                        </p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-accent-cyan/60">
+<span class="material-symbols-outlined text-sm">local_fire_department</span>
+<span class="text-sm font-bold">5.2k</span>
+</div>
+<p class="text-[10px] text-white/30 uppercase tracking-widest font-bold">Heat Score</p>
+</div>
+<button class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Track 4 -->
+<div class="flex items-center justify-between py-3 group">
+<div class="flex items-center gap-4">
+<div class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="Surreal digital landscape with floating orbs" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB5LZZvl_-Ge8hQZJMpBgYEYwQB2ph3gIuPHpfh_YnOqGgu5e9dqS0w2IW3M7o3nEw39RC5IKTaVjo6fc9KnPf5Wj-m31U0wx_GXsuSEEaQ3QPi4_qKVH6vksRWpHS2Bw4SmvdPRPX1DXokQ5ZUqIc9xNc-vg7ClUFsfk8Sh8KgplKlNkkUjtSnu7VDIrZWfGAHxfGgZoMFJ_AmnhA9yrjLjjLn4o9CP9gYDXAU9ktbAoxldxNNFIv_4FMXPydobu93MFQXHBDrfw");'></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl fill-1">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-tight truncate w-40">Orbital Drift</p>
+<p class="text-white/50 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                            Pulse
+                        </p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-accent-cyan/40">
+<span class="material-symbols-outlined text-sm">local_fire_department</span>
+<span class="text-sm font-bold">2.1k</span>
+</div>
+<p class="text-[10px] text-white/30 uppercase tracking-widest font-bold">Heat Score</p>
+</div>
+<button class="size-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Navigation Bar (iOS Style) -->
+<div class="fixed bottom-0 left-0 right-0 h-24 glass-effect border-t border-white/5 flex justify-around items-start pt-3 px-6 pb-8 z-50">
+<div class="flex flex-col items-center gap-1 text-white/40 hover:text-white transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[28px]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary cursor-pointer">
+<span class="material-symbols-outlined text-[28px] fill-1">explore</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Explore</span>
+</div>
+<div class="flex items-center justify-center -mt-8 size-14 rounded-full bg-primary shadow-lg shadow-primary/40 border-4 border-background-dark">
+<span class="material-symbols-outlined text-white text-3xl font-bold">add</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/40 hover:text-white transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[28px]">library_music</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Library</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/40 hover:text-white transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[28px]">settings</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Studio</span>
+</div>
+</div>
+</body></html>
