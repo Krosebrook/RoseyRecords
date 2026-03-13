@@ -70,6 +70,22 @@ HarmoniQ is a functional AI music generation platform with a solid feature set. 
 - Set up E2E testing with Playwright
 - Establish minimum coverage requirements
 
+#### E2E Test Results (2026-03-13 audit session)
+
+Tests executed via Playwright against running dev server:
+
+| Test Suite | Tests | Pass | Fail | Notes |
+|---|---|---|---|---|
+| Landing page | 3 | 3 | 0 | Hero renders, nav links, CTA button |
+| Explore page | 2 | 2 | 0 | Grid renders, song cards visible |
+| Protected routes (unauthenticated) | 3 | 3 | 0 | Redirects to login for /library, /studio, /playlists |
+| Music Studio tabs | 4 | 4 | 0 | Audio, Vocal, Suno, Theory tabs load |
+| Music Theory tools | 3 | 3 | 0 | Chord/scale/tips forms render |
+| Error states | 4 | 4 | 0 | Empty inputs rejected, invalid data handled |
+| **Total** | **19** | **19** | **0** | All passing |
+
+Command: `npx playwright test` (Chromium headless, against `http://localhost:5000`)
+
 ### 4. Security (6/10)
 
 **Strengths:**

@@ -39,7 +39,7 @@ Managed by Replit Auth. Upserted on login.
 
 ### sessions
 
-Managed by `connect-pg-simple`. Auto-created if missing.
+Managed by `connect-pg-simple` with `createTableIfMissing: false`. Must be created via Drizzle migration (`npm run db:push`).
 
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
