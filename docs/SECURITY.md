@@ -48,7 +48,8 @@ Set in `server/index.ts`:
 
 | Package | Severity | Type | Notes |
 |---|---|---|---|
-| `multer` | High | DoS via resource exhaustion + uncontrolled recursion | Production dep (used for reference audio upload) |
+| `minimatch` | High | ReDoS via wildcards, GLOBSTAR backtracking, nested extglobs | Transitive dep |
+| `multer` | High | DoS via resource exhaustion, incomplete cleanup, uncontrolled recursion | Production dep (reference audio upload) |
 | `rollup` | High | Arbitrary file write via path traversal | Transitive dep of Vite (devDep) |
 | `qs` | Low | arrayLimit bypass in comma parsing (DoS) | Transitive dep |
 
@@ -97,7 +98,7 @@ These files have TypeScript checking completely disabled:
 3. Add request body size limits (Express default is 100kb but not explicitly set)
 
 ### P2 - High
-4. Upgrade or replace `multer` (unknown severity advisory)
+4. Run `npm audit fix` to resolve all 4 known vulnerabilities (minimatch, multer, rollup, qs)
 5. Add structured logging with security event tracking
 6. Implement API key rotation strategy
 7. Add `/health` endpoint that doesn't expose internals

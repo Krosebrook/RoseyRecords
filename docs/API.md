@@ -1218,7 +1218,27 @@ POST /api/conversations/:id/messages
 }
 ```
 
-**Response:** AI-generated response message
+**Response:** Server-Sent Events (SSE) stream
+
+The response uses `Content-Type: text/event-stream` with the following event format:
+
+```
+data: {"content":"Here are some"}
+
+data: {"content":" popular chord"}
+
+data: {"content":" progressions..."}
+
+data: {"done":true}
+
+```
+
+Each SSE event contains a JSON object:
+- `{ "content": "..." }` — incremental text chunk from the AI response
+- `{ "done": true }` — signals the stream is complete
+- `{ "error": "..." }` — error during streaming (if headers already sent)
+
+The user message is saved before streaming begins. The complete assistant response is saved after the stream finishes.
 
 ---
 

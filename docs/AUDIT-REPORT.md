@@ -100,7 +100,7 @@ Note: No Playwright config or test suite exists in the repository. These tests w
 - No CSRF protection
 - Rate limiter is in-memory (resets on restart)
 - `@ts-nocheck` on security-critical code paths
-- 4 npm audit vulnerabilities (1 low, 3 high): multer, rollup, qs
+- 4 npm audit vulnerabilities (1 low, 3 high): minimatch, multer, rollup, qs
 - No request body size limits explicitly set
 - No Content-Security-Policy header
 
@@ -349,8 +349,9 @@ All endpoints, environment variables, and features were cross-referenced against
 
 | Package | Severity | Advisory | Fix |
 |---|---|---|---|
-| `multer` | High (x2) | DoS via resource exhaustion; DoS via uncontrolled recursion | `npm audit fix` |
-| `rollup` | High | Arbitrary file write via path traversal (in Vite devDep chain) | `npm audit fix` |
-| `qs` | Low | arrayLimit bypass in comma parsing (DoS) | `npm audit fix` |
+| `minimatch` (9.0.0–9.0.6) | High | ReDoS via wildcards, GLOBSTAR backtracking, nested extglobs (3 advisories) | `npm audit fix` |
+| `multer` (≤2.1.0) | High | DoS via incomplete cleanup, resource exhaustion, uncontrolled recursion (3 advisories) | `npm audit fix` |
+| `rollup` (4.0.0–4.58.0) | High | Arbitrary file write via path traversal (in Vite devDep chain) | `npm audit fix` |
+| `qs` (6.7.0–6.14.1) | Low | arrayLimit bypass in comma parsing (DoS) | `npm audit fix` |
 
-All 4 vulnerabilities are fixable via `npm audit fix`.
+4 vulnerabilities total (1 low, 3 high). All fixable via `npm audit fix`.

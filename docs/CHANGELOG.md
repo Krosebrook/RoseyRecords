@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Rate Limiting**: AI endpoints (50 req/15min) and write endpoints (100 req/15min) with per-user tracking
 - **Security Headers**: X-Content-Type-Options, X-XSS-Protection (X-Frame-Options omitted for Replit iframe compatibility)
 - **Log Sanitization**: `sanitizeLog()` redacts sensitive data (passwords, tokens, emails, PII) from server logs
-- **Admin Bypass**: `ADMIN_USER_IDS` env var for unlimited rate limits
+- **Admin Bypass**: `ADMIN_USER_IDS` env var for unlimited Suno credits
 
 ### Changed
 - **OpenAI Model**: Updated from gpt-4o-mini/gpt-4o to gpt-5.2
