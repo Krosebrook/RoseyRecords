@@ -36,7 +36,7 @@ export default function SongDetails() {
 
   if (isLoading) return (
     <Layout>
-      <div className="flex items-center justify-center h-full" data-testid="container-loading">
+      <div className="flex items-center justify-center min-h-[60vh]" data-testid="container-loading">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     </Layout>
@@ -44,7 +44,7 @@ export default function SongDetails() {
   
   if (error || !song) return (
     <Layout>
-      <div className="flex flex-col items-center justify-center h-full gap-4" data-testid="container-not-found">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4" data-testid="container-not-found">
         <h2 className="text-2xl font-bold">Song Not Found</h2>
         <Link href="/dashboard" className="text-primary hover:underline" data-testid="link-back-dashboard">Back to Dashboard</Link>
       </div>
