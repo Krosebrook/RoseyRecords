@@ -305,7 +305,7 @@ export default function Visualizer() {
       {/* Header */}
       <header className="p-3 md:p-4 border-b border-cyan-900/30">
         <h1 
-          className="text-lg sm:text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-500"
+          className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-500"
           style={{ fontFamily: "'Orbitron', sans-serif" }}
           data-testid="visualizer-title"
         >

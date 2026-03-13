@@ -149,7 +149,10 @@ export default function Explore() {
         song.title.toLowerCase().includes(searchLower) ||
         song.lyrics.toLowerCase().includes(searchLower);
       
-      const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
+      const matchesGenre = genreFilter === "all" || 
+        song.genre?.toLowerCase().includes(genreFilter) ||
+        song.title?.toLowerCase().includes(genreFilter) ||
+        song.lyrics?.toLowerCase().includes(genreFilter);
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
       
       return matchesSearch && matchesGenre && matchesMood;
@@ -190,9 +193,9 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                 setActiveChip(chip);
                 if (chip === "#Trending") {
                   setSortBy("popular");
-                  setSearchQuery("");
+                  setGenreFilter("all");
                 } else {
-                  setSearchQuery(chip.replace("#", ""));
+                  setGenreFilter(chip.replace("#", "").toLowerCase());
                 }
               }}
               className={cn(

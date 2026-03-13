@@ -173,8 +173,11 @@ export default function Activity() {
             <Bell className="w-7 h-7 text-primary" />
             Activity
           </h1>
-          <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">Preview</span>
+          <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">Coming Soon</span>
         </div>
+        <p className="text-sm text-muted-foreground" data-testid="text-activity-preview-note">
+          Live notifications are coming soon. Below is a preview of the activity feed.
+        </p>
 
         <div className="flex gap-3 overflow-x-auto pb-2">
           {FILTER_OPTIONS.map((filter) => (
