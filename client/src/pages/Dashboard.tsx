@@ -34,14 +34,12 @@ export default function Dashboard() {
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     return songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
+      if (genreFilter !== "all" && song.genre !== genreFilter) return false;
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
+
+      return debouncedSearchQuery === "" ||
         song.title.toLowerCase().includes(searchLower) ||
         song.lyrics.toLowerCase().includes(searchLower);
-      
-      const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
-      
-      return matchesSearch && matchesGenre && matchesMood;
     });
   }, [songs, debouncedSearchQuery, genreFilter, moodFilter]);
 
