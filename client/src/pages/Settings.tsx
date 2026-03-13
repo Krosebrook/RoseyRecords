@@ -50,11 +50,14 @@ export default function Settings() {
             </div>
           </div>
           <div className="bg-card p-5">
-            <p className="text-primary text-xs font-bold tracking-widest uppercase mb-1">Current Plan</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-primary text-xs font-bold tracking-widest uppercase">Current Plan</p>
+              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Preview</span>
+            </div>
             <p className="text-2xl font-bold mb-3">HarmoniQ Pro</p>
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Unlimited AI generations</p>
-              <Button size="sm" className="font-bold neon-shadow" data-testid="button-manage-subscription">
+              <Button size="sm" variant="outline" disabled className="font-bold" data-testid="button-manage-subscription">
                 Manage
               </Button>
             </div>

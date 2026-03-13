@@ -164,7 +164,7 @@ export default function Marketplace() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                "px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeCategory === cat
                   ? "bg-primary text-white shadow-lg shadow-primary/30"
                   : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
@@ -217,7 +217,7 @@ export default function Marketplace() {
                       <Download className="w-3.5 h-3.5 mr-1.5" />
                       ${pack.price.toFixed(2)}
                     </Button>
-                    <span className="text-[10px] text-muted-foreground">{pack.downloads.toLocaleString()} downloads</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Coming Soon</span>
                   </div>
                 </div>
               </motion.div>

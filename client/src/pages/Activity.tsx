@@ -182,7 +182,7 @@ export default function Activity() {
               key={filter.key}
               onClick={() => setActiveFilter(filter.key)}
               className={cn(
-                "shrink-0 h-9 px-5 rounded-lg text-sm font-semibold transition-all",
+                "shrink-0 h-11 min-w-[44px] px-5 rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeFilter === filter.key
                   ? "bg-primary text-white neon-shadow"
                   : "bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
@@ -205,7 +205,7 @@ export default function Activity() {
             {recentItems.length > 0 && (
               <>
                 <div className="px-1 pt-4 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-primary/80" data-testid="text-section-recent">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-primary" data-testid="text-section-recent">
                     Recent
                   </h3>
                 </div>
@@ -218,7 +218,7 @@ export default function Activity() {
             {earlierItems.length > 0 && (
               <>
                 <div className="px-1 pt-6 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40" data-testid="text-section-earlier">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground" data-testid="text-section-earlier">
                     Earlier
                   </h3>
                 </div>

@@ -196,7 +196,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                 }
               }}
               className={cn(
-                "shrink-0 h-9 px-5 rounded-full text-sm font-semibold transition-all",
+                "shrink-0 h-11 min-w-[44px] px-5 rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeChip === chip
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
