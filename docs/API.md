@@ -304,11 +304,14 @@ POST /api/generate/ai-suggest
 **Request Body:**
 ```json
 {
-  "context": "lyrics",
-  "currentValue": "A song about...",
-  "field": "prompt"
+  "field": "audio-prompt",
+  "context": "A song about summer nights"
 }
 ```
+
+**Parameters:**
+- `field` (required): One of `audio-prompt`, `song-title`, `lyrics`, `topic`, `music-tags`
+- `context` (optional, max 500 chars): Additional context to guide the suggestion
 
 **Response:**
 ```json
@@ -441,7 +444,14 @@ POST /api/generate/analyze-lyrics
 }
 ```
 
-**Response:** Analysis object with themes, emotions, and suggestions
+**Response:**
+```json
+{
+  "themes": ["love", "nostalgia"],
+  "emotionalArc": "Starts melancholic, builds to hopeful resolution",
+  "suggestions": ["Consider adding a bridge to shift perspective"]
+}
+```
 
 ### Get Production Tips
 
@@ -514,9 +524,16 @@ POST /api/music-theory/chord-progression
 **Response:**
 ```json
 {
-  "progression": "C - G - Am - F"
+  "progression": [
+    { "root": "C", "variety": "Major", "numeral": "I" },
+    { "root": "G", "variety": "Major", "numeral": "V" },
+    { "root": "A", "variety": "Minor", "numeral": "vi" },
+    { "root": "F", "variety": "Major", "numeral": "IV" }
+  ]
 }
 ```
+
+Each chord object has `root` (note name), `variety` (chord type), and `numeral` (Roman numeral analysis).
 
 ### Reharmonize Progression
 
@@ -529,17 +546,19 @@ POST /api/music-theory/reharmonize
 **Request Body:**
 ```json
 {
-  "progression": "C - G - Am - F",
+  "progression": [
+    { "root": "C", "variety": "Major", "numeral": "I" },
+    { "root": "G", "variety": "Major", "numeral": "V" }
+  ],
   "key": "C major"
 }
 ```
 
-**Response:**
-```json
-{
-  "progression": "Cmaj7 - G/B - Am7 - Fmaj9"
-}
-```
+**Parameters:**
+- `progression` (required): Array of `ChordProgression` objects (same shape as chord-progression response)
+- `key` (required): Musical key
+
+**Response:** Same `{ progression: ChordProgression[] }` format with reharmonized chords.
 
 ### Lookup Scales
 
@@ -560,10 +579,12 @@ POST /api/music-theory/lookup-scales
 ```json
 {
   "results": [
-    { "scale": "C Major Pentatonic", "notes": ["C", "D", "E", "G", "A"] }
+    { "scale": "C Major Pentatonic", "reasoning": "Contains all 5 notes of the pentatonic scale" }
   ]
 }
 ```
+
+Each result has `scale` (name) and `reasoning` (explanation).
 
 ---
 
@@ -888,7 +909,15 @@ GET /api/suno/status
 ```json
 {
   "configured": true,
-  "provider": "defapi"
+  "provider": "defapi",
+  "styles": ["Pop", "Rock", "Hip Hop", "..."],
+  "models": [
+    { "id": "chirp-v4", "name": "v4", "description": "Solid quality" },
+    { "id": "chirp-auk", "name": "v4.5", "description": "Enhanced vocal quality, 4 min tracks" },
+    { "id": "chirp-bluejay", "name": "v4.5+ (Recommended)", "description": "Rich sound, best vocals, up to 8 min" },
+    { "id": "chirp-crow", "name": "v5 (Latest)", "description": "Studio-grade audio, most authentic vocals" }
+  ],
+  "pollingConfig": { "initialDelayMs": 1500, "maxDelayMs": 6000, "maxWaitMs": 120000, "backoffMultiplier": 1.5 }
 }
 ```
 

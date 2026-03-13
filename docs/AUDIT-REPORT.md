@@ -78,7 +78,7 @@ HarmoniQ is a functional AI music generation platform with a solid feature set. 
 - Zod input validation on database writes
 - Log sanitization for sensitive data
 - Rate limiting on AI and write endpoints
-- Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
+- Security headers (X-Content-Type-Options, X-XSS-Protection); X-Frame-Options intentionally omitted for Replit iframe
 
 **Weaknesses:**
 - No CSRF protection
