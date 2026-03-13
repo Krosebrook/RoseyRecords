@@ -659,15 +659,15 @@ POST /api/audio/generate-with-reference
 **Content-Type:** `multipart/form-data`
 
 **Request Body:**
-- `referenceAudio` (file): Audio file to use as style reference (max 10MB, audio/* only)
-- `prompt` (text): Text description of desired output
-- `duration` (text): Duration in seconds
+- `referenceAudio` (file, required): Audio file to use as style reference (max 10MB, audio/* only; validated by magic bytes)
+- `prompt` (text, required): Text description of desired output
+- `duration` (text, optional): Duration in seconds (default: 15)
 
-**Response:**
+**Response:** Async — returns prediction ID for polling via `/api/audio/status/:predictionId`
 ```json
 {
-  "audioUrl": "https://replicate.delivery/...",
-  "duration": 15
+  "predictionId": "abc123...",
+  "status": "processing"
 }
 ```
 
@@ -1038,18 +1038,24 @@ POST /api/ace-step/generate
 **Request Body:**
 ```json
 {
-  "lyrics": "Song lyrics with verse/chorus structure...",
-  "prompt": "Genre and style description",
-  "duration": 120,
-  "instrumental": false
+  "tags": "pop, upbeat, female vocal, synth",
+  "lyrics": "Optional song lyrics with verse/chorus structure...",
+  "duration": 60,
+  "seed": 42
 }
 ```
+
+**Parameters:**
+- `tags` (required): Style tags describing the song (genre, mood, instruments)
+- `lyrics` (optional): Song lyrics text
+- `duration` (optional, default: 60): Duration in seconds
+- `seed` (optional): Random seed for reproducibility
 
 **Response:**
 ```json
 {
   "predictionId": "abc123...",
-  "status": "starting"
+  "status": "processing"
 }
 ```
 
@@ -1075,7 +1081,7 @@ Status values: `starting`, `processing`, `succeeded`, `failed`
 
 ## AI Chat API (Conversations)
 
-AI-powered chat conversations using OpenAI.
+AI-powered chat conversations using OpenAI. Authentication is enforced via Express middleware (`app.use("/api/conversations", isAuthenticated, aiRateLimiter.middleware)`) applied before route registration.
 
 ### List Conversations
 
@@ -1083,7 +1089,8 @@ AI-powered chat conversations using OpenAI.
 GET /api/conversations
 ```
 
-**Authentication:** Not required (no auth middleware applied)
+**Authentication:** Required (via middleware)
+**Rate Limit:** AI (50/15min)
 
 **Response:**
 ```json
@@ -1102,7 +1109,8 @@ GET /api/conversations
 GET /api/conversations/:id
 ```
 
-**Authentication:** Not required
+**Authentication:** Required (via middleware)
+**Rate Limit:** AI (50/15min)
 
 **Response:**
 ```json
@@ -1122,7 +1130,8 @@ GET /api/conversations/:id
 POST /api/conversations
 ```
 
-**Authentication:** Not required
+**Authentication:** Required (via middleware)
+**Rate Limit:** AI (50/15min)
 
 **Request Body:**
 ```json
@@ -1137,7 +1146,8 @@ POST /api/conversations
 DELETE /api/conversations/:id
 ```
 
-**Authentication:** Not required
+**Authentication:** Required (via middleware)
+**Rate Limit:** AI (50/15min)
 
 **Response:** `204 No Content`
 
@@ -1147,7 +1157,8 @@ DELETE /api/conversations/:id
 POST /api/conversations/:id/messages
 ```
 
-**Authentication:** Not required
+**Authentication:** Required (via middleware)
+**Rate Limit:** AI (50/15min)
 
 **Request Body:**
 ```json
@@ -1168,7 +1179,8 @@ POST /api/conversations/:id/messages
 POST /api/generate-image
 ```
 
-**Authentication:** Not required (no auth middleware applied)
+**Authentication:** Required (via middleware: `app.use("/api/generate-image", isAuthenticated, aiRateLimiter.middleware)`)
+**Rate Limit:** AI (50/15min)
 
 **Request Body:**
 ```json
@@ -1199,12 +1211,6 @@ POST /api/generate-image
 | GET | `/api/login` | Initiate login |
 | GET | `/api/callback` | OIDC callback |
 | GET | `/api/logout` | Logout |
-| GET | `/api/conversations` | List conversations |
-| GET | `/api/conversations/:id` | Get conversation |
-| POST | `/api/conversations` | Create conversation |
-| DELETE | `/api/conversations/:id` | Delete conversation |
-| POST | `/api/conversations/:id/messages` | Send message |
-| POST | `/api/generate-image` | Generate image |
 
 ### Authenticated Endpoints
 
@@ -1258,6 +1264,12 @@ POST /api/generate-image
 | GET | `/api/ace-step/config` | - | ACE-Step config |
 | POST | `/api/ace-step/generate` | - | ACE-Step generate |
 | GET | `/api/ace-step/status/:predictionId` | - | Check ACE-Step status |
+| GET | `/api/conversations` | AI | List conversations |
+| GET | `/api/conversations/:id` | AI | Get conversation |
+| POST | `/api/conversations` | AI | Create conversation |
+| DELETE | `/api/conversations/:id` | AI | Delete conversation |
+| POST | `/api/conversations/:id/messages` | AI | Send message (AI response) |
+| POST | `/api/generate-image` | AI | Generate image |
 
 ---
 
