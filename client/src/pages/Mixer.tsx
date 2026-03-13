@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import Layout from "@/components/Layout";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { SlidersHorizontal, Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { SlidersHorizontal, Play, Pause, SkipBack, SkipForward, Volume2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,8 @@ const DEFAULT_TRACKS: TrackChannel[] = [
   { id: "keys", name: "Keys", volume: 45, isSolo: false, isMuted: false, levelMeter: 40, eqBars: [35, 70, 55, 80, 45] },
   { id: "fx", name: "FX", volume: 30, isSolo: false, isMuted: false, levelMeter: 25, eqBars: [20, 90, 30, 60, 85] },
 ];
+
+type MasteringPreset = "balanced" | "warm" | "club";
 
 function EqVisualizer({ bars, isMuted }: { bars: number[]; isMuted: boolean }) {
   return (
@@ -126,13 +128,86 @@ function ChannelStrip({
   );
 }
 
+function AIMasteringSection({ onMaster }: { onMaster: (preset: MasteringPreset) => void }) {
+  const [activePreset, setActivePreset] = useState<MasteringPreset>("balanced");
+  const masteringProgress = 72;
+  const circumference = 2 * Math.PI * 58;
+  const offset = circumference - (masteringProgress / 100) * circumference;
+
+  return (
+    <section className="glass-panel rounded-2xl p-6 bg-gradient-to-b from-primary/10 to-transparent border border-primary/10" data-testid="container-ai-mastering">
+      <div className="flex flex-col items-center">
+        <div className="flex items-center justify-between w-full mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-yellow-400">AI Mastering Engine</span>
+          <div className="flex gap-1">
+            <div className="w-1 h-1 rounded-full bg-yellow-400" />
+            <div className="w-1 h-1 rounded-full bg-yellow-400/30" />
+            <div className="w-1 h-1 rounded-full bg-yellow-400/30" />
+          </div>
+        </div>
+
+        <div className="relative group cursor-pointer">
+          <svg className="w-32 h-32 -rotate-90">
+            <circle
+              className="text-white/5"
+              cx="64" cy="64" r="58"
+              fill="transparent"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <circle
+              className="text-yellow-400 drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]"
+              cx="64" cy="64" r="58"
+              fill="transparent"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <button
+              onClick={() => onMaster(activePreset)}
+              className="w-24 h-24 rounded-full bg-background border-2 border-yellow-400 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95 shadow-[0_0_15px_rgba(255,215,0,0.3)] hover:shadow-[0_0_25px_rgba(255,215,0,0.5)]"
+              data-testid="button-ai-master"
+            >
+              <Sparkles className="w-7 h-7 text-yellow-400" />
+              <span className="text-[10px] font-black uppercase text-center leading-none">
+                Master<br />with AI
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 w-full max-w-xs bg-white/5 rounded-full p-1 flex items-center justify-between border border-white/10">
+          {(["balanced", "warm", "club"] as const).map((preset) => (
+            <button
+              key={preset}
+              onClick={() => setActivePreset(preset)}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-full text-[10px] font-bold uppercase transition-all",
+                activePreset === preset
+                  ? "bg-yellow-400 text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              data-testid={`preset-${preset}`}
+            >
+              {preset === "club" ? "Club Ready" : preset.charAt(0).toUpperCase() + preset.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Mixer() {
-  usePageTitle("Mixing Console");
+  usePageTitle("Mixing & AI Mastering");
   const { toast } = useToast();
   const [tracks, setTracks] = useState<TrackChannel[]>(DEFAULT_TRACKS);
   const [isPlaying, setIsPlaying] = useState(true);
   const [masterVolume] = useState(82);
-  const [currentTrack] = useState({ name: "Neon Horizons", artist: "AI Generative Mix" });
+  const [currentTrack] = useState({ name: "Neon Horizons", artist: "Ready for Mastering" });
 
   const handleToggleSolo = useCallback((id: string) => {
     setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, isSolo: !t.isSolo } : t)));
@@ -149,38 +224,47 @@ export default function Mixer() {
     });
   };
 
+  const handleAIMaster = (preset: MasteringPreset) => {
+    toast({
+      title: "AI Mastering Started",
+      description: `Applying "${preset}" mastering preset to your mix...`,
+    });
+  };
+
   return (
     <Layout>
-      <div className="flex flex-col gap-4 h-[calc(100vh-6rem)] min-h-[600px]">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-mixer-title">
               <SlidersHorizontal className="w-6 h-6 text-primary" />
-              Mixing Console
+              Mixing & AI Mastering
             </h1>
           </div>
           <Button onClick={handleFinalizeMix} className="font-bold neon-shadow" data-testid="button-finalize-mix">
-            Finalize Mix
+            Finalize
           </Button>
         </div>
 
+        <AIMasteringSection onMaster={handleAIMaster} />
+
         <div className="glass-panel rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Master Output</span>
-            <span className="text-xs font-mono text-secondary">-3.2 dB</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Final Output Level</span>
+            <span className="text-xs font-mono text-secondary">-1.4 dB</span>
           </div>
-          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full neon-shadow"
-              animate={{ width: `${masterVolume}%` }}
+              className="h-full bg-gradient-to-r from-primary via-secondary to-yellow-400 rounded-full neon-shadow"
+              animate={{ width: `${92}%` }}
               transition={{ duration: 0.5 }}
-              data-testid="meter-master-output"
+              data-testid="meter-final-output"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-x-auto pb-2">
-          <div className="flex gap-3 min-w-max h-full items-stretch">
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-3 min-w-max items-stretch" style={{ minHeight: "380px" }}>
             {tracks.map((track) => (
               <ChannelStrip
                 key={track.id}

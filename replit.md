@@ -47,7 +47,9 @@ Preferred communication style: Simple, everyday language.
 - **Public Explore**: Browse and interact with publicly shared songs.
 - **Playlist Management**: Create and manage song playlists.
 - **Sound Marketplace**: Browse and discover premium sound packs and AI voice models.
-- **Mixing Console**: Multi-channel mixer with EQ visualizers, solo/mute controls, and master output.
+- **Mixing Console & AI Mastering**: Multi-channel mixer with EQ visualizers, solo/mute controls, master output, and AI mastering engine with presets (Balanced/Warm/Club Ready).
+- **Video Creator**: AI-powered music video generation with visual style selection (Cyberpunk/Dreamscape/Retro-Wave/Abstract Flow) and beat sync controls.
+- **Activity Feed**: Notification center with filter chips (All/Likes/Followers/Mentions) and categorized notification items.
 - **PWA Capabilities**: Offline caching and auto-updates.
 
 ### UI/UX Decisions

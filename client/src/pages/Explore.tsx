@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import { usePublicSongs, useLikeSong, useLikedSongIds } from "@/hooks/use-public-songs";
-import { Music, Heart, Play, User, Search, Filter, X } from "lucide-react";
+import { Music, Heart, Play, User, Search, Filter, X, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,16 @@ import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo, memo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
+
+const CATEGORY_CHIPS = ["#Trending", "#Synthwave", "#LoFi", "#Cyberpunk", "#Trap", "#Ambient"];
+
+const FEATURED_ARTISTS = [
+  { id: "1", name: "X-Neon", verified: true },
+  { id: "2", name: "Vox.ai", verified: true },
+  { id: "3", name: "LoopKid", verified: false },
+  { id: "4", name: "ByteBeat", verified: true },
+  { id: "5", name: "SynthWave", verified: false },
+];
 
 interface PublicSongCardProps {
   song: Song;
@@ -127,6 +137,7 @@ export default function Explore() {
   const [genreFilter, setGenreFilter] = useState<string>("all");
   const [moodFilter, setMoodFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("popular");
+  const [activeChip, setActiveChip] = useState<string>("#Trending");
 
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
@@ -171,6 +182,53 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
           <h1 className="text-3xl font-bold mb-2" data-testid="text-explore-title">Explore</h1>
           <p className="text-muted-foreground" data-testid="text-explore-description">Discover songs created by the community.</p>
         </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-1" data-testid="container-category-chips">
+          {CATEGORY_CHIPS.map((chip) => (
+            <button
+              key={chip}
+              onClick={() => {
+                setActiveChip(chip);
+                if (chip === "#Trending") {
+                  setSortBy("popular");
+                  setSearchQuery("");
+                } else {
+                  setSearchQuery(chip.replace("#", ""));
+                }
+              }}
+              className={cn(
+                "shrink-0 h-9 px-5 rounded-full text-sm font-semibold transition-all",
+                activeChip === chip
+                  ? "bg-primary text-white shadow-lg shadow-primary/20"
+                  : "bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+              )}
+              data-testid={`chip-${chip.replace("#", "").toLowerCase()}`}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        <section data-testid="container-featured-artists">
+          <h3 className="text-lg font-bold mb-3">Featured Artists</h3>
+          <div className="flex gap-6 overflow-x-auto pb-2">
+            {FEATURED_ARTISTS.map((artist) => (
+              <div key={artist.id} className="flex flex-col items-center gap-2 min-w-[72px]" data-testid={`artist-${artist.id}`}>
+                <div className="relative p-0.5 rounded-full bg-gradient-to-tr from-primary to-secondary">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 border-2 border-background flex items-center justify-center">
+                    <User className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  {artist.verified && (
+                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-primary rounded-full border-2 border-background flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs font-medium truncate w-20 text-center">{artist.name}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <div className="glass-panel rounded-xl p-4">
           <div className="flex flex-col md:flex-row gap-3">
