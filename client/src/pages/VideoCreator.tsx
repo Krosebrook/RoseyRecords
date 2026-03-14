@@ -58,6 +58,7 @@ export default function VideoCreator() {
                 className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 hover:scale-105 transition-transform"
                 data-testid="button-play-preview"
                 aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                aria-pressed={isPlaying}
                 title={isPlaying ? "Pause preview" : "Play preview"}
               >
                 {isPlaying ? (
