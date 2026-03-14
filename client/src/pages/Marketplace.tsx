@@ -119,12 +119,18 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
+  // Hoist invariant search string operation outside the loop
+  const searchLower = searchQuery.toLowerCase();
+
   const filteredPacks = SOUND_PACKS.filter((pack) => {
-    const matchesSearch =
-      pack.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pack.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === "All" || pack.category === activeCategory;
-    return matchesSearch && matchesCategory;
+    // Exact match condition skips expensive string matching when it fails
+    if (activeCategory !== "All" && pack.category !== activeCategory) return false;
+
+    if (searchQuery !== "") {
+      return pack.name.toLowerCase().includes(searchLower) ||
+             pack.description.toLowerCase().includes(searchLower);
+    }
+    return true;
   });
 
   const handleDownload = (pack: SoundPack) => {

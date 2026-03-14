@@ -33,14 +33,17 @@ export default function Dashboard() {
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     return songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+      // Evaluate cheap exact-match conditions first to avoid expensive string operations
+      if (genreFilter !== "all" && song.genre !== genreFilter) return false;
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
+      // Only perform expensive toLowerCase().includes() if necessary
+      if (debouncedSearchQuery !== "") {
+        return song.title.toLowerCase().includes(searchLower) ||
+               song.lyrics.toLowerCase().includes(searchLower);
+      }
       
-      return matchesSearch && matchesGenre && matchesMood;
+      return true;
     });
   }, [songs, debouncedSearchQuery, genreFilter, moodFilter]);
 

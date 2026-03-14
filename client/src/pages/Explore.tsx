@@ -142,19 +142,29 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
+    // Hoist loop-invariant string operations outside the filter loop
     const searchLower = debouncedSearchQuery.toLowerCase();
+    const genreLower = genreFilter !== "all" ? genreFilter.toLowerCase() : "";
 
     let filtered = songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+      // Evaluate cheap exact-match conditions first
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || 
-        song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
-        song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
+      // Genre match (can be substring match for tags like #Synthwave)
+      if (genreFilter !== "all") {
+        const songGenreLower = song.genre?.toLowerCase();
+        if (!songGenreLower || (!songGenreLower.includes(genreLower) && songGenreLower !== genreLower)) {
+          return false;
+        }
+      }
       
-      return matchesSearch && matchesGenre && matchesMood;
+      // Only perform expensive search operations if the cheap criteria pass
+      if (debouncedSearchQuery !== "") {
+        return song.title.toLowerCase().includes(searchLower) ||
+               song.lyrics.toLowerCase().includes(searchLower);
+      }
+
+      return true;
     });
 
     if (sortBy === "popular") {
