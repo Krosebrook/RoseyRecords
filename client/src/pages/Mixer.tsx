@@ -295,6 +295,7 @@ export default function Mixer() {
               className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform"
               data-testid="button-play-pause"
               aria-label={isPlaying ? "Pause" : "Play"}
+              aria-pressed={isPlaying}
               title={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
