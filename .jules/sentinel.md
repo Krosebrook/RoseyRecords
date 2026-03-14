@@ -18,3 +18,8 @@
 **Vulnerability:** IP-based rate limiting was using `req.ip` without Express's `trust proxy` configured. Behind Replit's reverse proxy, all unauthenticated requests appeared to originate from the same internal proxy IP.
 **Learning:** This leads to a denial of service (false positive) where one user exceeding the rate limit would ban all unauthenticated users. Conversely, it might allow a distributed attack to bypass per-user limits.
 **Prevention:** Always configure `app.set("trust proxy", 1);` in Express when deploying behind a reverse proxy (like Replit, Heroku, or Nginx) to ensure `req.ip` reflects the actual client IP (via `X-Forwarded-For`).
+
+## 2025-03-14 - SSRF Bypass via Alternative IP Formats
+**Vulnerability:** Regex-based SSRF filters for internal IPs (`127.0.0.1`, `10.x.x.x`) can be bypassed using integer-encoded IPs (e.g., `http://2130706433`), octal, hex, or DNS rebinding. Additionally, naive prefix regexes like `^10\.` cause false positives (e.g., blocking legitimate domains like `10.com`).
+**Learning:** Standard URL parsing doesn't automatically normalize integer or hex hostnames to dotted decimal, allowing them to slip past simple string filters but still resolve locally in the HTTP client.
+**Prevention:** Always convert integer/hex/octal IP representations to standard dotted decimal before regex validation, and ensure regexes match full octets (e.g., `^10\.(25[0-5]|...)\.`).

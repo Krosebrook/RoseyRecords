@@ -107,3 +107,60 @@ export function parseNumericId(value: string, res: Response): number | null {
   }
   return id;
 }
+
+// Helper to validate external URLs and prevent SSRF
+export function isValidExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+
+    // Only allow HTTP/HTTPS
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false;
+    }
+
+    const hostname = url.hostname;
+
+    // Reject localhost and IP representations of localhost
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '[::1]' ||
+      hostname.endsWith('.localhost')
+    ) {
+      return false;
+    }
+
+    let ipToCheck = hostname;
+
+    // Convert integer IP to dotted decimal string if necessary
+    if (/^\d+$/.test(hostname)) {
+      const num = parseInt(hostname, 10);
+      ipToCheck = `${(num >> 24) & 255}.${(num >> 16) & 255}.${(num >> 8) & 255}.${num & 255}`;
+    }
+
+    // If it's an IP address, check against restricted ranges
+    // This regex ensures we only match IPs, not domains like "10.com"
+    const isIpRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    if (isIpRegex.test(ipToCheck)) {
+      if (
+        /^127\./.test(ipToCheck) || // Localhost
+        /^10\./.test(ipToCheck) || // Private network
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ipToCheck) || // Private network
+        /^192\.168\./.test(ipToCheck) || // Private network
+        /^169\.254\./.test(ipToCheck) // Link-local / Cloud metadata
+      ) {
+        return false;
+      }
+    }
+
+    // Also reject explicit cloud metadata IPs in other formats
+    if (hostname === '0xA9FEA9FE' || hostname === '0251.0376.0251.0376') {
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    // Invalid URL parsing
+    return false;
+  }
+}
