@@ -81,6 +81,11 @@ export default function Landing() {
                 // @ts-expect-error fetchpriority is valid HTML but not in React types yet
                 fetchpriority="high"
                 decoding="async"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = "none";
+                  target.parentElement?.classList.add("bg-gradient-to-br", "from-primary/20", "to-secondary/20", "min-h-[300px]");
+                }}
               />
             </div>
           </motion.div>

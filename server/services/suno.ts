@@ -138,13 +138,9 @@ async function fetchWithRetry(
 
 const DEFAPI_MODEL_MAP: Record<string, string> = {
   "chirp-crow": "chirp-crow",
-  "chirp-bluejay": "chirp-v4-5-plus",
-  "chirp-auk": "chirp-v4-5",
+  "chirp-bluejay": "chirp-bluejay",
+  "chirp-auk": "chirp-auk",
   "chirp-v4": "chirp-v4",
-  "chirp-v3-5": "chirp-v3-5",
-  "chirp-v3-0": "chirp-v3-0",
-  "chirp-v4-5-plus": "chirp-v4-5-plus",
-  "chirp-v4-5": "chirp-v4-5",
 };
 
 /** DefAPI Provider (Production - Recommended) */
@@ -505,8 +501,6 @@ export const SUNO_STYLES = [
 ] as const;
 
 export const SUNO_MODELS = [
-  { id: "chirp-v3-0", name: "v3 (Legacy)", description: "Original model" },
-  { id: "chirp-v3-5", name: "v3.5", description: "Improved vocals" },
   { id: "chirp-v4", name: "v4", description: "Solid quality" },
   {
     id: "chirp-auk",
@@ -515,7 +509,7 @@ export const SUNO_MODELS = [
   },
   {
     id: "chirp-bluejay",
-    name: "v4.5+",
+    name: "v4.5+ (Recommended)",
     description: "Rich sound, best vocals, up to 8 min",
   },
   {

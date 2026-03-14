@@ -1125,7 +1125,7 @@ export default function Studio() {
               <Music className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
+              <h1 className="text-3xl font-bold" data-testid="text-studio-title">Music Studio</h1>
               <p className="text-xs sm:text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
             </div>
           </div>

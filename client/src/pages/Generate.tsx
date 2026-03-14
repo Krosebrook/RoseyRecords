@@ -213,7 +213,7 @@ export default function Generate() {
                 <p className="text-[10px] text-muted-foreground">
                   {aiEngine === "gemini" 
                     ? "Full song concept with BPM, key, and production tips" 
-                    : "Fast lyrics generation with GPT-4o"}
+                    : "Fast lyrics generation with GPT-5.2"}
                 </p>
               </div>
 

@@ -30,7 +30,6 @@ export default function Dashboard() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
-    // Extract loop-invariant toLowerCase() operation to prevent redundant O(N) string allocations during search filtering
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     return songs.filter(song => {
@@ -64,7 +63,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2" data-testid="text-dashboard-title">My Studio</h1>
+            <h1 className="text-3xl font-bold mb-2" data-testid="text-dashboard-title">My Library</h1>
             <p className="text-muted-foreground" data-testid="text-dashboard-description">Manage your generated songs and lyrics.</p>
           </div>
           <Link 

@@ -46,6 +46,10 @@ Preferred communication style: Simple, everyday language.
 - **User Library**: Personal song management.
 - **Public Explore**: Browse and interact with publicly shared songs.
 - **Playlist Management**: Create and manage song playlists.
+- **Sound Marketplace**: Browse and discover premium sound packs and AI voice models.
+- **Mixing Console & AI Mastering**: Multi-channel mixer with EQ visualizers, solo/mute controls, master output, and AI mastering engine with presets (Balanced/Warm/Club Ready).
+- **Video Creator**: AI-powered music video generation with visual style selection (Cyberpunk/Dreamscape/Retro-Wave/Abstract Flow) and beat sync controls.
+- **Activity Feed**: Notification center with filter chips (All/Likes/Followers/Mentions) and categorized notification items.
 - **PWA Capabilities**: Offline caching and auto-updates.
 
 ### UI/UX Decisions
@@ -56,9 +60,10 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### AI Services
-- **OpenAI API**: For fast lyrics and AI suggestions.
+- **OpenAI API**: For fast lyrics and AI suggestions (model: `gpt-5.2`).
   - Environment variables: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`
-- **Gemini API**: For comprehensive song concepts.
+  - Uses `max_completion_tokens` parameter (not deprecated `max_tokens`)
+- **Gemini API**: For comprehensive song concepts (model: `gemini-3-pro-preview`).
   - Environment variables: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
 - **Replicate API**: For MusicGen (short audio/music) and ACE-Step 1.5 (full songs with vocals).
   - Environment variable: `REPLICATE_API_KEY`
@@ -66,7 +71,7 @@ Preferred communication style: Simple, everyday language.
   - Environment variable: `FAL_API_KEY` or `FAL_KEY`
 - **Suno API (via DefAPI)**: For professional studio-quality music with realistic vocals.
   - Environment variable: `DEFAPI_API_KEY` (recommended)
-  - Supports models like chirp-bluejay (v4.5+).
+  - Supported models: chirp-crow (v5), chirp-bluejay (v4.5+, default), chirp-auk (v4.5), chirp-v4 (v4). Deprecated v3.x models removed.
 
 ### Database
 - **PostgreSQL**: Primary data store for users, songs, playlists.
@@ -75,3 +80,20 @@ Preferred communication style: Simple, everyday language.
 ### Authentication
 - **Replit Auth**: OpenID Connect-based authentication.
   - Environment variables: `ISSUER_URL`, `REPL_ID`, `SESSION_SECRET`
+
+## Documentation
+
+Comprehensive documentation suite in `docs/`:
+- `ARCHITECTURE.md` — System architecture, schema, auth flow
+- `API.md` — All API endpoints
+- `DATABASE.md` — Table definitions, indexes, migration strategy
+- `PRD.md` — Product requirements
+- `ROADMAP.md` — Version history and planned features
+- `CHANGELOG.md` — Detailed changelog
+- `CONTRIBUTING.md` — Development guidelines
+- `RUNBOOK.md` — Operations and troubleshooting
+- `SECURITY.md` — Security architecture and recommendations
+- `AUDIT-REPORT.md` — Full codebase audit (2026-03-13)
+- `DEAD-CODE-TRIAGE.md` — Dead code analysis
+- `docs/adr/` — 5 Architecture Decision Records
+- `.env.example` — All 21 environment variables documented
