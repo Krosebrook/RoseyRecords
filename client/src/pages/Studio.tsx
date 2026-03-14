@@ -101,7 +101,6 @@ export default function Studio() {
   const [isMuted, setIsMuted] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pendingPlayRef = useRef<boolean>(false);
   const progressIntervalRef = useRef<number | null>(null);
   
   const [chordKey, setChordKey] = useState("C");
@@ -191,13 +190,6 @@ export default function Studio() {
       };
       audio.muted = isMuted;
       audioRef.current = audio;
-      if (pendingPlayRef.current) {
-        pendingPlayRef.current = false;
-        audio.play().then(() => {
-          setIsPlaying(true);
-          startProgressTracking();
-        }).catch((err) => console.error("Audio play error:", err));
-      }
     }
   }, [currentAudioUrl]);
 
@@ -2060,17 +2052,13 @@ export default function Studio() {
                           onClick={() => {
                             const url = vocalsUrl || fullTrackUrl;
                             if (url) {
-                              if (currentAudioUrl === url) {
-                                handlePlayPause();
-                              } else {
-                                pendingPlayRef.current = true;
-                                setCurrentAudioUrl(url);
-                              }
+                              setCurrentAudioUrl(url);
+                              handlePlayPause();
                             }
                           }}
                           data-testid="button-play-vocals"
-                          aria-label={isPlaying ? "Pause vocals" : "Play vocals"}
-                          title={isPlaying ? "Pause vocals" : "Play vocals"}
+                          aria-label="Play vocals"
+                          title="Play vocals"
                         >
                           {isPlaying ? (
                             <Pause className="w-5 h-5" />
