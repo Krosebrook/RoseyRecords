@@ -107,3 +107,50 @@ export function parseNumericId(value: string, res: Response): number | null {
   }
   return id;
 }
+
+export function isValidExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return false;
+    }
+
+    const hostname = url.hostname;
+
+    if (
+      hostname === "localhost" ||
+      hostname.endsWith(".localhost") ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname === "0.0.0.0"
+    ) {
+      return false;
+    }
+
+    // Block IPv4 private network space
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return false;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)) return false;
+
+    // Block cloud instance metadata IP
+    if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(hostname)) return false;
+
+    // 172.16.0.0 - 172.31.255.255
+    const parts = hostname.split(".");
+    if (
+      parts.length === 4 &&
+      parts[0] === "172" &&
+      parseInt(parts[1], 10) >= 16 &&
+      parseInt(parts[1], 10) <= 31
+    ) {
+      return false;
+    }
+
+    // Prevent explicit loopback references that might bypass 127.0.0.1
+    if (/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return false;
+
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
