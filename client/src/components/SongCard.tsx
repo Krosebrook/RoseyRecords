@@ -78,7 +78,6 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                         data-testid={`button-delete-${song.id}`}
                         aria-label="Delete song"
-                        title="Delete song"
                       >
                         {isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
