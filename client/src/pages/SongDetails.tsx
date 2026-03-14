@@ -4,8 +4,10 @@ import { useSong, useDeleteSong } from "@/hooks/use-songs";
 import { ArrowLeft, Calendar, Trash2, Tag, Music, Share2, Globe, Lock, Copy, Link2, Twitter, Facebook } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { copyToClipboard } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,10 +35,11 @@ export default function SongDetails() {
   const { data: song, isLoading, error } = useSong(id);
   const { mutate: deleteSong, isPending: isDeleting } = useDeleteSong();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
 
   if (isLoading) return (
     <Layout>
-      <div className="flex items-center justify-center h-full" data-testid="container-loading">
+      <div className="flex items-center justify-center min-h-[60vh]" data-testid="container-loading">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     </Layout>
@@ -44,7 +47,7 @@ export default function SongDetails() {
   
   if (error || !song) return (
     <Layout>
-      <div className="flex flex-col items-center justify-center h-full gap-4" data-testid="container-not-found">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4" data-testid="container-not-found">
         <h2 className="text-2xl font-bold">Song Not Found</h2>
         <Link href="/dashboard" className="text-primary hover:underline" data-testid="link-back-dashboard">Back to Dashboard</Link>
       </div>
@@ -57,25 +60,6 @@ export default function SongDetails() {
         setLocation("/dashboard");
       }
     });
-  };
-
-  const copyToClipboard = async (text: string, successMessage: string) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        toast({ title: "Copied!", description: successMessage });
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        toast({ title: "Copied!", description: successMessage });
-      }
-    } catch (err) {
-      toast({ title: "Failed to copy", description: "Please try again.", variant: "destructive" });
-    }
   };
 
   const handleCopyLyrics = () => {
@@ -189,9 +173,9 @@ export default function SongDetails() {
                       size="icon"
                       variant="destructive"
                       disabled={isDeleting}
-                      title="Delete Song"
                       data-testid="button-delete-song"
                       aria-label="Delete song"
+                      title="Delete song"
                     >
                       <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>

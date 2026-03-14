@@ -3,7 +3,7 @@ import type { Express, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { detectAudioFormat, sanitizeLog, parseNumericId } from "./utils";
+import { detectAudioFormat, sanitizeLog, parseNumericId, isValidExternalUrl } from "./utils";
 import { generateLyricsSchema } from "@shared/schema";
 import { z } from "zod";
 import { registerAuthRoutes, setupAuth, isAuthenticated } from "./replit_integrations/auth";
@@ -810,6 +810,10 @@ Also suggest a fitting title for the song.`;
       if (!prompt || !audioUrl) {
         return res.status(400).json({ message: "Prompt and audioUrl are required" });
       }
+
+      if (!isValidExternalUrl(audioUrl)) {
+        return res.status(400).json({ message: "Invalid or unsupported audioUrl" });
+      }
       
       const result = await stableAudioService.transformAudio({
         prompt,
@@ -1159,7 +1163,7 @@ Also suggest a fitting title for the song.`;
       }
 
       const base64 = file.buffer.toString("base64");
-      const dataUrl = `data:${mimeType};base64,${base64}`;
+      const dataUrl = `data:${file.mimetype};base64,${base64}`;
 
       const predictionId = await replicateService.startMusicWithReference(
         dataUrl,

@@ -18,3 +18,29 @@
 **Vulnerability:** IP-based rate limiting was using `req.ip` without Express's `trust proxy` configured. Behind Replit's reverse proxy, all unauthenticated requests appeared to originate from the same internal proxy IP.
 **Learning:** This leads to a denial of service (false positive) where one user exceeding the rate limit would ban all unauthenticated users. Conversely, it might allow a distributed attack to bypass per-user limits.
 **Prevention:** Always configure `app.set("trust proxy", 1);` in Express when deploying behind a reverse proxy (like Replit, Heroku, or Nginx) to ensure `req.ip` reflects the actual client IP (via `X-Forwarded-For`).
+
+## 2024-05-24 - Server-Side Request Forgery (SSRF) in AI Resource Fetching
+**Vulnerability:** The `/api/stable-audio/transform` endpoint accepted a user-provided `audioUrl` without validation. The application would fetch this URL, which could be exploited to probe internal network services, databases, or bypass firewalls.
+**Learning:** Any endpoint that fetches external resources based on user input is a potential SSRF vector. Unvalidated URLs can be manipulated to point to `localhost`, internal IPs (e.g., `10.x.x.x`, `192.168.x.x`), or unexpected protocols (like `file://` or `gopher://`).
+**Prevention:** Always parse and explicitly validate URLs provided by users before making outgoing requests. Enforce a strict protocol whitelist (e.g., `http:`, `https:`), and block common internal hostnames and private IP ranges to mitigate SSRF risks.
+
+## 2024-03-09 - [Data URI Content-Type Spoofing / Undeclared Variable DoS]
+**Vulnerability:** The `/api/audio/generate-with-reference` route had an undeclared `mimeType` variable causing a 100% 500 Error (DoS) on file uploads. More critically, if fixed by simply using the user-provided `file.mimetype`, it would construct a Data URI (`data:{mimeType};base64,...`) that trusts the client-provided MIME type, potentially enabling content-type spoofing to downstream services (like Replicate) even after validating magic bytes.
+**Learning:** Validating magic bytes (e.g., via `detectAudioFormat`) is only half the battle. If you discard the validated result and proceed to use the user-provided, unverified MIME type for downstream processing, the security check is effectively bypassed in the data pipeline.
+**Prevention:** Always use the server-determined, cryptographically or heuristically validated MIME type (e.g., the output of `detectAudioFormat`) rather than the user-supplied `Content-Type` or `file.mimetype` when constructing files or data URIs for downstream consumption.
+## 2024-03-01 - Prevent Input Validation Bypass in Route ID Parsing
+**Vulnerability:** The integration routes (`audio/routes.ts` and `chat/routes.ts`) were parsing dynamic route parameters (`:id`) using `parseInt()`. `parseInt` dangerously parses partial numeric strings, evaluating `"1; DROP TABLE users"` or `"1/../../"` as `1`, ignoring the malicious suffix. This can bypass validation constraints and pass unexpected characters to downstream handlers or database queries.
+**Learning:** In JavaScript/TypeScript, `parseInt` is too permissive for security-critical input validation compared to strict numeric parsing using `Number()`.
+**Prevention:** Always use strict numeric parsing for IDs. The `parseNumericId` helper (using `Number(value)` combined with `!isNaN` and `Number.isInteger` checks) should be the standard for parsing any numeric route parameters across the entire application.
+## 2024-03-24 - Missing Rate Limiting on Database Write Endpoints
+**Vulnerability:** The `POST /api/songs/:id/play` endpoint lacked rate limiting middleware (`writeRateLimiter`), allowing for potential play count manipulation (artificial inflation) and minor DoS risks via database write spamming.
+**Learning:** Even utility-like endpoints that modify database state need to be protected. Developers may sometimes assume that simple increment operations are low risk and forget to apply standard rate limiting.
+**Prevention:** Always apply the appropriate rate limiting middleware (`writeRateLimiter` for writes/mutations, `aiRateLimiter` for generation) to all state-modifying or expensive endpoints during route definition.
+## 2026-02-27 - Missing Rate Limiting on Public Metrics Endpoint
+**Vulnerability:** The `POST /api/songs/:id/play` endpoint, which increments play counts, had no authentication or rate limiting. This allowed unauthenticated users to artificially inflate play counts via automated scripts.
+**Learning:** Metrics endpoints (views, plays, likes) are often overlooked for security because they don't expose data, but they affect platform integrity and resource usage.
+**Prevention:** Apply rate limiting middleware (e.g., `writeRateLimiter`) to all public write endpoints, even if they seem minor. Consider specific "metrics" rate limiters (e.g., 1 per minute per IP) for such endpoints.
+## 2026-02-14 - Incomplete File Upload Validation
+**Vulnerability:** The `/api/audio/generate-with-reference` endpoint relied solely on client-provided `mimetype` for file validation, allowing spoofed uploads. Additionally, the existing `detectAudioFormat` utility lacked support for FLAC and AAC formats used by the endpoint.
+**Learning:** Relying on `file.mimetype` from `multer` is insufficient as it is easily spoofed. Magic byte validation must be comprehensive and cover all allowed file types to prevent legitimate uploads from being rejected or malicious ones accepted.
+**Prevention:** Always validate file uploads using magic bytes (file signature) on the server side before processing. Ensure the validation utility supports all accepted formats.
