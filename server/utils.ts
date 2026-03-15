@@ -107,3 +107,57 @@ export function parseNumericId(value: string, res: Response): number | null {
   }
   return id;
 }
+
+// Helper to validate external URLs and prevent SSRF
+export function isValidExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+
+    // Only allow HTTP/HTTPS
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false;
+    }
+
+    const hostname = url.hostname;
+
+    // Reject localhost and IP representations of localhost
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '[::1]' ||
+      hostname.endsWith('.localhost')
+    ) {
+      return false;
+    }
+
+    let ipToCheck = hostname;
+
+    // Block internal network hostnames (e.g. "redis", "api") that don't have a TLD
+    // Exclude localhost since we already checked it above
+    if (!hostname.includes('.')) {
+      return false;
+    }
+
+    // Node.js URL parser automatically normalizes integer, hex, and octal IPs
+    // to standard dotted decimal strings (e.g., 2130706433 -> "127.0.0.1")
+    // If it's an IP address, check against restricted ranges
+    // This regex ensures we only match IPs, not domains like "10.com"
+    const isIpRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    if (isIpRegex.test(ipToCheck)) {
+      if (
+        /^127\./.test(ipToCheck) || // Localhost
+        /^10\./.test(ipToCheck) || // Private network
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ipToCheck) || // Private network
+        /^192\.168\./.test(ipToCheck) || // Private network
+        /^169\.254\./.test(ipToCheck) // Link-local / Cloud metadata
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (e) {
+    // Invalid URL parsing
+    return false;
+  }
+}
