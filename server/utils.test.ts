@@ -129,13 +129,6 @@ for (const test of audioTestCases) {
   }
 }
 
-if (failed) {
-  console.error("\nSome tests failed.");
-  process.exit(1);
-} else {
-  console.log("\nAll tests passed!");
-}
-
 import { isValidExternalUrl } from "./utils";
 
 console.log("\nRunning isValidExternalUrl tests...");
@@ -168,8 +161,15 @@ for (const test of urlTestCases) {
     console.log(`✅ ${test.input}`);
   } catch (e) {
     console.error(`❌ Expected ${test.expected} for ${test.input}, got ${result}`);
-    process.exit(1);
+    failed = true;
   }
 }
 
 console.log("\nAll isValidExternalUrl tests passed!");
+
+if (failed) {
+  console.error("\nSome tests failed.");
+  process.exit(1);
+} else {
+  console.log("\nAll tests passed!");
+}
