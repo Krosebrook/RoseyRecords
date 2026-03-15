@@ -4,3 +4,22 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Runtime logs
+*.log
+
+# Temporary patch files
+*.patch
+
+# Backup/orig files left by editors or merge tools
+*.orig
+
+# Verification screenshots and temp scripts
+verification/
+verification.png
+verification_debug.png
+
+# Temporary server/test scripts at repo root
+test_server.py
+server.py
+main.py

@@ -46,13 +46,7 @@ export default function VideoCreator() {
             <Video className="w-7 h-7 text-primary" />
             Video Creator
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            data-testid="button-more-options"
-            aria-label="More options"
-            title="More options"
-          >
+          <Button variant="ghost" size="icon" data-testid="button-more-options" aria-label="More options" title="More options">
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
@@ -66,8 +60,8 @@ export default function VideoCreator() {
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 hover:scale-105 transition-transform"
                 data-testid="button-play-preview"
-                aria-label={isPlaying ? "Pause video preview" : "Play video preview"}
-                title={isPlaying ? "Pause video preview" : "Play video preview"}
+                aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                title={isPlaying ? "Pause preview" : "Play preview"}
               >
                 {isPlaying ? (
                   <Pause className="w-8 h-8 text-white fill-current" />
