@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Music, Calendar, Trash2, Globe, Lock, Loader2 } from "lucide-react";
-import { type Song } from "@shared/schema";
+import { type Song, type SongListItem } from "@shared/schema";
 import { format } from "date-fns";
 import { useDeleteSong } from "@/hooks/use-songs";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface SongCardProps {
-  song: Song;
+  song: Song | SongListItem;
 }
 
 export const SongCard = memo(function SongCard({ song }: SongCardProps) {

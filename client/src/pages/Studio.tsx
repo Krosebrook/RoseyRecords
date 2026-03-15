@@ -2374,8 +2374,6 @@ export default function Studio() {
                           )}
                           style={key.black ? { left: `${(i - Math.floor((i + 1) / 7) * 5) * 40 - 12}px` } : {}}
                           data-testid={`piano-key-${key.note.replace('#', 'sharp')}`}
-                          aria-label={`Note ${key.note}`}
-                          aria-pressed={selectedNotes.includes(key.note)}
                           title={`Note ${key.note}`}
                         >
                           {!key.black && (
