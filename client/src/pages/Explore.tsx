@@ -143,17 +143,22 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
+    // Hoist loop-invariant string operations outside the filter loop
     const searchLower = debouncedSearchQuery.toLowerCase();
+    const genreLower = genreFilter !== "all" ? genreFilter.toLowerCase() : "";
 
     let filtered = songs.filter(song => {
       // Cheap exact-match checks first
       if (genreFilter !== "all" && song.genre !== genreFilter) return false;
       if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || 
-        song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
-        song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
+      // Genre match (can be substring match for tags like #Synthwave)
+      if (genreFilter !== "all") {
+        const songGenreLower = song.genre?.toLowerCase();
+        if (!songGenreLower || (!songGenreLower.includes(genreLower) && songGenreLower !== genreLower)) {
+          return false;
+        }
+      }
       
       return true;
     });
