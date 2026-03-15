@@ -135,7 +135,14 @@ function NotificationItem({ notification }: { notification: Notification }) {
             {notification.actionLabel}
           </Button>
         ) : notification.type === "system" ? (
-          <Button variant="ghost" size="icon" className="text-muted-foreground" data-testid={`button-download-${notification.id}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground"
+            data-testid={`button-download-${notification.id}`}
+            aria-label="Download track"
+            title="Download track"
+          >
             <Download className="w-4 h-4" />
           </Button>
         ) : notification.type === "mention" ? (

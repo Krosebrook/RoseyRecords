@@ -46,7 +46,13 @@ export default function VideoCreator() {
             <Video className="w-7 h-7 text-primary" />
             Video Creator
           </h1>
-          <Button variant="ghost" size="icon" data-testid="button-more-options">
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid="button-more-options"
+            aria-label="More options"
+            title="More options"
+          >
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
