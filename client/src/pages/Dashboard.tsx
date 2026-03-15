@@ -151,7 +151,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             data-testid="container-songs"
           >
-            {filteredSongs.map((song) => (
+            {filteredSongs.map((song: any) => (
               <SongCard key={song.id} song={song} />
             ))}
           </motion.div>
