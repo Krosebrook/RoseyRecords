@@ -2356,6 +2356,8 @@ export default function Studio() {
                         <button
                           key={i}
                           onClick={() => handlePianoKeyClick(key.note)}
+                          aria-label={`Note ${key.note}`}
+                          aria-pressed={selectedNotes.includes(key.note)}
                           className={cn(
                             "transition-all",
                             key.black

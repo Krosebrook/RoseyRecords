@@ -150,7 +150,7 @@ export default function Explore() {
       if (genreFilter !== "all" && song.genre !== genreFilter) return false;
       if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" ||
+      const matchesGenre = genreFilter === "all" || 
         song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
         song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;

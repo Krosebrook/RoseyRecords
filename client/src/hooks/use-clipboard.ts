@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useClipboard() {
   const { toast } = useToast();
-
+  
   const copyToClipboard = useCallback(async (text: string, successMessage = "Copied to clipboard.") => {
     if (!text) return;
 
