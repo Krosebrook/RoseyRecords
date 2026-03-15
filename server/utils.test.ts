@@ -135,3 +135,41 @@ if (failed) {
 } else {
   console.log("\nAll tests passed!");
 }
+
+import { isValidExternalUrl } from "./utils";
+
+console.log("\nRunning isValidExternalUrl tests...");
+
+const urlTestCases = [
+  { input: "http://example.com", expected: true },
+  { input: "https://example.com/path", expected: true },
+  { input: "http://localhost", expected: false },
+  { input: "http://127.0.0.1", expected: false },
+  { input: "http://[::1]", expected: false },
+  { input: "http://10.0.0.1", expected: false },
+  { input: "http://192.168.1.1", expected: false },
+  { input: "http://169.254.169.254", expected: false },
+  { input: "http://172.16.0.1", expected: false },
+  { input: "http://172.31.255.255", expected: false },
+  { input: "http://172.32.0.1", expected: true },
+  { input: "http://2130706433", expected: false }, // 127.0.0.1
+  { input: "http://0x7f000001", expected: false }, // 127.0.0.1
+  { input: "http://0177.0.0.1", expected: false }, // 127.0.0.1
+  { input: "http://[::ffff:127.0.0.1]", expected: false },
+  { input: "http://[::ffff:7f00:1]", expected: false },
+  { input: "http://2852039166", expected: false }, // 169.254.169.254
+  { input: "http://10.com", expected: true }, // legitimate domain
+];
+
+for (const test of urlTestCases) {
+  const result = isValidExternalUrl(test.input);
+  try {
+    assert.strictEqual(result, test.expected);
+    console.log(`✅ ${test.input}`);
+  } catch (e) {
+    console.error(`❌ Expected ${test.expected} for ${test.input}, got ${result}`);
+    process.exit(1);
+  }
+}
+
+console.log("\nAll isValidExternalUrl tests passed!");
