@@ -55,6 +55,7 @@ export function AiSuggestButton({ field, context, onSuggestion, disabled, classN
           className={className}
           data-testid={`button-ai-suggest-${field}`}
           aria-label={`Generate ${field.replace(/-/g, ' ')} suggestion`}
+          title={`Generate ${field.replace(/-/g, ' ')} suggestion`}
           aria-busy={isLoading}
         >
           {isLoading ? (

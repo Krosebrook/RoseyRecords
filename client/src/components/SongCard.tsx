@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Music, Calendar, Trash2, Globe, Lock, Loader2 } from "lucide-react";
-import { type Song } from "@shared/schema";
+import { type Song, type SongListItem } from "@shared/schema";
 import { format } from "date-fns";
 import { useDeleteSong } from "@/hooks/use-songs";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface SongCardProps {
-  song: Song;
+  song: Song | SongListItem;
 }
 
 export const SongCard = memo(function SongCard({ song }: SongCardProps) {
@@ -75,9 +75,10 @@ export const SongCard = memo(function SongCard({ song }: SongCardProps) {
                         variant="ghost"
                         onClick={(e) => e.stopPropagation()}
                         disabled={isPending}
-                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        className="opacity-70 hover:opacity-100 focus:opacity-100 transition-opacity"
                         data-testid={`button-delete-${song.id}`}
                         aria-label="Delete song"
+                        title="Delete song"
                       >
                         {isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

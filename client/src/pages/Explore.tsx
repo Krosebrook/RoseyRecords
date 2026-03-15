@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { Song } from "@shared/schema";
+import type { SongListItem } from "@shared/schema";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo, memo } from "react";
@@ -35,7 +35,7 @@ const FEATURED_ARTISTS = [
 ];
 
 interface PublicSongCardProps {
-  song: Song;
+  song: SongListItem;
   isLiked: boolean;
 }
 
@@ -72,6 +72,7 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
                     disabled={isPending}
                     data-testid={`button-like-${song.id}`}
                     aria-label={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
+                    title={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
                   >
                     <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
                   </Button>
@@ -142,18 +143,19 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
-    // Extract loop-invariant toLowerCase() operation to prevent redundant O(N) string allocations during search filtering
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     let filtered = songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+      // Cheap exact-match checks first
+      if (genreFilter !== "all" && song.genre !== genreFilter) return false;
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || song.genre === genreFilter;
+      const matchesGenre = genreFilter === "all" || 
+        song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
+        song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
       const matchesMood = moodFilter === "all" || song.mood === moodFilter;
       
-      return matchesSearch && matchesGenre && matchesMood;
+      return true;
     });
 
     if (sortBy === "popular") {
@@ -161,7 +163,13 @@ export default function Explore() {
     } else if (sortBy === "liked") {
       filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
     } else if (sortBy === "recent") {
-      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      // Optimized: Avoid O(N log N) new Date() instantiations during sort.
+      // ISO 8601 strings (or fallback empty strings) sort correctly with standard operators.
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt ? String(a.createdAt) : "";
+        const dateB = b.createdAt ? String(b.createdAt) : "";
+        return dateA > dateB ? -1 : dateA < dateB ? 1 : 0;
+      });
     }
 
     return filtered;
@@ -191,13 +199,13 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                 setActiveChip(chip);
                 if (chip === "#Trending") {
                   setSortBy("popular");
-                  setSearchQuery("");
+                  setGenreFilter("all");
                 } else {
-                  setSearchQuery(chip.replace("#", ""));
+                  setGenreFilter(chip.replace("#", "").toLowerCase());
                 }
               }}
               className={cn(
-                "shrink-0 h-9 px-5 rounded-full text-sm font-semibold transition-all",
+                "shrink-0 h-11 min-w-[44px] px-5 rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeChip === chip
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
@@ -210,7 +218,10 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
         </div>
 
         <section data-testid="container-featured-artists">
-          <h3 className="text-lg font-bold mb-3">Featured Artists</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-lg font-bold">Featured Artists</h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Coming Soon</span>
+          </div>
           <div className="flex gap-6 overflow-x-auto pb-2">
             {FEATURED_ARTISTS.map((artist) => (
               <div key={artist.id} className="flex flex-col items-center gap-2 min-w-[72px]" data-testid={`artist-${artist.id}`}>
@@ -290,6 +301,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                       className="shrink-0"
                       data-testid="button-clear-filters"
                       aria-label="Clear filters"
+                      title="Clear filters"
                     >
                       <X className="w-4 h-4" />
                     </Button>
