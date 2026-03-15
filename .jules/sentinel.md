@@ -44,3 +44,7 @@
 **Vulnerability:** The `/api/audio/generate-with-reference` endpoint relied solely on client-provided `mimetype` for file validation, allowing spoofed uploads. Additionally, the existing `detectAudioFormat` utility lacked support for FLAC and AAC formats used by the endpoint.
 **Learning:** Relying on `file.mimetype` from `multer` is insufficient as it is easily spoofed. Magic byte validation must be comprehensive and cover all allowed file types to prevent legitimate uploads from being rejected or malicious ones accepted.
 **Prevention:** Always validate file uploads using magic bytes (file signature) on the server side before processing. Ensure the validation utility supports all accepted formats.
+## 2025-03-14 - SSRF Bypass via Alternative IP Formats
+**Vulnerability:** Regex-based SSRF filters for internal IPs (`127.0.0.1`, `10.x.x.x`) can be bypassed using integer-encoded IPs (e.g., `http://2130706433`), octal, hex, or DNS rebinding. Additionally, naive prefix regexes like `^10\.` cause false positives (e.g., blocking legitimate domains like `10.com`).
+**Learning:** Standard URL parsing doesn't automatically normalize integer or hex hostnames to dotted decimal, allowing them to slip past simple string filters but still resolve locally in the HTTP client.
+**Prevention:** Always convert integer/hex/octal IP representations to standard dotted decimal before regex validation, and ensure regexes match full octets (e.g., `^10\.(25[0-5]|...)\.`).
