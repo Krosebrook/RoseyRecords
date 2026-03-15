@@ -1125,7 +1125,7 @@ export default function Studio() {
               <Music className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold" data-testid="text-studio-title">Music Studio</h1>
+              <h1 className="text-3xl font-bold" data-testid="text-studio-title">Music Studio</h1>
               <p className="text-xs sm:text-sm text-muted-foreground" data-testid="text-studio-subtitle">AI-powered music creation - up to 3 minutes</p>
             </div>
           </div>
@@ -1656,6 +1656,7 @@ export default function Studio() {
                               className="rounded-full bg-primary/20 backdrop-blur hover-elevate"
                               data-testid="button-play-pause"
                               aria-label={isPlaying ? "Pause" : "Play"}
+                              title={isPlaying ? "Pause" : "Play"}
                             >
                               {isPlaying ? (
                                 <Pause className="w-6 h-6" />
@@ -1670,6 +1671,7 @@ export default function Studio() {
                               className="rounded-full bg-primary/10"
                               data-testid="button-mute"
                               aria-label={isMuted ? "Unmute" : "Mute"}
+                              title={isMuted ? "Unmute" : "Mute"}
                             >
                               {isMuted ? (
                                 <VolumeX className="w-4 h-4" />
@@ -1686,6 +1688,7 @@ export default function Studio() {
                                   asChild
                                   data-testid="button-download"
                                   aria-label="Download audio"
+                                  title="Download audio"
                                 >
                                   <a href={currentAudioUrl} download={`harmoniq-${generationMode}-${Date.now()}.wav`}>
                                     <Download className="w-4 h-4" />
@@ -1778,6 +1781,7 @@ export default function Studio() {
                     disabled={isGettingTip}
                     data-testid="button-get-tip"
                     aria-label="Get new production tip"
+                    title="Get new production tip"
                   >
                     {isGettingTip ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -2053,6 +2057,8 @@ export default function Studio() {
                             }
                           }}
                           data-testid="button-play-vocals"
+                          aria-label="Play vocals"
+                          title="Play vocals"
                         >
                           {isPlaying ? (
                             <Pause className="w-5 h-5" />
@@ -2071,6 +2077,8 @@ export default function Studio() {
                           variant="outline"
                           asChild
                           data-testid="button-download-vocals"
+                          aria-label="Download vocals"
+                          title="Download vocals"
                         >
                           <a href={vocalsUrl || fullTrackUrl || ""} download="vocals.mp3">
                             <Download className="w-4 h-4" />
@@ -2366,8 +2374,6 @@ export default function Studio() {
                           )}
                           style={key.black ? { left: `${(i - Math.floor((i + 1) / 7) * 5) * 40 - 12}px` } : {}}
                           data-testid={`piano-key-${key.note.replace('#', 'sharp')}`}
-                          aria-label={`Note ${key.note}`}
-                          aria-pressed={selectedNotes.includes(key.note)}
                           title={`Note ${key.note}`}
                         >
                           {!key.black && (

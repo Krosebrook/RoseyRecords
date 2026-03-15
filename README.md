@@ -9,137 +9,126 @@ HarmoniQ is an AI-powered music and lyrics generation platform that enables user
 - **Smart Generation**: Generate verses, choruses, bridges with proper structure
 - **Genre-Aware**: Lyrics adapt to selected genre and mood
 - **Song Concepts**: Gemini provides full song concepts including BPM, key, and energy analysis
+- **AI Suggest**: Smart suggestion buttons for creative inputs across the platform
+
+### Multi-Engine Audio Generation
+- **Suno/DefAPI**: Studio-quality full songs with realistic vocals (chirp-bluejay, chirp-crow models)
+- **ACE-Step 1.5**: Commercial-grade full songs with vocals via Replicate
+- **Stable Audio**: Extended instrumentals up to 3 minutes via fal.ai
+- **MusicGen**: Short instrumental clips for rapid iteration via Replicate
+- **Bark Vocals**: AI singing with 10 voice presets (5 male, 5 female)
 
 ### Music Studio
-- **Instrumental Generation**: Create AI-powered instrumental tracks up to 3 minutes
-- **Sample-First Workflow**: Generate 15-second previews before committing to full tracks
-- **Singing Vocals**: Generate AI singing vocals with Bark integration
-- **Mix Tab**: Combine instrumentals and vocals with volume/delay controls
-- **Music Theory Tools**: Chord progression generator, scale finder, production tips
+- Audio generation tab with genre and duration controls
+- Vocals tab with Bark AI singing
+- Mix tab for combining instrumentals and vocals
+- Music Theory tools: chord progression generator, scale finder, production tips
 
 ### Audio Visualizer
-- Interactive audio visualizer with synthwave aesthetic
+- Interactive synthwave-themed visualizer
 - Circular equalizer, frequency spectrum, and waveform displays
-- Upload and play your own audio files
+- Audio file upload and playback
 
 ### User Features
-- **Personal Library**: Save and manage your generated songs
+- **Personal Library**: Save and manage generated songs
 - **Public Explore**: Browse and like publicly shared songs
-- **Playlist Management**: Create and organize song playlists
+- **Playlist Management**: Create and organize playlists
 - **PWA Support**: Install as a progressive web app with offline caching
+- **AI-Guided Onboarding**: Interactive walkthrough tours for new users
 
 ## Tech Stack
 
 ### Frontend
 - React 18 with TypeScript
-- Vite for fast development and builds
+- Vite 7 for development and builds
 - Tailwind CSS with custom synthwave theme
 - shadcn/ui component library (Radix UI)
 - Framer Motion for animations
-- TanStack React Query for data fetching
+- TanStack React Query v5 for data fetching
 - Wouter for routing
 
 ### Backend
-- Node.js with Express.js
+- Node.js 20 with Express.js
 - TypeScript (ES modules)
-- PostgreSQL database with Drizzle ORM
+- PostgreSQL 16 with Drizzle ORM
 - Passport.js with OpenID Connect (Replit Auth)
+- Custom rate limiting (AI: 50/15min, Write: 100/15min)
 
 ### AI Services
-- OpenAI API for fast lyrics generation
-- Google Gemini for comprehensive song concepts
-- Replicate API for short audio clips (MusicGen)
-- Stable Audio (fal.ai) for extended duration tracks
-- Bark for AI singing vocals
+- OpenAI (gpt-5.2) for fast lyrics and AI suggestions
+- Google Gemini (gemini-3-pro-preview) for song concepts and music theory
+- Replicate for MusicGen, Bark vocals, and ACE-Step 1.5
+- Stable Audio (fal.ai) for extended instrumentals
+- Suno via DefAPI for studio-quality vocals
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - PostgreSQL database
-- API keys for AI services
-
-### Environment Variables
-
-```bash
-# Database
-DATABASE_URL=postgresql://...
-
-# Authentication
-SESSION_SECRET=your-session-secret
-ISSUER_URL=your-replit-issuer-url
-REPL_ID=your-repl-id
-
-# AI Services (via Replit integrations)
-AI_INTEGRATIONS_OPENAI_API_KEY=...
-AI_INTEGRATIONS_OPENAI_BASE_URL=...
-AI_INTEGRATIONS_GEMINI_API_KEY=...
-AI_INTEGRATIONS_GEMINI_BASE_URL=...
-
-# Audio Generation
-REPLICATE_API_KEY=your-replicate-key
-FAL_API_KEY=your-fal-key
-```
+- API keys for AI services (see `.env.example`)
 
 ### Installation
 
 ```bash
-# Install dependencies
 npm install
-
-# Push database schema
 npm run db:push
-
-# Start development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`.
+The application runs at `http://localhost:5000`.
 
-## Project Structure
+### Environment Variables
 
+Copy `.env.example` and fill in your values. Required variables:
+
+```bash
+DATABASE_URL=                           # PostgreSQL connection string
+SESSION_SECRET=                         # Cookie signing secret
+ISSUER_URL=https://replit.com/oidc      # Replit OIDC issuer
+REPL_ID=                                # Replit project ID
+AI_INTEGRATIONS_OPENAI_API_KEY=         # OpenAI API key
+AI_INTEGRATIONS_OPENAI_BASE_URL=        # OpenAI base URL
+AI_INTEGRATIONS_GEMINI_API_KEY=         # Gemini API key
+AI_INTEGRATIONS_GEMINI_BASE_URL=        # Gemini base URL
 ```
-harmoniq/
-├── client/                 # Frontend React application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Utilities and helpers
-│   │   ├── pages/          # Page components
-│   │   └── replit_integrations/  # Client-side integrations
-│   └── index.html
-├── server/                 # Backend Express application
-│   ├── routes.ts           # API route definitions
-│   ├── storage.ts          # Database operations
-│   ├── index.ts            # Server entry point
-│   └── replit_integrations/  # Server-side integrations
-├── shared/                 # Shared types and schemas
-│   ├── schema.ts           # Drizzle database schema
-│   └── routes.ts           # API route contracts
-└── drizzle/                # Database migrations
-```
+
+Optional (enable additional engines): `REPLICATE_API_KEY`, `FAL_API_KEY`, `DEFAPI_API_KEY`
+
+See `.env.example` for the complete list of 20+ environment variables.
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run db:push` - Push schema changes to database
-- `npm run db:studio` - Open Drizzle Studio
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run db:push` | Push schema changes to database |
+| `npx drizzle-kit studio` | Open Drizzle Studio |
 
-## Branch Management
+## Documentation
 
-This repository includes automated merge tooling:
+All documentation lives in the `docs/` directory:
 
-- `scripts/merge-manager.sh` - Automated merge orchestration
-- `scripts/pre-merge-check.sh` - Validation before merge
-- `scripts/cleanup-branches.sh` - Post-merge cleanup
-
-See `docs/MERGE_EXECUTION_GUIDE.md` for complete instructions.
-
-## License
-
-MIT License - See LICENSE file for details.
+| Document | Purpose |
+|---|---|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, schema, auth flow |
+| [API.md](docs/API.md) | Complete API endpoint documentation |
+| [DATABASE.md](docs/DATABASE.md) | Schema definitions, indexes, migration strategy |
+| [PRD.md](docs/PRD.md) | Product requirements and feature status |
+| [ROADMAP.md](docs/ROADMAP.md) | Version history and planned features |
+| [CHANGELOG.md](docs/CHANGELOG.md) | Detailed version changelog |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Development guidelines |
+| [RUNBOOK.md](docs/RUNBOOK.md) | Operations guide and troubleshooting |
+| [SECURITY.md](docs/SECURITY.md) | Security architecture and recommendations |
+| [AUDIT-REPORT.md](docs/AUDIT-REPORT.md) | Full codebase audit results |
+| [DEAD-CODE-TRIAGE.md](docs/DEAD-CODE-TRIAGE.md) | Dead code analysis |
+| [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development guidelines.
+
+## License
+
+MIT License

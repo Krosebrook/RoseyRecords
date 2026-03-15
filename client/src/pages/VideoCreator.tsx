@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { motion } from "framer-motion";
-import { Video, Play, Pause, Check, Zap, BarChart3, MoreHorizontal } from "lucide-react";
+import { Video, Play, Pause, Check, Zap, BarChart3, MoreHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -27,23 +27,26 @@ export default function VideoCreator() {
   const [beatSync, setBeatSync] = useState(82);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress] = useState(33);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = () => {
+    setIsGenerating(true);
     toast({
       title: "Generating Video",
       description: `Creating ${VISUAL_STYLES.find(s => s.id === selectedStyle)?.name} style video with ${beatSync}% beat sync...`,
     });
+    setTimeout(() => setIsGenerating(false), 3000);
   };
 
   return (
     <Layout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-video-title">
-            <Video className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold flex items-center gap-2" data-testid="text-video-title">
+            <Video className="w-7 h-7 text-primary" />
             Video Creator
           </h1>
-          <Button variant="ghost" size="icon" data-testid="button-more-options">
+          <Button variant="ghost" size="icon" data-testid="button-more-options" aria-label="More options" title="More options">
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
@@ -57,6 +60,8 @@ export default function VideoCreator() {
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 hover:scale-105 transition-transform"
                 data-testid="button-play-preview"
+                aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                title={isPlaying ? "Pause preview" : "Play preview"}
               >
                 {isPlaying ? (
                   <Pause className="w-8 h-8 text-white fill-current" />
@@ -91,7 +96,7 @@ export default function VideoCreator() {
               <h3 className="text-lg font-bold" data-testid="text-styles-heading">Visual Styles</h3>
               <p className="text-sm text-muted-foreground">Select AI aesthetic direction</p>
             </div>
-            <button className="text-primary text-sm font-semibold" data-testid="button-view-all-styles">View All</button>
+            <span className="text-muted-foreground text-xs font-medium bg-muted px-2 py-1 rounded-full" data-testid="text-more-styles">More styles coming soon</span>
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-2">
@@ -99,7 +104,7 @@ export default function VideoCreator() {
               <button
                 key={style.id}
                 onClick={() => setSelectedStyle(style.id)}
-                className="flex flex-col gap-3 min-w-[140px] snap-start group"
+                className="flex flex-col gap-3 min-w-[140px] snap-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
                 data-testid={`style-${style.id}`}
               >
                 <div
@@ -143,8 +148,8 @@ export default function VideoCreator() {
             </span>
           </div>
 
-          <div className="relative h-6 flex items-center">
-            <div className="absolute h-2 w-full rounded-full bg-white/10 overflow-hidden">
+          <div className="relative h-8 flex items-center">
+            <div className="absolute h-2 w-full rounded-full bg-white/10 overflow-hidden pointer-events-none">
               <div
                 className="h-full bg-gradient-to-r from-primary/50 to-primary rounded-full"
                 style={{ width: `${beatSync}%` }}
@@ -156,12 +161,9 @@ export default function VideoCreator() {
               max="100"
               value={beatSync}
               onChange={(e) => setBeatSync(Number(e.target.value))}
-              className="absolute w-full h-6 opacity-0 cursor-pointer"
+              className="absolute w-full h-8 cursor-pointer appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:shadow-[0_0_15px_rgba(127,19,236,0.5)] [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background [&::-moz-range-track]:bg-transparent [&::-webkit-slider-runnable-track]:bg-transparent"
+              aria-label="Beat sync intensity"
               data-testid="slider-beat-sync"
-            />
-            <div
-              className="absolute w-6 h-6 rounded-full bg-primary shadow-[0_0_15px_rgba(127,19,236,0.5)] border-4 border-background pointer-events-none"
-              style={{ left: `calc(${beatSync}% - 12px)` }}
             />
           </div>
 
@@ -173,12 +175,12 @@ export default function VideoCreator() {
 
         <Button
           onClick={handleGenerate}
+          disabled={isGenerating}
           size="lg"
-          className="w-full h-16 rounded-full text-lg font-bold tracking-wide gap-3 neon-shadow"
+          className="w-full h-14 rounded-full text-lg font-bold tracking-wide gap-3 neon-shadow"
           data-testid="button-generate-video"
         >
-          <Zap className="w-5 h-5" />
-          GENERATE VIDEO
+          {isGenerating ? <><Loader2 className="w-5 h-5 animate-spin" />GENERATING...</> : <><Zap className="w-5 h-5" />GENERATE VIDEO</>}
         </Button>
       </div>
     </Layout>

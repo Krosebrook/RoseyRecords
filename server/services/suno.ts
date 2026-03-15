@@ -141,8 +141,6 @@ const DEFAPI_MODEL_MAP: Record<string, string> = {
   "chirp-bluejay": "chirp-bluejay",
   "chirp-auk": "chirp-auk",
   "chirp-v4": "chirp-v4",
-  "chirp-v3-5": "chirp-v3-5",
-  "chirp-v3-0": "chirp-v3-0",
 };
 
 /** DefAPI Provider (Production - Recommended) */

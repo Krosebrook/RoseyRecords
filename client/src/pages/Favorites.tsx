@@ -8,7 +8,7 @@ import { api, buildUrl } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Song } from "@shared/schema";
+import type { SongListItem } from "@shared/schema";
 import { memo } from "react";
 
 function useLikedSongs() {
@@ -18,7 +18,7 @@ function useLikedSongs() {
       const res = await fetch('/api/songs/liked', { credentials: "include" });
       if (res.status === 401) return [];
       if (!res.ok) throw new Error("Failed to fetch liked songs");
-      return res.json() as Promise<Song[]>;
+      return res.json() as Promise<SongListItem[]>;
     },
   });
 }
@@ -59,7 +59,7 @@ function useUnlikeSong() {
   });
 }
 
-const FavoriteSongCard = memo(function FavoriteSongCard({ song }: { song: Song }) {
+const FavoriteSongCard = memo(function FavoriteSongCard({ song }: { song: SongListItem }) {
   const { mutate: unlikeSong, isPending } = useUnlikeSong();
 
   const handleUnlike = (e: React.MouseEvent) => {

@@ -30,16 +30,23 @@ export default function Dashboard() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
-    // Extract loop-invariant toLowerCase() operation to prevent redundant O(N) string allocations during search filtering
     const searchLower = debouncedSearchQuery.toLowerCase();
 
     return songs.filter(song => {
+      // Cheap exact-match checks first
       if (genreFilter !== "all" && song.genre !== genreFilter) return false;
       if (moodFilter !== "all" && song.mood !== moodFilter) return false;
+      
+      // Expensive string operations only for items that passed basic criteria
+      if (debouncedSearchQuery !== "") {
+        const titleMatches = song.title.toLowerCase().includes(searchLower);
+        if (titleMatches) return true;
 
-      return debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+        const lyricsMatches = song.lyrics.toLowerCase().includes(searchLower);
+        return lyricsMatches;
+      }
+      
+      return true;
     });
   }, [songs, debouncedSearchQuery, genreFilter, moodFilter]);
 
@@ -56,7 +63,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2" data-testid="text-dashboard-title">My Studio</h1>
+            <h1 className="text-3xl font-bold mb-2" data-testid="text-dashboard-title">My Library</h1>
             <p className="text-muted-foreground" data-testid="text-dashboard-description">Manage your generated songs and lyrics.</p>
           </div>
           <Link 
@@ -144,7 +151,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             data-testid="container-songs"
           >
-            {filteredSongs.map((song) => (
+            {filteredSongs.map((song: any) => (
               <SongCard key={song.id} song={song} />
             ))}
           </motion.div>

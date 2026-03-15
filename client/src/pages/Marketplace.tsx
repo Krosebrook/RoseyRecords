@@ -4,6 +4,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { Search, Download, Star, ShoppingBag, Sparkles, Music, Mic, Headphones } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -118,12 +119,20 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
+  const searchLower = searchQuery.toLowerCase();
+
   const filteredPacks = SOUND_PACKS.filter((pack) => {
-    const matchesSearch =
-      pack.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pack.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === "All" || pack.category === activeCategory;
-    return matchesSearch && matchesCategory;
+    // Cheap exact-match check first
+    if (activeCategory !== "All" && pack.category !== activeCategory) return false;
+
+    // Expensive string operations only for items that passed basic criteria
+    if (searchLower) {
+      if (pack.name.toLowerCase().includes(searchLower)) return true;
+      if (pack.description.toLowerCase().includes(searchLower)) return true;
+      return false;
+    }
+
+    return true;
   });
 
   const handleDownload = (pack: SoundPack) => {
@@ -148,12 +157,11 @@ export default function Marketplace() {
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
+          <Input
             placeholder="Search Sound Packs & Models"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-muted-foreground/50"
+            className="pl-12 h-12"
             data-testid="input-marketplace-search"
           />
         </div>
@@ -164,7 +172,7 @@ export default function Marketplace() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                "px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeCategory === cat
                   ? "bg-primary text-white shadow-lg shadow-primary/30"
                   : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
@@ -209,14 +217,15 @@ export default function Marketplace() {
                   <div className="flex items-center justify-between">
                     <Button
                       size="sm"
+                      variant="outline"
                       onClick={() => handleDownload(pack)}
-                      className="text-xs font-bold shadow-lg shadow-primary/20"
+                      className="text-xs font-bold"
                       data-testid={`button-download-${pack.id}`}
                     >
                       <Download className="w-3.5 h-3.5 mr-1.5" />
                       ${pack.price.toFixed(2)}
                     </Button>
-                    <span className="text-[10px] text-muted-foreground">{pack.downloads.toLocaleString()} downloads</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Coming Soon</span>
                   </div>
                 </div>
               </motion.div>

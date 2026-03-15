@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import { useAuth } from "@/hooks/use-auth";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { User, Mail, Shield, Bell, Info, Crown, Music, Sparkles, Moon, ChevronRight, LogOut } from "lucide-react";
+import { User, Mail, Shield, Bell, Info, Crown, Music, Sparkles, ChevronRight, LogOut } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,6 @@ export default function Settings() {
     return saved ? JSON.parse(saved) : { hiFi: true, aiHints: true };
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains("dark");
-  });
-
   useEffect(() => {
     localStorage.setItem("harmoniq_notifications", JSON.stringify(notifications));
   }, [notifications]);
@@ -32,17 +28,6 @@ export default function Settings() {
   useEffect(() => {
     localStorage.setItem("harmoniq_preferences", JSON.stringify(preferences));
   }, [preferences]);
-
-  const toggleDarkMode = (enabled: boolean) => {
-    setDarkMode(enabled);
-    if (enabled) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  };
 
   return (
     <Layout>
@@ -65,11 +50,14 @@ export default function Settings() {
             </div>
           </div>
           <div className="bg-card p-5">
-            <p className="text-primary text-xs font-bold tracking-widest uppercase mb-1">Current Plan</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-primary text-xs font-bold tracking-widest uppercase">Current Plan</p>
+              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Preview</span>
+            </div>
             <p className="text-2xl font-bold mb-3">HarmoniQ Pro</p>
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Unlimited AI generations</p>
-              <Button size="sm" className="font-bold neon-shadow" data-testid="button-manage-subscription">
+              <Button size="sm" variant="outline" disabled className="font-bold" data-testid="button-manage-subscription">
                 Manage
               </Button>
             </div>
@@ -103,19 +91,6 @@ export default function Settings() {
                 checked={preferences.aiHints}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, aiHints: checked })}
                 data-testid="switch-ai-hints"
-              />
-            </div>
-            <div className="flex items-center gap-4 px-4 py-4 justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Moon className="w-5 h-5 text-primary" />
-                </div>
-                <span className="text-sm font-medium">Dark Mode</span>
-              </div>
-              <Switch
-                checked={darkMode}
-                onCheckedChange={toggleDarkMode}
-                data-testid="switch-dark-mode"
               />
             </div>
           </div>
@@ -200,12 +175,15 @@ export default function Settings() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 px-4 py-4 justify-between" data-testid="row-account-privacy">
+            <div className="flex items-center gap-4 px-4 py-4 justify-between opacity-50" data-testid="row-account-privacy">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Shield className="w-5 h-5 text-primary" />
                 </div>
-                <p className="text-sm font-medium">Privacy & Security</p>
+                <div>
+                  <p className="text-sm font-medium">Privacy & Security</p>
+                  <p className="text-xs text-muted-foreground">Coming soon</p>
+                </div>
               </div>
             </div>
           </div>

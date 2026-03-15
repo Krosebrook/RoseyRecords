@@ -135,7 +135,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
             {notification.actionLabel}
           </Button>
         ) : notification.type === "system" ? (
-          <Button variant="ghost" size="icon" className="text-muted-foreground" data-testid={`button-download-${notification.id}`}>
+          <Button variant="ghost" size="icon" className="text-muted-foreground" data-testid={`button-download-${notification.id}`} aria-label="Download notification item" title="Download notification item">
             <Download className="w-4 h-4" />
           </Button>
         ) : notification.type === "mention" ? (
@@ -169,11 +169,15 @@ export default function Activity() {
     <Layout>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-activity-title">
-            <Bell className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold flex items-center gap-2" data-testid="text-activity-title">
+            <Bell className="w-7 h-7 text-primary" />
             Activity
           </h1>
+          <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">Coming Soon</span>
         </div>
+        <p className="text-sm text-muted-foreground" data-testid="text-activity-preview-note">
+          Live notifications are coming soon. Below is a preview of the activity feed.
+        </p>
 
         <div className="flex gap-3 overflow-x-auto pb-2">
           {FILTER_OPTIONS.map((filter) => (
@@ -181,7 +185,7 @@ export default function Activity() {
               key={filter.key}
               onClick={() => setActiveFilter(filter.key)}
               className={cn(
-                "shrink-0 h-9 px-5 rounded-lg text-sm font-semibold transition-all",
+                "shrink-0 h-11 min-w-[44px] px-5 rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 activeFilter === filter.key
                   ? "bg-primary text-white neon-shadow"
                   : "bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
@@ -204,7 +208,7 @@ export default function Activity() {
             {recentItems.length > 0 && (
               <>
                 <div className="px-1 pt-4 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-primary/80" data-testid="text-section-recent">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-primary" data-testid="text-section-recent">
                     Recent
                   </h3>
                 </div>
@@ -217,7 +221,7 @@ export default function Activity() {
             {earlierItems.length > 0 && (
               <>
                 <div className="px-1 pt-6 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40" data-testid="text-section-earlier">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground" data-testid="text-section-earlier">
                     Earlier
                   </h3>
                 </div>
