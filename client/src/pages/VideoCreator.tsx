@@ -106,6 +106,9 @@ export default function VideoCreator() {
                 onClick={() => setSelectedStyle(style.id)}
                 className="flex flex-col gap-3 min-w-[140px] snap-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
                 data-testid={`style-${style.id}`}
+                aria-label={`Select ${style.name} style`}
+                aria-pressed={selectedStyle === style.id}
+                title={style.name}
               >
                 <div
                   className={cn(
