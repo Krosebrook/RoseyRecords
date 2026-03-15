@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { Song } from "@shared/schema";
+import type { SongListItem } from "@shared/schema";
 import { GENRES, MOODS } from "@shared/schema";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useState, useMemo, memo } from "react";
@@ -35,7 +35,7 @@ const FEATURED_ARTISTS = [
 ];
 
 interface PublicSongCardProps {
-  song: Song;
+  song: SongListItem;
   isLiked: boolean;
 }
 
@@ -72,6 +72,7 @@ const PublicSongCard = memo(function PublicSongCard({ song, isLiked }: PublicSon
                     disabled={isPending}
                     data-testid={`button-like-${song.id}`}
                     aria-label={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
+                    title={isLiked ? `Unlike ${song.title}` : `Like ${song.title}`}
                   >
                     <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
                   </Button>
@@ -142,19 +143,24 @@ export default function Explore() {
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
     
+    // Hoist loop-invariant string operations outside the filter loop
     const searchLower = debouncedSearchQuery.toLowerCase();
+    const genreLower = genreFilter !== "all" ? genreFilter.toLowerCase() : "";
 
     let filtered = songs.filter(song => {
-      const matchesSearch = debouncedSearchQuery === "" ||
-        song.title.toLowerCase().includes(searchLower) ||
-        song.lyrics.toLowerCase().includes(searchLower);
+      // Cheap exact-match checks first
+      if (genreFilter !== "all" && song.genre !== genreFilter) return false;
+      if (moodFilter !== "all" && song.mood !== moodFilter) return false;
       
-      const matchesGenre = genreFilter === "all" || 
-        song.genre?.toLowerCase() === genreFilter.toLowerCase() ||
-        song.genre?.toLowerCase().includes(genreFilter.toLowerCase());
-      const matchesMood = moodFilter === "all" || song.mood === moodFilter;
+      // Genre match (can be substring match for tags like #Synthwave)
+      if (genreFilter !== "all") {
+        const songGenreLower = song.genre?.toLowerCase();
+        if (!songGenreLower || (!songGenreLower.includes(genreLower) && songGenreLower !== genreLower)) {
+          return false;
+        }
+      }
       
-      return matchesSearch && matchesGenre && matchesMood;
+      return true;
     });
 
     if (sortBy === "popular") {
@@ -162,7 +168,13 @@ export default function Explore() {
     } else if (sortBy === "liked") {
       filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
     } else if (sortBy === "recent") {
-      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      // Optimized: Avoid O(N log N) new Date() instantiations during sort.
+      // ISO 8601 strings (or fallback empty strings) sort correctly with standard operators.
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt ? String(a.createdAt) : "";
+        const dateB = b.createdAt ? String(b.createdAt) : "";
+        return dateA > dateB ? -1 : dateA < dateB ? 1 : 0;
+      });
     }
 
     return filtered;
@@ -294,6 +306,7 @@ const hasActiveFilters = debouncedSearchQuery !== "" || genreFilter !== "all" ||
                       className="shrink-0"
                       data-testid="button-clear-filters"
                       aria-label="Clear filters"
+                      title="Clear filters"
                     >
                       <X className="w-4 h-4" />
                     </Button>

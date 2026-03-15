@@ -307,13 +307,15 @@ export default function Mixer() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="text-muted-foreground hover:text-foreground transition-colors" data-testid="button-skip-back">
+            <button className="text-muted-foreground hover:text-foreground transition-colors" data-testid="button-skip-back" aria-label="Skip backward" title="Skip backward">
               <SkipBack className="w-5 h-5" />
             </button>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform"
               data-testid="button-play-pause"
+              aria-label={isPlaying ? "Pause" : "Play"}
+              title={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 text-background fill-current" />
@@ -321,7 +323,7 @@ export default function Mixer() {
                 <Play className="w-5 h-5 text-background fill-current ml-0.5" />
               )}
             </button>
-            <button className="text-muted-foreground hover:text-foreground transition-colors" data-testid="button-skip-forward">
+            <button className="text-muted-foreground hover:text-foreground transition-colors" data-testid="button-skip-forward" aria-label="Skip forward" title="Skip forward">
               <SkipForward className="w-5 h-5" />
             </button>
           </div>

@@ -812,7 +812,7 @@ Also suggest a fitting title for the song.`;
       }
 
       if (!isValidExternalUrl(audioUrl)) {
-        return res.status(400).json({ message: "Invalid audio URL" });
+        return res.status(400).json({ message: "Invalid or unsupported audioUrl" });
       }
       
       const result = await stableAudioService.transformAudio({

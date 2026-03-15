@@ -46,7 +46,7 @@ export default function VideoCreator() {
             <Video className="w-7 h-7 text-primary" />
             Video Creator
           </h1>
-          <Button variant="ghost" size="icon" data-testid="button-more-options">
+          <Button variant="ghost" size="icon" data-testid="button-more-options" aria-label="More options" title="More options">
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
@@ -60,6 +60,8 @@ export default function VideoCreator() {
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 hover:scale-105 transition-transform"
                 data-testid="button-play-preview"
+                aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                title={isPlaying ? "Pause preview" : "Play preview"}
               >
                 {isPlaying ? (
                   <Pause className="w-8 h-8 text-white fill-current" />
@@ -104,6 +106,9 @@ export default function VideoCreator() {
                 onClick={() => setSelectedStyle(style.id)}
                 className="flex flex-col gap-3 min-w-[140px] snap-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
                 data-testid={`style-${style.id}`}
+                aria-label={`Select ${style.name} style`}
+                aria-pressed={selectedStyle === style.id}
+                title={style.name}
               >
                 <div
                   className={cn(
